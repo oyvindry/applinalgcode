@@ -12,7 +12,7 @@ function f = findIDWTKernel(wave_name)
         f = @(x, symm, dual) IDWTKernelHaar(x, symm, dual);
     elseif (strcmpi(wave_name(1:2), 'db') && ~strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(3:end));
-        filters = liftingfactortho(vm, 0, 0);
+        filters = getDBfilter(vm, 0);
         f = @(x, symm, dual) IDWTKernelOrtho(x, filters, symm, dual);
     elseif (strcmpi(wave_name(1:2), 'db') && strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(3:end-1));
@@ -20,7 +20,7 @@ function f = findIDWTKernel(wave_name)
         f = @(x, symm, dual) IDWTKernelOrtho(x, filters, symm, dual);
     elseif (strcmpi(wave_name(1:3), 'sym') && ~strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(4:end));
-        filters = liftingfactortho(vm, 1, 0);
+        filters = getDBfilter(vm, 1);
         f = @(x, symm, dual) IDWTKernelOrtho(x, filters, symm, dual);
     elseif (strcmpi(wave_name(1:3), 'sym') && strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(4:end-1));
