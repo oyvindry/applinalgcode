@@ -1,4 +1,4 @@
-function X=IDWT2Impl(X, nres, f, mode, dualarg)
+function X=IDWT2Impl(X, nres, wave_name, mode, dualarg)
     f = findIDWTKernel(wave_name);
     symm = 1;
     if nargin >= 4
