@@ -4,7 +4,6 @@ function x = IDWTImpl(x, nres, wave_name, mode, dualarg)
     if (~exist('dualarg')) dualarg  = 0; end
     
     f = findIDWTKernel(wave_name);
-    %x = IDWTReadKernel(x, nres, f, mode, dualarg);
     x = reorganize_coefficients(x, nres, 0);
     N = size(x, 1);
     for res = (nres - 1):(-1):0

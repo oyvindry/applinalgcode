@@ -23,7 +23,6 @@ function x = DWTImpl(x, nres, wave_name, mode, dualarg)
     if (~exist('dualarg')) dualarg  = 0; end
     
     f = findDWTKernel(wave_name);
-    %x = DWTReadKernel(x, nres, f, mode, dualarg);
     N = size(x, 1);
     for res=0:(nres - 1)
         x(1:2^res:N, :) = f(x(1:2^res:N, :), mode, dualarg);
