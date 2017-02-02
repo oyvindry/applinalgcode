@@ -1,4 +1,4 @@
-function showDWT(m, wave_name, invf, lowres)
+function showDWT(m, wave_name, lowres)
     img = double(imread('images/lena.png', 'png'));
     img = DWT2Impl(img, m, wave_name);
     if lowres
@@ -11,7 +11,7 @@ function showDWT(m, wave_name, invf, lowres)
         sz(1) = sz(1)/2^m; sz(2) = sz(2)/2^m;
         img(1:sz(1), 1:sz(2), :) = 0;
     end
-    img = IDWT2Impl(img, m, invf);
+    img = IDWT2Impl(img, m, wave_name);
     imshow(uint8(255*mapto01(img)));
   
   
