@@ -3,28 +3,113 @@ from numpy import *
 import matplotlib.pyplot as plt
 from sound import *
 from images import *
+import scipy.io as sio
+import os
+import os.path
 
-def DWTKernelFilters(H0, H1, G0, G1, x, symm, dual):
+def findDWTKernel(wave_name):
+    # Find the DWTKernel corresponding to the given wavelet name 
+    f = 0
+    if wave_name.lower() =='cdf97':
+        f = DWTKernel97
+    elif wave_name.lower() == 'cdf53':
+        f = DWTKernel53
+    elif wave_name.lower() == 'pwl0':
+        f = DWTKernelpwl0
+    elif wave_name.lower() == 'pwl2':
+        f = DWTKernelpwl2
+    elif wave_name.lower() == 'haar':
+        f = DWTKernelHaar
+    elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
+        vm = float(wave_name[2::])
+        filters = getDBfilter(vm, 0)
+        f = lambda x, mode, dual: DWTKernelOrtho(x, filters, mode, dual)
+    elif wave_name[:2].lower() == 'db':
+        vm = float(wave_name[2::-1])
+        filters = liftingfactortho(vm, 0, 1)
+        f = lambda x, mode, dual: DWTKernelOrtho(x, filters, mode, dual)
+    elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
+        vm = float(wave_name[3::])
+        filters = getDBfilter(vm, 1)
+        f = lambda x, mode, dual: DWTKernelOrtho(x, filters, mode, dual)
+    elif wave_name[:3].lower() == 'sym':
+        vm = float(wave_name[3::-1])
+        filters = liftingfactortho(vm, 1, 1)
+        f = lambda x, mode, dual: DWTKernelOrtho(x, filters, mode, dual)
+    return f
+    
+def findIDWTKernel(wave_name):
+    # Find the IDWTKernel corresponding to the given wavelet name 
+    f = 0
+    if wave_name.lower() =='cdf97':
+        f = IDWTKernel97
+    elif wave_name.lower() == 'cdf53':
+        f = IDWTKernel53
+    elif wave_name.lower() == 'pwl0':
+        f = IDWTKernelpwl0
+    elif wave_name.lower() == 'pwl2':
+        f = IDWTKernelpwl2
+    elif wave_name.lower() == 'haar':
+        f = IDWTKernelHaar
+    elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
+        vm = float(wave_name[2::])
+        filters = getDBfilter(vm, 0)
+        f = lambda x, mode, dual: IDWTKernelOrtho(x, filters, mode, dual)
+    elif wave_name[:2].lower() == 'db':
+        vm = float(wave_name[2::-1])
+        filters = liftingfactortho(vm, 0, 1)
+        f = lambda x, mode, dual: IDWTKernelOrtho(x, filters, mode, dual)
+    elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
+        vm = float(wave_name[3::])
+        filters = getDBfilter(vm, 1)
+        f = lambda x, mode, dual: IDWTKernelOrtho(x, filters, mode, dual)
+    elif wave_name[:3].lower() == 'sym':
+        vm = float(wave_name[3::-1])
+        filters = liftingfactortho(vm, 1, 1)
+        f = lambda x, mode, dual: IDWTKernelOrtho(x, filters, mode, dual)
+    return f
+
+def getDBfilter(vm, type):
+    filter = 0;
+    dest = 'var'
+    if (type == 0):
+        filename = '%s/DB%d.mat' % (dest, vm)
+    else:
+        filename = '%s/sym%d.mat' % (dest, vm)
+
+    if os.path.isfile(filename):
+        sio.loadmat(filename)
+    else:
+        filter = liftingfactortho(vm, type)
+        
+        if not os.path.isdir(dest):
+            os.mkdir(dest)
+        
+        sio.savemat(filename, {'filter': filter})
+    return filter
+
+
+def DWTKernelFilters(H0, H1, G0, G1, x, mode, dual):
     f0, f1 = H0, H1
     if dual:
         f0, f1 = G0, G1
     N = len(x)
     x0 = x.copy()
     x1 = x.copy()
-    filterS(f0, x0, symm)
-    filterS(f1, x1, symm)
+    filterS(f0, x0, mode)
+    filterS(f1, x1, mode)
     x[::2] = x0[::2]
     x[1::2] = x1[1::2]
 
-def IDWTKernelFilters(H0, H1, G0, G1, x, symm, dual):
+def IDWTKernelFilters(H0, H1, G0, G1, x, mode, dual):
     f0, f1 = G0, G1
     if dual:
         f0, f1 = H0, H1
     N = len(x)
     x0 = x.copy(); x0[1::2] = 0
     x1 = x.copy(); x1[::2] = 0
-    filterS(f0, x0, symm)
-    filterS(f1, x1, symm)
+    filterS(f0, x0, mode)
+    filterS(f1, x1, mode)
     x[:] = x0 + x1
         
 def reorganize_coefficients(x, nres, forward):
@@ -82,7 +167,7 @@ def reorganize_coefficients2(X, nres, forward):
       
 # Generic DWT/IDWT implementations
 
-def DWT2Impl(X, nres, f, symm=True, dual=False):
+def DWT2Impl(X, nres, wave_name, mode=True, dual=False):
     """
     Compute a 2-dimensional DWT. The one-dimensional DWT is applied 
     to each row and column in X at each stage. X may have a third 
@@ -91,19 +176,20 @@ def DWT2Impl(X, nres, f, symm=True, dual=False):
     
     X: A 2-dimensional object for which we apply the 2-dim DWT
     nres: The number of stages
-    f: Wavelet kernel to apply. See DWTImpl for documentation
-    symm: Whether to apply symmetric extension to the input
+    wave_name: Wavelet kernel to apply. 
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     M, N = shape(X)[0:2]
+    f = findDWTKernel(wave_name)
     for res in range(nres):
         for n in range(0,N,2**res): 
-            f(X[0::2**res, n], symm, dual)
+            f(X[0::2**res, n], mode, dual)
         for m in range(0,M,2**res):
-            f(X[m, 0::2**res], symm, dual)
+            f(X[m, 0::2**res], mode, dual)
     reorganize_coefficients2(X, nres, True)   
             
-def IDWT2Impl(X, nres, f, symm=True, dual=False):
+def IDWT2Impl(X, nres, wave_name, mode=True, dual=False):
     """
     Compute a 2-dimensional IDWT. The one-dimensional IDWT is applied 
     to each row and column in X at each stage. X may have a third 
@@ -112,19 +198,20 @@ def IDWT2Impl(X, nres, f, symm=True, dual=False):
     
     X: A 2-dimensional object for which we apply the 2-dim IDWT
     nres: The number of stages
-    f: Wavelet kernel to apply. See IDWTImpl for documentation
-    symm: Whether to apply symmetric extension to the input
+    wave_name: Wavelet kernel to apply. See IDWTImpl for documentation
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     reorganize_coefficients2(X, nres, False)   
     M, N = shape(X)[0:2]        
+    f = findIDWTKernel(wave_name)
     for res in range(nres - 1, -1, -1):
         for n in range(0, N, 2**res):
-            f(X[0::2**res, n], symm, dual)
+            f(X[0::2**res, n], mode, dual)
         for m in range(0, M, 2**res):
-            f(X[m, 0::2**res], symm, dual)
+            f(X[m, 0::2**res], mode, dual)
   
-def DWTImpl(x, nres, f, symm=True, dual=False):
+def DWTImpl(x, nres, wave_name, mode=True, dual=False):
     """
     Compute the DWT of x for a given number of resolutions, using 
     wavelet kernel f. The kernel is assumed to compute one level 
@@ -146,14 +233,15 @@ def DWTImpl(x, nres, f, symm=True, dual=False):
             JPEG2000),
         DWTKernelOrtho (Daubechies orthonormal wavelets with number 
             of vanishing moments dictated by a global variable)
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
+    f = findDWTKernel(wave_name)
     for res in range(nres):
-        f(x[0::2**res], symm, dual)
+        f(x[0::2**res], mode, dual)
     reorganize_coefficients(x, nres, True)
             
-def IDWTImpl(x, nres, f, symm=True, dual=False):
+def IDWTImpl(x, nres, wave_name, mode=True, dual=False):
     """
     Compute the IDWT of x for a given number of resolutions, using 
     wavelet kernel f. The kernel is assumed to compute one level 
@@ -175,46 +263,47 @@ def IDWTImpl(x, nres, f, symm=True, dual=False):
             JPEG2000),
         IDWTKernelOrtho (Daubechies orthonormal wavelets with number 
             of vanishing moments dictated by a global variable)
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
+    f = findIDWTKernel(wave_name)
     reorganize_coefficients(x, nres, False)
     for res in range(nres - 1, -1, -1):
-        f(x[0::2**res], symm, dual)
+        f(x[0::2**res], mode, dual)
             
 # Lifting steps
             
-def liftingstepevensymm(lmbda, x, symm):
+def liftingstepevensymm(lmbda, x, mode):
     """
     Apply an elementary symmetric lifting step of even type to x. 
     
     lmbda: The common value of the two filter coefficients
     x: The vector which we apply the lifting step to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     """
-    if (not symm) and mod(len(x), 2)!=0:
+    if (not mode) and mod(len(x), 2)!=0:
         raise AssertionError()
-    if symm:
+    if mode:
         x[0] += 2*lmbda*x[1] # With symmetric extension
     else:
         x[0] += lmbda*(x[1]+x[-1])
     x[2:-1:2] += lmbda*(x[1:-2:2] + x[3::2])
-    if mod(len(x), 2)==1 and symm:
+    if mod(len(x), 2)==1 and mode:
         x[-1] += 2*lmbda*x[-2] # With symmetric extension
   
-def liftingstepoddsymm(lmbda, x, symm):
+def liftingstepoddsymm(lmbda, x, mode):
     """
     Apply an elementary symmetric lifting step of odd type to x. 
     
     lmbda: The common value of the two filter coefficients
     x: The vector which we apply the lifting step to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     """
-    if (not symm) and mod(len(x), 2)!=0:
+    if (not mode) and mod(len(x), 2)!=0:
         raise AssertionError()
     x[1:-1:2] += lmbda*(x[0:-2:2] + x[2::2])
     if mod(len(x), 2)==0:
-        if symm:
+        if mode:
             x[-1] += 2*lmbda*x[-2] # With symmetric extension
         else:
             x[-1] += lmbda*(x[0]+x[-2])
@@ -247,12 +336,12 @@ def liftingstepodd(lmbda1, lmbda2, x):
 
 # The Haar wavelet
 
-def DWTKernelHaar(x, symm, dual):
+def DWTKernelHaar(x, mode, dual):
     """
     Apply the DWT kernel transformation for the Haar wavelet to x.
     
     x: The vector which we apply this kernel transformation to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     x /= sqrt(2)
@@ -267,12 +356,12 @@ def DWTKernelHaar(x, symm, dual):
         a, b = x[k] + x[k+1], x[k] - x[k+1]  
         x[k], x[k+1] = a, b 
          
-def IDWTKernelHaar(x, symm, dual):
+def IDWTKernelHaar(x, mode, dual):
     """
     Apply the IDWT kernel transformation for the Haar wavelet to x.
     
     x: The vector which we apply this kernel transformation to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     x /= sqrt(2)
@@ -289,125 +378,125 @@ def IDWTKernelHaar(x, symm, dual):
             
 # Piecewise linear wavelets
 
-def DWTKernelpwl0(x, symm, dual):
+def DWTKernelpwl0(x, mode, dual):
     """
     Apply the DWT kernel transformation for the 
     piecewise linear wavelet (i.e. 0 vanishing moments) to x.
     
     x: The vector which we apply this kernel transformation to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     if dual:
         x /= sqrt(2)
-        liftingstepevensymm(0.5, x, symm)
+        liftingstepevensymm(0.5, x, mode)
     else:
         x *= sqrt(2)
-        liftingstepoddsymm(-0.5, x, symm)
+        liftingstepoddsymm(-0.5, x, mode)
         
-def IDWTKernelpwl0(x, symm, dual):
+def IDWTKernelpwl0(x, mode, dual):
     """
     Apply the IDWT kernel transformation for the 
     pieccewise linear wavelet (i.e. 0 vanishing moments) to x.
     
     x: The vector which we apply this kernel transformation to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     if dual:
         x *= sqrt(2)
-        liftingstepevensymm(-0.5, x, symm)
+        liftingstepevensymm(-0.5, x, mode)
     else:
         x /= sqrt(2)
-        liftingstepoddsymm(0.5, x, symm)
+        liftingstepoddsymm(0.5, x, mode)
 
 
-def DWTKernelpwl2(x, symm, dual):
+def DWTKernelpwl2(x, mode, dual):
     """
     Apply the DWT kernel transformation for the 
     alternative pieccewise linear wavelet (i.e. 2 van. moms.) to x.
     
     x: The vector which we apply this kernel transformation to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     if dual:
-        liftingstepevensymm(0.5, x, symm)
-        liftingstepoddsymm(-0.25, x, symm)
+        liftingstepevensymm(0.5, x, mode)
+        liftingstepoddsymm(-0.25, x, mode)
         x /= sqrt(2)
     else:
-        liftingstepoddsymm(-0.5, x, symm)
-        liftingstepevensymm(0.25, x, symm)
+        liftingstepoddsymm(-0.5, x, mode)
+        liftingstepevensymm(0.25, x, mode)
         x *= sqrt(2)
     
-def IDWTKernelpwl2(x, symm, dual):
+def IDWTKernelpwl2(x, mode, dual):
     """
     Apply the IDWT kernel transformation for the 
     alternative pieccewise linear wavelet (i.e. 2 van. moms.) to x.
     
     x: The vector which we apply this kernel transformation to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     if dual:
         x *= sqrt(2)
-        liftingstepoddsymm(0.25, x, symm)
-        liftingstepevensymm(-0.5, x, symm)
+        liftingstepoddsymm(0.25, x, mode)
+        liftingstepevensymm(-0.5, x, mode)
     else:
         x /= sqrt(2)
-        liftingstepevensymm(-0.25, x, symm)
-        liftingstepoddsymm(0.5, x, symm)       
+        liftingstepevensymm(-0.25, x, mode)
+        liftingstepoddsymm(0.5, x, mode)       
                 
         
 # JPEG2000-related wavelet kernels
         
-def DWTKernel53(x, symm, dual):
+def DWTKernel53(x, mode, dual):
     """
     Apply the DWT kernel transformation for the 
     Spline 5/3 wavelet to x.
     
     x: The vector which we apply this kernel transformation to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     if dual:
         x[0::2] *= 0.5
         x[1::2] *= 2
-        liftingstepevensymm(0.125, x, symm)
-        liftingstepoddsymm(-1, x, symm)
+        liftingstepevensymm(0.125, x, mode)
+        liftingstepoddsymm(-1, x, mode)
     else:
         x[0::2] *= 2
         x[1::2] *= 0.5
-        liftingstepoddsymm(-0.125, x, symm)
-        liftingstepevensymm(1, x, symm)
+        liftingstepoddsymm(-0.125, x, mode)
+        liftingstepevensymm(1, x, mode)
             
-def IDWTKernel53(x, symm, dual):
+def IDWTKernel53(x, mode, dual):
     """
     Apply the IDWT kernel transformation for the 
     Spline 5/3 wavelet to x.
     
     x: The vector which we apply this kernel transformation to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     if dual:
-        liftingstepoddsymm(1, x, symm)
-        liftingstepevensymm(-0.125, x, symm)     
+        liftingstepoddsymm(1, x, mode)
+        liftingstepevensymm(-0.125, x, mode)     
         x[0::2] *= 2
         x[1::2] *= 0.5
     else:
-        liftingstepevensymm(-1, x, symm)
-        liftingstepoddsymm(0.125, x, symm)     
+        liftingstepevensymm(-1, x, mode)
+        liftingstepoddsymm(0.125, x, mode)     
         x[0::2] *= 0.5
         x[1::2] *= 2
 
 
-def DWTKernel97(x, symm, dual):
+def DWTKernel97(x, mode, dual):
     """
     Apply the DWT kernel transformation for the CDF 9/7 wavelet to x.
     
     x: The vector which we apply this kernel transformation to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     lambda1=-0.586134342059950
@@ -419,24 +508,24 @@ def DWTKernel97(x, symm, dual):
     if dual:
         x[0::2] /= alpha
         x[1::2] /= beta
-        liftingstepevensymm(lambda4, x, symm)
-        liftingstepoddsymm(lambda3, x, symm)
-        liftingstepevensymm(lambda2, x, symm)
-        liftingstepoddsymm(lambda1, x, symm)
+        liftingstepevensymm(lambda4, x, mode)
+        liftingstepoddsymm(lambda3, x, mode)
+        liftingstepevensymm(lambda2, x, mode)
+        liftingstepoddsymm(lambda1, x, mode)
     else:
         x[0::2] *= alpha
         x[1::2] *= beta
-        liftingstepoddsymm(-lambda4, x, symm)
-        liftingstepevensymm(-lambda3, x, symm)
-        liftingstepoddsymm(-lambda2, x, symm)
-        liftingstepevensymm(-lambda1, x, symm)
+        liftingstepoddsymm(-lambda4, x, mode)
+        liftingstepevensymm(-lambda3, x, mode)
+        liftingstepoddsymm(-lambda2, x, mode)
+        liftingstepevensymm(-lambda1, x, mode)
                 
-def IDWTKernel97(x, symm, dual):
+def IDWTKernel97(x, mode, dual):
     """
     Apply the IDWT kernel transformation for the CDF 9/7 wavelet to x
     
     x: The vector which we apply this kernel transformation to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     lambda1=-0.586134342059950
@@ -446,29 +535,29 @@ def IDWTKernel97(x, symm, dual):
     alpha=-1.149604398860250
     beta=-0.869864451624777
     if dual:
-        liftingstepoddsymm(-lambda1, x, symm)
-        liftingstepevensymm(-lambda2, x, symm)   
-        liftingstepoddsymm(-lambda3, x, symm)
-        liftingstepevensymm(-lambda4, x, symm)      
+        liftingstepoddsymm(-lambda1, x, mode)
+        liftingstepevensymm(-lambda2, x, mode)   
+        liftingstepoddsymm(-lambda3, x, mode)
+        liftingstepevensymm(-lambda4, x, mode)      
         x[0::2] *= alpha
         x[1::2] *= beta
     else:
-        liftingstepevensymm(lambda1, x, symm)
-        liftingstepoddsymm(lambda2, x, symm)   
-        liftingstepevensymm(lambda3, x, symm)
-        liftingstepoddsymm(lambda4, x, symm)      
+        liftingstepevensymm(lambda1, x, mode)
+        liftingstepoddsymm(lambda2, x, mode)   
+        liftingstepevensymm(lambda3, x, mode)
+        liftingstepoddsymm(lambda4, x, mode)      
         x[0::2] /= alpha
         x[1::2] /= beta
         
 # Orthonormal wavelets
         
-def DWTKernelOrtho( x, symm, dual):
+def DWTKernelOrtho( x, mode, dual):
     """
     Apply the DWT kernel transformation for orthonormal wavelets. 
     The number of vanishing moments is stored in global variables.
     
     x: The vector which we apply this kernel transformation to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     global lambdas, alpha, beta
@@ -490,13 +579,13 @@ def DWTKernelOrtho( x, symm, dual):
         if mod(lambdas.shape[0], 2)==1:
             liftingstepeven(-lambdas[0, 0], -lambdas[0, 1], x)
   
-def IDWTKernelOrtho( x, symm, dual):
+def IDWTKernelOrtho( x, mode, dual):
     """
     Apply the IDWT kernel transformation for orthonormal wavelets. 
     The number of vanishing moments is stored in global variables.
     
     x: The vector which we apply this kernel transformation to
-    symm: Whether to apply symmetric extension to the input
+    mode: Whether to apply symmetric extension to the input
     dual: Whether to apply the wavelet kernel or dual wavelet kernel.
     """
     global lambdas
@@ -552,7 +641,7 @@ def h0h1computeortho(N):
     h1=g1[::-1]
     return h0, h1
 
-def liftingfactortho(N):
+def liftingfactortho(N, type=0, debug_mode=False):
     """
     Assume that len(h1)==len(h0), and that h0 and h1 are even length and as symmetric as possible, with h0 with a minimum possible overweight of filter coefficients to the left, h1 to the right
     This function computes lifting steps l1, l2,...,ln, and constants alpha, beta so that ln ... l2 l1 H =  diag(alpha,beta), and stores these as global variables
@@ -693,56 +782,54 @@ def liftingfact97():
     alpha, beta = h00[2], h11[1] 
     return lambdas, alpha, beta    
     
-def _test_kernel(f,invf,text):
-    print text
+def _test_kernel(wave_name):
+    print 'Testing %s, 1D' % wave_name
     res = random.random(16)
     x = zeros(16)
     x[:] = res[:]
-    DWTImpl(x,2,f)
-    IDWTImpl(x,2,invf)
+    DWTImpl(x,2,wave_name)
+    IDWTImpl(x,2,wave_name)
     diff = abs(x-res).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
+    print 'Testing %s, 2D' % wave_name
     res = random.random((16,2))
     x = zeros((16,2))
     x[:] = res[:]
-    DWTImpl(x,2,f)
-    IDWTImpl(x,2,invf)
+    DWTImpl(x,2,wave_name)
+    IDWTImpl(x,2,wave_name)
     diff = abs(x-res).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
 def _test_kernel_ortho():
     print 'Testing orthonormal wavelets'
-    liftingfactortho(4)
     res = random.random(16) # only this assumes that N is even
     x = zeros(16)
     
     print 'Testing that the reverse inverts the forward transform'
     x[0:16] = res[0:16]
-    DWTImpl(x, 2, DWTKernelOrtho)
-    IDWTImpl(x, 2, IDWTKernelOrtho)
+    DWTImpl(x, 2, 'db4x')
+    IDWTImpl(x, 2, 'db4x')
     diff = max(abs(x-res))
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
     print 'Testing that the transform is orthogonal, i.e. that the transform and its dual are equal'
     x[0:16] = res[0:16]
-    DWTImpl(x, 2, DWTKernelOrtho)
-    DWTImpl(res, 2, DWTKernelOrtho, False, True)
+    DWTImpl(x, 2, 'db4x')
+    DWTImpl(res, 2, 'db4x', False, True)
     diff = max(abs(x-res))
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
 def _test_dwt_different_sizes():
     print 'Testing the DWT on different input sizes'
     m = 4
-    f = DWTKernel97
-    invf = IDWTKernel97
 
     print 'Testing the DWT for greyscale image'
     img = random.random((32,32))
     img2 = zeros_like(img)
     img2[:] = img[:]
-    DWT2Impl(img2, m, f)
-    IDWT2Impl(img2, m, invf)
+    DWT2Impl(img2, m, 'cdf97')
+    IDWT2Impl(img2, m, 'cdf97')
     diff = abs(img2-img).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
@@ -750,8 +837,8 @@ def _test_dwt_different_sizes():
     img = random.random((32, 32, 3))
     img2 = zeros_like(img)
     img2[:] = img[:]
-    DWT2Impl(img2, m, f)
-    IDWT2Impl(img2, m, invf)
+    DWT2Impl(img2, m, 'cdf97')
+    IDWT2Impl(img2, m, 'cdf97')
     diff = abs(img2-img).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
@@ -759,8 +846,8 @@ def _test_dwt_different_sizes():
     sd = random.random(32)
     sd2 = zeros_like(sd)
     sd2[:] = sd[:]
-    DWTImpl(sd2, m, f)
-    IDWTImpl(sd2, m, invf)
+    DWTImpl(sd2, m, 'cdf97')
+    IDWTImpl(sd2, m, 'cdf97')
     diff = abs(sd2-sd).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
@@ -768,27 +855,26 @@ def _test_dwt_different_sizes():
     sd = random.random((32,2))
     sd2 = zeros_like(sd)
     sd2[:] = sd[:]
-    DWTImpl(sd2, m, f)
-    IDWTImpl(sd2, m, invf)
+    DWTImpl(sd2, m, 'cdf97')
+    IDWTImpl(sd2, m, 'cdf97')
     diff = abs(sd2-sd).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
 def _test_orthogonality():
     print 'Testing that the wavelet and the dual wavelet are equal for orthonormal wavelets'
-    liftingfactortho(4)
     x0 = random.random(32)
     
     print 'Testing that the IDWT inverts the DWT'
     x = x0.copy()
-    DWTImpl(x, 2, DWTKernelOrtho, 0, 0)
-    IDWTImpl(x, 2, IDWTKernelOrtho, 0, 0);
+    DWTImpl(x, 2, 'db4x', 0, 0)
+    IDWTImpl(x, 2, 'db4x', 0, 0);
     diff = abs(x-x0).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
     print 'Apply the transpose, to see that the transpose equals the inverse'
     x = x0.copy()
-    DWTImpl(x, 2, DWTKernelOrtho, 0, 0)
-    IDWTImpl(x, 2, IDWTKernelOrtho, 0, 1)
+    DWTImpl(x, 2, 'db4x', 0, 0)
+    IDWTImpl(x, 2, 'db4x', 0, 1)
     diff = abs(x-x0).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
 
@@ -801,8 +887,8 @@ def _test_orthogonality():
 
     print 'See that the wavelet transform equals the dual wavelet transform'
     x = x0.copy()
-    DWTImpl(x, 2, DWTKernelOrtho, 0, 1)
-    DWTImpl(x0, 2, DWTKernelOrtho, 0, 0)
+    DWTImpl(x, 2, 'db4x', 0, 1)
+    DWTImpl(x0, 2, 'db4x', 0, 0)
     diff = abs(x-x0).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
 
@@ -812,8 +898,8 @@ if __name__=='__main__':
     _test_dwt_different_sizes()
     _test_kernel_ortho()
     _test_orthogonality()
-    _test_kernel( DWTKernel97, IDWTKernel97, 'Testing CDF 9/7 wavelet')
-    _test_kernel( DWTKernel53, IDWTKernel53, 'Testing Spline 5/3 wavelet')
-    _test_kernel( DWTKernelpwl0, IDWTKernelpwl0, 'Testing piecewise linear wavelet')
-    _test_kernel( DWTKernelpwl2, IDWTKernelpwl2, 'Testing alternative piecewise linear wavelet')
-    _test_kernel( DWTKernelHaar, IDWTKernelHaar, 'Testing Haar wavelet')
+    _test_kernel( 'cdf97')
+    _test_kernel( 'cdf53')
+    _test_kernel( 'pwl0')
+    _test_kernel( 'pwl2')
+    _test_kernel( 'haar')

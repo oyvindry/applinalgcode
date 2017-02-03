@@ -1,4 +1,4 @@
-function x = DWTKernelHaar(x, symm, dual)
+function x = DWTKernelHaar(x, mode, dual)
     x = x/sqrt(2);
     N = size(x, 1);
     if mod(N,2) == 1
