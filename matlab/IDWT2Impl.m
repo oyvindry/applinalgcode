@@ -1,14 +1,8 @@
-function X=IDWT2Impl(X, nres, wave_name, mode, dualarg)
-    f = findIDWTKernel(wave_name);
-    symm = 1;
-    if nargin >= 4
-        symm = mode;
-    end
-    dual = 0;
-    if nargin >= 5
-        dual = dualarg;
-    end
+function X=IDWT2Impl(X, nres, wave_name, bd_mode, dual)
+    if (~exist('bd_mode')) bd_mode = 1; end
+    if (~exist('dual')) dual  = 0; end
     
+    f = findIDWTKernel(wave_name);
     X = reorganize_coefficients2(X, nres, 0);   
     
     M = size(X, 1); N = size(X, 2); sz = size(X);
@@ -22,10 +16,10 @@ function X=IDWT2Impl(X, nres, wave_name, mode, dualarg)
         end
         for n = 1:2^res:N
             Y2(:, :) = X(1:2^res:M, n, :);
-            X(1:2^res:M, n, :) = f(Y2(:, :), symm, dual);
+            X(1:2^res:M, n, :) = f(Y2(:, :), bd_mode, dual);
         end
         for m = 1:2^res:M
             Y1(:, :) = X(m, 1:2^res:N, :);
-            X(m, 1:2^res:N, :) = f(Y1(:, :), symm, dual);
+            X(m, 1:2^res:N, :) = f(Y1(:, :), bd_mode, dual);
         end
     end

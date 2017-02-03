@@ -1,4 +1,4 @@
-function x = IDWTKernelHaar(x, mode, dual)
+function x = IDWTKernelHaar(x, bd_mode, dual)
     x = x/sqrt(2);
     N = size(x, 1);
     if mod(N,2) == 1

@@ -1,4 +1,4 @@
-function x = DWTImpl(x, nres, wave_name, mode, dual)
+function x = DWTImpl(x, nres, wave_name, bd_mode, dual)
     % Compute the discrete wavelet transform of the matrix `x` along the first
     % dimension.
     %    
@@ -15,16 +15,16 @@ function x = DWTImpl(x, nres, wave_name, mode, dual)
     %            'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
     %                      with X vanishing moments
     %
-    % mode: Boundary extension mode
-    % dualarg: Whether to apply the kernel for the dual wavelet rather than the 
+    % bd_mode: Boundary extension mode
+    % dual: Whether to apply the kernel for the dual wavelet rather than the 
     %       wavelet itself.
     % 
-    if (~exist('mode')) mode = 1; end
+    if (~exist('bd_mode')) bd_mode = 1; end
     if (~exist('dual')) dual  = 0; end
     
     f = findDWTKernel(wave_name);
     for res=0:(nres - 1)
-        x(1:2^res:end, :) = f(x(1:2^res:end, :), mode, dual);
+        x(1:2^res:end, :) = f(x(1:2^res:end, :), bd_mode, dual);
     end
     x = reorganize_coefficients(x, nres, 1);
 end

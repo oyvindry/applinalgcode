@@ -1,4 +1,4 @@
-function x = DWTKernell53(x, symm, dual)
+function x = DWTKernell53(x, bd_mode, dual)
     lambda1 = -1;
     lambda2 = 0.125;
     alpha = 2;
@@ -8,11 +8,11 @@ function x = DWTKernell53(x, symm, dual)
     if dual
         x(1:2:N, :) = x(1:2:N, :)/alpha;
         x(2:2:N, :) = x(2:2:N, :)/beta;
-        x = liftingstepevensymm(lambda2, x, symm);
-        x = liftingstepoddsymm(lambda1, x, symm);
+        x = liftingstepevensymm(lambda2, x, bd_mode);
+        x = liftingstepoddsymm(lambda1, x, bd_mode);
     else
         x(1:2:N, :) = x(1:2:N, :)*alpha;
         x(2:2:N, :) = x(2:2:N, :)*beta;
-        x = liftingstepoddsymm(-lambda2, x, symm);
-        x = liftingstepevensymm(-lambda1, x, symm);
+        x = liftingstepoddsymm(-lambda2, x, bd_mode);
+        x = liftingstepevensymm(-lambda1, x, bd_mode);
     end

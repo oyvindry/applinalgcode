@@ -1,4 +1,4 @@
-function x = IDWTKernel97(x, symm, dual)
+function x = IDWTKernel97(x, bd_mode, dual)
     lambda1 = -0.586134342059950;
     lambda2 = -0.668067171029734;
     lambda3 = 0.070018009414994;
@@ -8,17 +8,17 @@ function x = IDWTKernel97(x, symm, dual)
     N = size(x, 1);
   
     if dual
-        x = liftingstepoddsymm(-lambda1, x, symm);
-        x = liftingstepevensymm(-lambda2, x, symm);
-        x = liftingstepoddsymm(-lambda3, x, symm);
-        x = liftingstepevensymm(-lambda4, x, symm);
+        x = liftingstepoddsymm(-lambda1, x, bd_mode);
+        x = liftingstepevensymm(-lambda2, x, bd_mode);
+        x = liftingstepoddsymm(-lambda3, x, bd_mode);
+        x = liftingstepevensymm(-lambda4, x, bd_mode);
         x(1:2:N, :) = x(1:2:N, :)*alpha;
         x(2:2:N, :) = x(2:2:N, :)*beta;
     else
-        x = liftingstepevensymm(lambda1, x, symm);
-        x = liftingstepoddsymm(lambda2, x, symm);
-        x = liftingstepevensymm(lambda3, x, symm);
-        x = liftingstepoddsymm(lambda4, x, symm);
+        x = liftingstepevensymm(lambda1, x, bd_mode);
+        x = liftingstepoddsymm(lambda2, x, bd_mode);
+        x = liftingstepevensymm(lambda3, x, bd_mode);
+        x = liftingstepoddsymm(lambda4, x, bd_mode);
         x(1:2:N, :) = x(1:2:N, :)/alpha;
         x(2:2:N, :) = x(2:2:N, :)/beta;
     end

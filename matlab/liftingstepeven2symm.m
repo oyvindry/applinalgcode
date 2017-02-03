@@ -1,9 +1,9 @@
-function x = liftingstepeven2symm(lambda1, lambda2, x, symm)
+function x = liftingstepeven2symm(lambda1, lambda2, x, bd_mode)
     N = size(x, 1);
-    if ~symm
+    if ~bd_mode
         assert(mod(N,2) == 0)
     end
-    if symm
+    if bd_mode
         x(1, :) =lambda1*2*x(2, :) + x(1, :) + lambda2*2*x(4, :); % Symmetric extension
         x(3, :) = lambda1*(x(4, :) + x(2, :)) + x(3, :) + lambda2*(x(6, :) + x(2, :));
         if mod(N,2)==1
