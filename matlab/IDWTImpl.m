@@ -5,9 +5,8 @@ function x = IDWTImpl(x, nres, wave_name, bd_mode, dual)
     
     f = findIDWTKernel(wave_name);
     x = reorganize_coefficients(x, nres, 0);
-    N = size(x, 1);
     for res = (nres - 1):(-1):0
-        x(1:2^res:N, :) = f(x(1:2^res:N, :), bd_mode, dual);
+        x(1:2^res:end, :) = f(x(1:2^res:end, :), bd_mode, dual);
     end
 end
 
