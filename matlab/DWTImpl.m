@@ -1,10 +1,7 @@
-function x = DWTImpl(x, nres, wave_name, bd_mode, dual)
-    % Compute the discrete wavelet transform of the matrix `x` along the first
-    % dimension.
-    %    
-    % x:         Matrix whose DWT will be computed along the first dimension        
-    % nres:      Number of wavelet decompositions
-    % wave_name: Name of the wavelet. Possible arguments are:
+function x=DWTImpl(x, nres, wave_name, bd_mode, dual, transpose)
+    % x:         Matrix whose DWT will be computed along the first dimension(s).      
+    % nres:      Number of resolutions.
+    % wave_name: Name of the wavelet. Possible names are:
     %            'cdf97' - CDF 9/7 wavelet
     %            'cdf53' - Spline 5/3 wavelet  
     %            'pwl0'  - Piecewise linear wavelets with 0 vanishing moments
@@ -14,17 +11,22 @@ function x = DWTImpl(x, nres, wave_name, bd_mode, dual)
     %                      moments
     %            'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
     %                      with X vanishing moments
-    %
-    % bd_mode: Boundary extension mode
-    % dual: Whether to apply the kernel for the dual wavelet rather than the 
-    %       wavelet itself.
-    % 
-    if (~exist('bd_mode')) bd_mode = 1; end
-    if (~exist('dual')) dual  = 0; end
+    % bd_mode:   Boundary extension mode. Possible modes are. 
+    %            'per'    - Periodic extension
+    %            'symm'   - Symmetric extension (default)
+    %            'bd'     - Boundary wavelets
+    %            'bd_pre' - Boundary wavelets with preconditioning
+    % dual:      Whether to apply the dual wavelet rather than the wavelet itself. Default: 0
+    % transpose: Whether the transpose is to be taken. Default: 0
     
-    f = findDWTKernel(wave_name);
-    for res=0:(nres - 1)
-        x(1:2^res:end, :) = f(x(1:2^res:end, :), bd_mode, dual);
+    if (~exist('bd_mode','var')) bd_mode = 'symm'; end
+    if (~exist('dual','var')) dual  = 0; end
+    if (~exist('transpose','var')) transpose = 0; end
+    
+    f = find_kernel(wave_name, 1, dual, transpose);
+    if transpose
+        x = IDWTImpl_internal(x, nres, f, bd_mode);
+    else
+        x = DWTImpl_internal(x, nres, f, bd_mode);
     end
-    x = reorganize_coefficients(x, nres, 1);
 end

@@ -139,22 +139,22 @@ classdef TestDecRec < matlab.unittest.TestCase
             x = testCase.x;
             eps = testCase.eps;
             nres = testCase.nres;
-            z = dwt_impl(dwt_impl(x, nres, wave_name, 1, 1, 0, 0), nres, wave_name, 0, 1, 0, 0);
+            z = IDWTImpl(DWTImpl(x, nres, wave_name, 'per', 0), nres, wave_name, 'per', 0);
             testCase.verifyTrue(norm(z-x,2) < eps);
-            z = dwt_impl(dwt_impl(x, nres, wave_name, 1, 1, 1, 0), nres, wave_name, 0, 1, 1, 0);
+            z = IDWTImpl(DWTImpl(x, nres, wave_name, 'symm', 0), nres, wave_name, 'symm', 0);
             testCase.verifyTrue(norm(z-x,2) < eps);
-            z = dwt_impl(dwt_impl(x, nres, wave_name, 1, 1, 0, 1), nres, wave_name, 0, 1, 0, 1);
+            z = IDWTImpl(DWTImpl(x, nres, wave_name, 'per', 1), nres, wave_name, 'per', 1);
             testCase.verifyTrue(norm(z-x,2) < eps);
-            z = dwt_impl(dwt_impl(x, nres, wave_name, 1, 1, 1, 1), nres, wave_name, 0, 1, 1, 1);
+            z = IDWTImpl(DWTImpl(x, nres, wave_name, 'symm', 1), nres, wave_name, 'symm', 1);
             testCase.verifyTrue(norm(z-x,2) < eps);
         end
         function testWaveletDecRecBoundary(testCase, wave_name)
             x = testCase.x;
             eps = testCase.eps;
             nres = testCase.nres;
-            z = dwt_impl(dwt_impl(x, nres, wave_name, 1, 1, 2, 0), nres, wave_name, 0, 1, 2, 0);
+            z = IDWTImpl(DWTImpl(x, nres, wave_name, 'bd', 0), nres, wave_name, 'bd', 0);
             testCase.verifyTrue(norm(z-x,2) < eps);
-            z = dwt_impl(dwt_impl(x, nres, wave_name, 1, 1, 3, 0), nres, wave_name, 0, 1, 3, 0);
+            z = IDWTImpl(DWTImpl(x, nres, wave_name, 'bd_pre', 0), nres, wave_name, 'bd_pre', 0);
             testCase.verifyTrue(norm(z-x,2) < eps);
         end
     end
