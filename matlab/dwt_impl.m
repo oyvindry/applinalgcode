@@ -14,15 +14,19 @@ function x=dwt_impl(x, nres, wave_name, forward, dim, bd_mode, dual, transpose)
     if (~exist('dim','var')) dim  = 1; end
     if (~exist('transpose','var')) transpose = 0; end
     
-    if transpose ~= forward
-        f = findDWTKernel(wave_name, dual || transpose);
+    if transpose
+        forward = ~forward;
+        dual = ~dual;
+    end
+    if forward
+        f = findDWTKernel(wave_name, dual);
         if dim == 2
             x = dwt2_impl(x, nres, f, bd_mode);
         elseif dim == 1
             x = dwt1_impl(x, nres, f, bd_mode);
         end 
     else
-        f = findIDWTKernel(wave_name, dual || transpose);
+        f = findIDWTKernel(wave_name, dual);
         if dim ==2
             x = idwt2_impl(x, nres, f, bd_mode);
         elseif dim == 1
@@ -55,7 +59,7 @@ function x = dwt2_impl(x, nres, f, bd_mode)
         M = ceil(M/2); N = ceil(N/2);
     end
     
-    x = reorganize_coefficients2(x, nres, 1);   
+    x = reorganize_coeffs2(x, nres, 1);   
 end    
     
     
@@ -63,13 +67,13 @@ function x = dwt1_impl(x, nres, f, bd_mode)
     for res=0:(nres - 1)
         x(1:2^res:end, :) = f(x(1:2^res:end, :), bd_mode);
     end
-    x = reorganize_coefficients(x, nres, 1);
+    x = reorganize_coeffs(x, nres, 1);
 end
 
 
 
 function x=idwt2_impl(x, nres, f, bd_mode)
-    x = reorganize_coefficients2(x, nres, 0);   
+    x = reorganize_coeffs2(x, nres, 0);   
     
     M = size(x, 1); N = size(x, 2); sz = size(x);
     sz1 = sz; sz1(1) = [];
@@ -92,14 +96,66 @@ function x=idwt2_impl(x, nres, f, bd_mode)
 end    
     
 function x = idwt1_impl(x, nres, f, bd_mode)
-    x = reorganize_coefficients(x, nres, 0);
+    x = reorganize_coeffs(x, nres, 0);
     for res = (nres - 1):(-1):0
         x(1:2^res:end, :) = f(x(1:2^res:end, :), bd_mode);
     end
 end
 
 
-
+function y = reorganize_coeffs(x, nres, forward)
+    N = size(x,1);
+    y = zeros(size(x));
+    inds = 1:2^nres:N;
+    lc = length(inds);
+    if forward
+        y(1:lc, :) = x(inds, :);
+    else
+        y(inds, :) = x(1:lc, :);
+    end
+    for res = nres:(-1):1
+        inds = (2^(res - 1) + 1):2^res:N;
+        lw = length(inds);
+        if forward
+            y((lc + 1):(lc + lw), :) = x(inds, :);
+        else
+            y(inds, :) = x((lc + 1):(lc + lw), :);
+        end
+        lc = lc + lw;
+    end
+end
+    
+function Y=reorganize_coeffs2(X, nres, forward)
+    M = size(X, 1);
+    N = size(X, 2);
+    Y = zeros(size(X));
+    inds1 = 1:2^nres:M;
+    inds2 = 1:2^nres:N;
+    lc1 = length(inds1);
+    lc2 = length(inds2);
+    if forward
+        Y(1:lc1, 1:lc2, :) = X(inds1, inds2, :);
+    else
+        Y(inds1, inds2, :) = X(1:lc1, 1:lc2, :);
+    end
+    for res = nres:(-1):1
+        inds1 = (2^(res - 1) + 1):2^res:M;
+        inds2 = (2^(res - 1) + 1):2^res:N;
+        lw1 = length(inds1);
+        lw2 = length(inds2);
+        if forward
+            Y((lc1 + 1):(lc1 + lw1), 1:lc2, :) = X(inds1, 1:2^res:M, :);
+            Y((lc1 + 1):(lc1 + lw1), (lc2+1):(lc2+lw2), :) = X(inds1, (1+2^(res-1)):2^res:M, :);
+            Y(1:lc1, (lc2 + 1):(lc2 + lw2), :) = X(1:2^res:M, inds2, :);
+        else
+            Y(inds1, 1:2^res:M, :) = X((lc1 + 1):(lc1 + lw1), 1:lc2, :);
+            Y(inds1, (1+2^(res-1)):2^res:M, :) = X((lc1 + 1):(lc1 + lw1), (lc2+1):(lc2+lw2), :);
+            Y(1:2^res:M, inds2, :) = X(1:lc1, (lc2 + 1):(lc2 + lw2), :);
+        end
+        lc1 = lc1 + lw1;
+        lc2 = lc2 + lw2;
+    end    
+end
 
 function f= findDWTKernel(wave_name, dual)
     % Find the DWTKernel corresponding to the given wavelet name 
