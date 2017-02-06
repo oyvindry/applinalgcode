@@ -82,12 +82,12 @@ def forw_comp_rev_DWT(m, wave_name, lowres = 1):
     x, fs = audioread('sounds/castanets.wav')
     N = 2**17
     x = x[0:N]
-    dwt_impl(x, m, wave_name)
+    DWTImpl(x, m, wave_name)
     if lowres==1:
         x[(N/2**m):N] = 0
     else:
         x[0:(N/2**m)] = 0
-    dwt_impl(x, m, wave_name, False)
+    IDWTImpl(x, m, wave_name)
     x /= abs(x).max()
     return x, fs
     
@@ -103,14 +103,14 @@ def forw_comp_rev_DWT2(m, wave_name, lowres = 1):
     """
     img = CreateExcerpt()
     M, N = shape(img)[0:2]
-    dwt_impl(img, m, wave_name, True, 2)
+    DWT2Impl(img, m, wave_name)
     if lowres==1:
         tokeep = img[0:(M/(2**m)), 0:(N/(2**m))]
         img=zeros_like(img)
         img[0:(M/(2**m)),0:(N/(2**m))] = tokeep
     else:
         img[0:(M/2**m), 0:(N/2**m)] = 0
-    dwt_impl(img, m, wave_name, False, 2) 
+    IDWT2Impl(img, m, wave_name) 
     mapto01(img)
     img *= 255
     return img

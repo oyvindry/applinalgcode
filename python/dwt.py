@@ -10,44 +10,149 @@ import os.path
 
 
 
-function x=dwt_impl(x, nres, wave_name, forward=True, dim=1, bd_mode=1, dual=False, transpose=False)
-    % x:         Matrix whose DWT will be computed along the first dimension(s).      
-    % nres:      Number of resolutions.
-    % wave_name: Name of the wavelet.
-    % forward:   Whether to apply the forward or reverse transform. Default: 1
-    % dim:       The dimension of the transform (1 for sound, 2 for images). Default: 1
-    % bd_mode:   Boundary extension mode. Default: 1
-    % dual:      Whether to apply the dual wavelet rather than the wavelet itself. Default: 0
-    % transpose: Whether the transpose is to be taken. Default: 0
+function x=dwt_impl(x, nres, wave_name, forward=True, dim=1, bd_mode='symm', dual=False, transpose=False)
+    # For classes
     
+    f=find_kernel(wave_name, forward, dual, transpose)
     if transpose:
         forward = not forward
-        dual = not dual
     if forward:
-        f = findDWTKernel(wave_name, dual)
         if dim == 2:
-            x = dwt2_impl(x, nres, f, bd_mode)
+            DWT2Impl_internal(x, nres, f, bd_mode)
         elif dim == 1:
-            x = dwt1_impl(x, nres, f, bd_mode)
+            DWTImpl_internal(x, nres, f, bd_mode)
     else:
-        f = findIDWTKernel(wave_name, dual)
-        if dim ==2:
-            x = idwt2_impl(x, nres, f, bd_mode)
-        elseif dim == 1:
-            x = idwt1_impl(x, nres, f, bd_mode)
+        if dim == 2:
+            IDWT2Impl_internal(x, nres, f, bd_mode)
+        elif dim == 1:
+            IDWTImpl_internal(x, nres, f, bd_mode)
 
+def DWT2Impl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False)
+    """
+    x:         Matrix whose DWT will be computed along the first dimension(s).      
+    nres:      Number of resolutions.
+    wave_name: Name of the wavelet. Possible names are:
+               'cdf97' - CDF 9/7 wavelet
+               'cdf53' - Spline 5/3 wavelet  
+               'pwl0'  - Piecewise linear wavelets with 0 vanishing moments
+               'pwl2'  - Piecewise linear wavelets with 2 vanishing moments
+               'Haar'  - The Haar wavelet
+               'dbX'   - Dauberchies orthnormal wavelet with X vanishing
+                         moments
+               'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
+                         with X vanishing moments
+    bd_mode:   Boundary extension mode. Possible modes are. 
+               'per'    - Periodic extension
+               'symm'   - Symmetric extension (default)
+               'bd'     - Boundary wavelets
+               'bd_pre' - Boundary wavelets with preconditioning
+    dual:      Whether to apply the dual wavelet rather than the wavelet itself. Default: False
+    transpose: Whether the transpose is to be taken. Default: False
+    """
+    f = find_kernel(wave_name, True, dual, transpose)
+    if transpose:
+        IDWT2Impl_internal(x, nres, f, bd_mode)
+    else:
+        DWT2Impl_internal(x, nres, f, bd_mode)
+        
+def DWTImpl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False)
+    """
+    x:         Matrix whose DWT will be computed along the first dimension(s).      
+    nres:      Number of resolutions.
+    wave_name: Name of the wavelet. Possible names are:
+               'cdf97' - CDF 9/7 wavelet
+               'cdf53' - Spline 5/3 wavelet  
+               'pwl0'  - Piecewise linear wavelets with 0 vanishing moments
+               'pwl2'  - Piecewise linear wavelets with 2 vanishing moments
+               'Haar'  - The Haar wavelet
+               'dbX'   - Dauberchies orthnormal wavelet with X vanishing
+                         moments
+               'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
+                         with X vanishing moments
+    bd_mode:   Boundary extension mode. Possible modes are. 
+               'per'    - Periodic extension
+               'symm'   - Symmetric extension (default)
+               'bd'     - Boundary wavelets
+               'bd_pre' - Boundary wavelets with preconditioning
+    dual:      Whether to apply the dual wavelet rather than the wavelet itself. Default: False
+    transpose: Whether the transpose is to be taken. Default: False
+    """
+    f = find_kernel(wave_name, True, dual, transpose)
+    if transpose:
+        IDWTImpl_internal(x, nres, f, bd_mode)
+    else:
+        DWTImpl_internal(x, nres, f, bd_mode)
 
-def dwt2_impl(X, nres, f, bd_mode):
+def IDWT2Impl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False)
+    """
+    x:         Matrix whose IDWT will be computed along the first dimension(s).      
+    nres:      Number of resolutions.
+    wave_name: Name of the wavelet. Possible names are:
+               'cdf97' - CDF 9/7 wavelet
+               'cdf53' - Spline 5/3 wavelet  
+               'pwl0'  - Piecewise linear wavelets with 0 vanishing moments
+               'pwl2'  - Piecewise linear wavelets with 2 vanishing moments
+               'Haar'  - The Haar wavelet
+               'dbX'   - Dauberchies orthnormal wavelet with X vanishing
+                         moments
+               'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
+                         with X vanishing moments
+    bd_mode:   Boundary extension mode. Possible modes are. 
+               'per'    - Periodic extension
+               'symm'   - Symmetric extension (default)
+               'bd'     - Boundary wavelets
+               'bd_pre' - Boundary wavelets with preconditioning
+    dual:      Whether to apply the dual wavelet rather than the wavelet itself. Default: False
+    transpose: Whether the transpose is to be taken. Default: False
+    """
+    f = find_kernel(wave_name, False, dual, transpose)
+    if transpose:
+        DWT2Impl_internal(x, nres, f, bd_mode)
+    else:
+        IDWT2Impl_internal(x, nres, f, bd_mode)
+        
+def IDWTImpl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False)
+    """
+    x:         Matrix whose IDWT will be computed along the first dimension(s).      
+    nres:      Number of resolutions.
+    wave_name: Name of the wavelet. Possible names are:
+               'cdf97' - CDF 9/7 wavelet
+               'cdf53' - Spline 5/3 wavelet  
+               'pwl0'  - Piecewise linear wavelets with 0 vanishing moments
+               'pwl2'  - Piecewise linear wavelets with 2 vanishing moments
+               'Haar'  - The Haar wavelet
+               'dbX'   - Dauberchies orthnormal wavelet with X vanishing
+                         moments
+               'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
+                         with X vanishing moments
+    bd_mode:   Boundary extension mode. Possible modes are. 
+               'per'    - Periodic extension
+               'symm'   - Symmetric extension (default)
+               'bd'     - Boundary wavelets
+               'bd_pre' - Boundary wavelets with preconditioning
+    dual:      Whether to apply the dual wavelet rather than the wavelet itself. Default: False
+    transpose: Whether the transpose is to be taken. Default: False
+    """
+    f = find_kernel(wave_name, False, dual, transpose)
+    if transpose:
+        DWTImpl_internal(x, nres, f, bd_mode)
+    else:
+        IDWTImpl_internal(x, nres, f, bd_mode)
+        
+        
+        
+            
+def DWT2Impl_internal(X, nres, f, bd_mode):
     M, N = shape(X)[0:2]
     for res in range(nres):
         for n in range(0,N,2**res): 
             f(X[0::2**res, n], bd_mode)
         for m in range(0,M,2**res):
             f(X[m, 0::2**res], bd_mode)
-    reorganize_coefficients2(X, nres, True)   
+    reorganize_coeffs2_forward(X, nres)   
             
-def idwt2_impl(X, nres, f, bd_mode):
-    reorganize_coefficients2(X, nres, False)   
+def IDWT2Impl_internal(X, nres, f, bd_mode):
+    reorganize_coeffs2_reverse(X, nres)   
     M, N = shape(X)[0:2]        
     for res in range(nres - 1, -1, -1):
         for n in range(0, N, 2**res):
@@ -55,13 +160,13 @@ def idwt2_impl(X, nres, f, bd_mode):
         for m in range(0, M, 2**res):
             f(X[m, 0::2**res], bd_mode)
   
-def dwt1_impl(x, nres, f, bdmode):
+def DWTImpl_internal(x, nres, f, bdmode):
     for res in range(nres):
         f(x[0::2**res], bd_mode)
-    reorganize_coefficients(x, nres, True)
+    reorganize_coeffs_forward(x, nres)
             
-def idwt1_impl(x, nres, f, bd_mode):
-    reorganize_coefficients(x, nres, False)
+def IDWTImpl_internal(x, nres, f, bd_mode):
+    reorganize_coeffs_reverse(x, nres)
     for res in range(nres - 1, -1, -1):
         f(x[0::2**res], bd_mode)
         
@@ -69,121 +174,142 @@ def idwt1_impl(x, nres, f, bd_mode):
         
         
         
-
-def findDWTKernel(wave_name, dual):
-    f = 0
-    if dual:
-        if wave_name.lower() =='cdf97':
-            f = dwt_kernel_97_dual
-        elif wave_name.lower() == 'cdf53':
-            f = dwt_kernel_53_dual
-        elif wave_name.lower() == 'pwl0':
-            f = dwt_kernel_pwl0_dual
-        elif wave_name.lower() == 'pwl2':
-            f = dwt_kernel_pwl2_dual
-        elif wave_name.lower() == 'haar':
-            f = dwt_kernel_haar
-        elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
-            vm = float(wave_name[2::])
-            filters = getDBfilter(vm, 0)
-            f = lambda x, bd_mode: dwt_kernel_ortho_dual(x, filters, bd_mode)
-        elif wave_name[:2].lower() == 'db':
-            vm = float(wave_name[2::-1])
-            filters = liftingfactortho(vm, 0, 1)
-            f = lambda x, bd_mode: dwt_kernel_ortho_dual(x, filters, bd_mode)
-        elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
-            vm = float(wave_name[3::])
-            filters = getDBfilter(vm, 1)
-            f = lambda x, bd_mode: det_kernel_ortho_dual(x, filters, bd_mode)
-        elif wave_name[:3].lower() == 'sym':
-            vm = float(wave_name[3::-1])
-            filters = liftingfactortho(vm, 1, 1)
-            f = lambda x, bd_mode: dwt_kernel_ortho_dual(x, filters, bd_mode)
+def find_kernel(wave_name, forward, dual, transpose)
+    if transpose:
+        forward = not forward
+        dual = not dual
+    if forward:
+        if dual:
+            f = find_kernel_dwt_dual(wave_name)
+        else:
+            f = find_kernel_dwt(wave_name)
     else:
-        if wave_name.lower() =='cdf97':
-            f = dwt_kernel_97
-        elif wave_name.lower() == 'cdf53':
-            f = dwt_kernel_53
-        elif wave_name.lower() == 'pwl0':
-            f = dwt_kernel_pwl0
-        elif wave_name.lower() == 'pwl2':
-            f = dwt_kernel_pwl2
-        elif wave_name.lower() == 'haar':
-            f = dwt_kernel_haar
-        elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
-            vm = float(wave_name[2::])
-            filters = getDBfilter(vm, 0)
-            f = lambda x, bd_mode: dwt_kernel_ortho(x, filters, bd_mode)
-        elif wave_name[:2].lower() == 'db':
-            vm = float(wave_name[2::-1])
-            filters = liftingfactortho(vm, 0, 1)
-            f = lambda x, bd_mode: dwt_kernel_ortho(x, filters, bd_mode)
-        elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
-            vm = float(wave_name[3::])
-            filters = getDBfilter(vm, 1)
-            f = lambda x, bd_mode: dwt_kernel_ortho(x, filters, bd_mode)
-        elif wave_name[:3].lower() == 'sym':
-            vm = float(wave_name[3::-1])
-            filters = liftingfactortho(vm, 1, 1)
-            f = lambda x, bd_mode: dwt_kernel_ortho(x, filters, bd_mode)
+        if dual:
+            f = find_kernel_idwt_dual(wave_name)
+        else:
+            f = find_kernel_idwt(wave_name)
+
+function f= find_kernel_dwt_dual(wave_name)
+
+
+def find_kernel_dwt_dual(wave_name):
+    f = 0
+    if wave_name.lower() =='cdf97':
+        f = dwt_kernel_97_dual
+    elif wave_name.lower() == 'cdf53':
+        f = dwt_kernel_53_dual
+    elif wave_name.lower() == 'pwl0':
+        f = dwt_kernel_pwl0_dual
+    elif wave_name.lower() == 'pwl2':
+        f = dwt_kernel_pwl2_dual
+    elif wave_name.lower() == 'haar':
+        f = dwt_kernel_haar
+    elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
+        vm = float(wave_name[2::])
+        filters = getDBfilter(vm, 0)
+        f = lambda x, bd_mode: dwt_kernel_ortho_dual(x, filters, bd_mode)
+    elif wave_name[:2].lower() == 'db':
+        vm = float(wave_name[2::-1])
+        filters = liftingfactortho(vm, 0, 1)
+        f = lambda x, bd_mode: dwt_kernel_ortho_dual(x, filters, bd_mode)
+    elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
+        vm = float(wave_name[3::])
+        filters = getDBfilter(vm, 1)
+        f = lambda x, bd_mode: det_kernel_ortho_dual(x, filters, bd_mode)
+    elif wave_name[:3].lower() == 'sym':
+        vm = float(wave_name[3::-1])
+        filters = liftingfactortho(vm, 1, 1)
+        f = lambda x, bd_mode: dwt_kernel_ortho_dual(x, filters, bd_mode)
+    return f
+
+def find_kernel_dwt(wave_name):
+    f = 0
+    if wave_name.lower() =='cdf97':
+        f = dwt_kernel_97
+    elif wave_name.lower() == 'cdf53':
+        f = dwt_kernel_53
+    elif wave_name.lower() == 'pwl0':
+        f = dwt_kernel_pwl0
+    elif wave_name.lower() == 'pwl2':
+        f = dwt_kernel_pwl2
+    elif wave_name.lower() == 'haar':
+        f = dwt_kernel_haar
+    elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
+        vm = float(wave_name[2::])
+        filters = getDBfilter(vm, 0)
+        f = lambda x, bd_mode: dwt_kernel_ortho(x, filters, bd_mode)
+    elif wave_name[:2].lower() == 'db':
+        vm = float(wave_name[2::-1])
+        filters = liftingfactortho(vm, 0, 1)
+        f = lambda x, bd_mode: dwt_kernel_ortho(x, filters, bd_mode)
+    elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
+        vm = float(wave_name[3::])
+        filters = getDBfilter(vm, 1)
+        f = lambda x, bd_mode: dwt_kernel_ortho(x, filters, bd_mode)
+    elif wave_name[:3].lower() == 'sym':
+        vm = float(wave_name[3::-1])
+        filters = liftingfactortho(vm, 1, 1)
+        f = lambda x, bd_mode: dwt_kernel_ortho(x, filters, bd_mode)
     return f
     
-def findIDWTKernel(wave_name, dual):
+def find_kernel_idwt_dual(wave_name):
     f = 0
-    if dual:
-        if wave_name.lower() =='cdf97':
-            f = idwt_kernel_97_dual
-        elif wave_name.lower() == 'cdf53':
-            f = idwt_kernel_53_dual
-        elif wave_name.lower() == 'pwl0':
-            f = idwt_kernel_pwl0_dual
-        elif wave_name.lower() == 'pwl2':
-            f = idwt_kernel_pwl2_dual
-        elif wave_name.lower() == 'haar':
-            f = idwt_kernel_haar
-        elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
-            vm = float(wave_name[2::])
-            filters = getDBfilter(vm, 0)
-            f = lambda x, bd_mode: idwt_kernel_ortho_dual(x, filters, bd_mode)
-        elif wave_name[:2].lower() == 'db':
-            vm = float(wave_name[2::-1])
-            filters = liftingfactortho(vm, 0, 1)
-            f = lambda x, bd_mode: idwt_kernel_ortho_dual(x, filters, bd_mode)
-        elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
-            vm = float(wave_name[3::])
-            filters = getDBfilter(vm, 1)
-            f = lambda x, bd_mode: idwt_kernel_ortho_dual(x, filters, bd_mode)
-        elif wave_name[:3].lower() == 'sym':
-            vm = float(wave_name[3::-1])
-            filters = liftingfactortho(vm, 1, 1)
-            f = lambda x, bd_mode: idwt_kernel_ortho_dual(x, filters, bd_mode)
-    else:
-        if wave_name.lower() =='cdf97':
-            f = idwt_kernel_97
-        elif wave_name.lower() == 'cdf53':
-            f = idwt_kernel_53
-        elif wave_name.lower() == 'pwl0':
-            f = idwt_kernel_pwl0
-        elif wave_name.lower() == 'pwl2':
-            f = idwt_kernel_pwl2
-        elif wave_name.lower() == 'haar':
-            f = IDWTKernelHaar
-        elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
-            vm = float(wave_name[2::])
-            filters = getDBfilter(vm, 0)
-            f = lambda x, bd_mode: idwt_kernel_ortho(x, filters, bd_mode)
-        elif wave_name[:2].lower() == 'db':
-            vm = float(wave_name[2::-1])
-            filters = liftingfactortho(vm, 0, 1)
-            f = lambda x, bd_mode: idwt_kernel_ortho(x, filters, bd_mode)
-        elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
-            vm = float(wave_name[3::])
-            filters = getDBfilter(vm, 1)
-            f = lambda x, bd_mode: idwt_kernel_ortho(x, filters, bd_mode)
-        elif wave_name[:3].lower() == 'sym':
-            vm = float(wave_name[3::-1])
-            filters = liftingfactortho(vm, 1, 1)
-            f = lambda x, bd_mode: idwt_kernel_ortho(x, filters, bd_mode)
+    if wave_name.lower() =='cdf97':
+        f = idwt_kernel_97_dual
+    elif wave_name.lower() == 'cdf53':
+        f = idwt_kernel_53_dual
+    elif wave_name.lower() == 'pwl0':
+        f = idwt_kernel_pwl0_dual
+    elif wave_name.lower() == 'pwl2':
+        f = idwt_kernel_pwl2_dual
+    elif wave_name.lower() == 'haar':
+        f = idwt_kernel_haar
+    elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
+        vm = float(wave_name[2::])
+        filters = getDBfilter(vm, 0)
+        f = lambda x, bd_mode: idwt_kernel_ortho_dual(x, filters, bd_mode)
+    elif wave_name[:2].lower() == 'db':
+        vm = float(wave_name[2::-1])
+        filters = liftingfactortho(vm, 0, 1)
+        f = lambda x, bd_mode: idwt_kernel_ortho_dual(x, filters, bd_mode)
+    elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
+        vm = float(wave_name[3::])
+        filters = getDBfilter(vm, 1)
+        f = lambda x, bd_mode: idwt_kernel_ortho_dual(x, filters, bd_mode)
+    elif wave_name[:3].lower() == 'sym':
+        vm = float(wave_name[3::-1])
+        filters = liftingfactortho(vm, 1, 1)
+        f = lambda x, bd_mode: idwt_kernel_ortho_dual(x, filters, bd_mode)
+    return f
+
+def find_kernel_idwt(wave_name):
+    f = 0
+    if wave_name.lower() =='cdf97':
+        f = idwt_kernel_97
+    elif wave_name.lower() == 'cdf53':
+        f = idwt_kernel_53
+    elif wave_name.lower() == 'pwl0':
+        f = idwt_kernel_pwl0
+    elif wave_name.lower() == 'pwl2':
+        f = idwt_kernel_pwl2
+    elif wave_name.lower() == 'haar':
+        f = IDWTKernelHaar
+    elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
+        vm = float(wave_name[2::])
+        filters = getDBfilter(vm, 0)
+        f = lambda x, bd_mode: idwt_kernel_ortho(x, filters, bd_mode)
+    elif wave_name[:2].lower() == 'db':
+        vm = float(wave_name[2::-1])
+        filters = liftingfactortho(vm, 0, 1)
+        f = lambda x, bd_mode: idwt_kernel_ortho(x, filters, bd_mode)
+    elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
+        vm = float(wave_name[3::])
+        filters = getDBfilter(vm, 1)
+        f = lambda x, bd_mode: idwt_kernel_ortho(x, filters, bd_mode)
+    elif wave_name[:3].lower() == 'sym':
+        vm = float(wave_name[3::-1])
+        filters = liftingfactortho(vm, 1, 1)
+        f = lambda x, bd_mode: idwt_kernel_ortho(x, filters, bd_mode)
     return f
 
 def getDBfilter(vm, type):
@@ -229,55 +355,52 @@ def IDWTKernelFilters(H0, H1, G0, G1, x, bd_mode, dual):
     filterS(f1, x1, bd_mode)
     x[:] = x0 + x1
         
-def reorganize_coefficients(x, nres, forward):
-    """
-    Permute one-dimensional DWT coefficients from the order used in-place DWT, to the order with low resolution coordinates first, as required by the DWT. If forward is false, the opposite reorganization is used. 
-    
-    x: The vector which holds the DWT coefficients. The reorganization is formed in the first dimension, but x may have a second dimension, as is the case for sound with more than one channel. 
-    nres: The number of resolutions in x.
-    forward: If forward is True, reorganize from in-place order to DWT coefficient order. If forward is False, reorganize from DWT coefficient order to in-place order.
-    """
+def reorganize_coeffs_forward(x, nres):
     N = shape(x)[0]
     y = zeros_like(x)
     sz = shape(x[0::2**nres])[0]
-    if forward:
-        y[0:sz] = x[0::2**nres]
-    else:
-        y[0::2**nres] = x[0:sz]
+    y[0:sz] = x[0::2**nres]
     for res in range(nres, 0, -1):
         lw = shape(x[2**(res - 1)::2**res])[0]
-        if forward:
-            y[sz:(sz + lw)] = x[2**(res - 1)::2**res]
-        else:
-            y[2**(res - 1)::2**res] = x[sz:(sz + lw)]
+        y[sz:(sz + lw)] = x[2**(res - 1)::2**res]
         sz += lw
     x[:] = y[:]
     
-def reorganize_coefficients2(X, nres, forward):
-    """
-    Permute two-dimensional DWT coefficients from the order used in-place DWT, to the order with low resolution coordinates first, as required by the DWT. If forward is false, the opposite reorganization is used. 
+def reorganize_coeffs_reverse(x, nres):
+    N = shape(x)[0]
+    y = zeros_like(x)
+    sz = shape(x[0::2**nres])[0]
+    y[0::2**nres] = x[0:sz]
+    for res in range(nres, 0, -1):
+        lw = shape(x[2**(res - 1)::2**res])[0]
+        y[2**(res - 1)::2**res] = x[sz:(sz + lw)]
+        sz += lw
+    x[:] = y[:]
     
-    X: The matrix which holds the DWT coefficients. The reorganization is formed in the two first dimensions, but X may have a third dimension, as is the case for images with more than one colour component. 
-    nres: The number of resolutions in X.
-    forward: If forward is True, reorganize from in-place order to DWT coefficient order. If forward is False, reorganize from DWT coefficient order to in-place order.
-    """
+def reorganize_coeffs2_forward(X, nres):
     M, N = shape(X)[0:2]
     Y = zeros_like(X)
     lc1, lc2 = shape(X[0::2**nres, 0::2**nres])[0:2]
-    if forward:
-        Y[0:lc1, 0:lc2] = X[0::2**nres, 0::2**nres]
-    else:
-        Y[0::2**nres, 0::2**nres] = X[0:lc1, 0:lc2]
+    Y[0:lc1, 0:lc2] = X[0::2**nres, 0::2**nres]
     for res in range(nres, 0, -1):
         lw1, lw2 = shape(X[2**(res - 1)::2**res, 2**(res - 1)::2**res])[0:2]
-        if forward:
-            Y[lc1:(lc1 + lw1), 0:lc2] = X[2**(res - 1)::2**res, 0::2**res]
-            Y[lc1:(lc1 + lw1), lc2:(lc2 + lw2)] = X[2**(res - 1)::2**res, 2**(res - 1)::2**res]
-            Y[0:lc1, lc2:(lc2 + lw2)] = X[0::2**res, 2**(res - 1)::2**res]
-        else:
-            Y[2**(res - 1)::2**res, 0::2**res] = X[lc1:(lc1 + lw1), 0:lc2]
-            Y[2**(res - 1)::2**res, 2**(res - 1)::2**res] = X[lc1:(lc1 + lw1), lc2:(lc2 + lw2)]
-            Y[0::2**res, 2**(res - 1)::2**res] = X[0:lc1, lc2:(lc2 + lw2)]
+        Y[lc1:(lc1 + lw1), 0:lc2] = X[2**(res - 1)::2**res, 0::2**res]
+        Y[lc1:(lc1 + lw1), lc2:(lc2 + lw2)] = X[2**(res - 1)::2**res, 2**(res - 1)::2**res]
+        Y[0:lc1, lc2:(lc2 + lw2)] = X[0::2**res, 2**(res - 1)::2**res]
+        lc1 += lw1
+        lc2 += lw2
+    X[:] = Y[:]
+    
+def reorganize_coeffs2_reverse(X, nres):
+    M, N = shape(X)[0:2]
+    Y = zeros_like(X)
+    lc1, lc2 = shape(X[0::2**nres, 0::2**nres])[0:2]
+    Y[0::2**nres, 0::2**nres] = X[0:lc1, 0:lc2]
+    for res in range(nres, 0, -1):
+        lw1, lw2 = shape(X[2**(res - 1)::2**res, 2**(res - 1)::2**res])[0:2]
+        Y[2**(res - 1)::2**res, 0::2**res] = X[lc1:(lc1 + lw1), 0:lc2]
+        Y[2**(res - 1)::2**res, 2**(res - 1)::2**res] = X[lc1:(lc1 + lw1), lc2:(lc2 + lw2)]
+        Y[0::2**res, 2**(res - 1)::2**res] = X[0:lc1, lc2:(lc2 + lw2)]
         lc1 += lw1
         lc2 += lw2
     X[:] = Y[:]
@@ -296,14 +419,14 @@ def liftingstepevensymm(lmbda, x, bd_mode):
     x: The vector which we apply the lifting step to
     bd_mode: Whether to apply symmetric extension to the input
     """
-    if (not bd_mode) and mod(len(x), 2)!=0:
+    if (bd_mode.lower() == 'per') and mod(len(x), 2)!=0:
         raise AssertionError()
-    if bd_mode:
+    if bd_mode.lower() == 'symm':
         x[0] += 2*lmbda*x[1] # With symmetric extension
     else:
         x[0] += lmbda*(x[1]+x[-1])
     x[2:-1:2] += lmbda*(x[1:-2:2] + x[3::2])
-    if mod(len(x), 2)==1 and bd_mode:
+    if mod(len(x), 2)==1 and bd_mode.lower() == 'symm':
         x[-1] += 2*lmbda*x[-2] # With symmetric extension
   
 def liftingstepoddsymm(lmbda, x, bd_mode):
@@ -314,11 +437,11 @@ def liftingstepoddsymm(lmbda, x, bd_mode):
     x: The vector which we apply the lifting step to
     bd_mode: Whether to apply symmetric extension to the input
     """
-    if (not bd_mode) and mod(len(x), 2)!=0:
+    if (bd_mode.lower() == 'per') and mod(len(x), 2)!=0:
         raise AssertionError()
     x[1:-1:2] += lmbda*(x[0:-2:2] + x[2::2])
     if mod(len(x), 2)==0:
-        if bd_mode:
+        if bd_mode.lower() == 'symm':
             x[-1] += 2*lmbda*x[-2] # With symmetric extension
         else:
             x[-1] += lmbda*(x[0]+x[-2])
@@ -734,8 +857,8 @@ def _test_kernel(wave_name):
     res = random.random(16)
     x = zeros(16)
     x[:] = res[:]
-    dwt_impl(x,2,wave_name)
-    dwt_impl(x,2,wave_name, False)
+    DWTImpl(x,2,wave_name)
+    IDWTImpl(x,2,wave_name)
     diff = abs(x-res).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
@@ -743,8 +866,8 @@ def _test_kernel(wave_name):
     res = random.random((16,2))
     x = zeros((16,2))
     x[:] = res[:]
-    dwt_impl(x,2,wave_name)
-    dwt_impl(x,2,wave_name, False)
+    DWTImpl(x,2,wave_name)
+    IDWTImpl(x,2,wave_name)
     diff = abs(x-res).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
@@ -755,15 +878,15 @@ def _test_kernel_ortho():
     
     print 'Testing that the reverse inverts the forward transform'
     x[0:16] = res[0:16]
-    dwt_impl(x, 2, 'db4x')
-    dwt_impl(x, 2, 'db4x', False)
+    DWTImpl(x, 2, 'db4x')
+    IDWTImpl(x, 2, 'db4x')
     diff = max(abs(x-res))
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
     print 'Testing that the transform is orthogonal, i.e. that the transform and its dual are equal'
     x[0:16] = res[0:16]
-    dwt_impl(x, 2, 'db4x')
-    dwt_impl(res, 2, 'db4x', True, 1, 0, True)
+    DWTImpl(x, 2, 'db4x', 'per')
+    DWTImpl(res, 2, 'db4x', 'per', True)
     diff = max(abs(x-res))
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
@@ -775,8 +898,8 @@ def _test_dwt_different_sizes():
     img = random.random((32,32))
     img2 = zeros_like(img)
     img2[:] = img[:]
-    dwt_impl(img2, m, 'cdf97', True, 2)
-    dwt_impl(img2, m, 'cdf97', False, 2)
+    DWT2Impl(img2, m, 'cdf97')
+    IDWT2Impl(img2, m, 'cdf97')
     diff = abs(img2-img).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
@@ -784,8 +907,8 @@ def _test_dwt_different_sizes():
     img = random.random((32, 32, 3))
     img2 = zeros_like(img)
     img2[:] = img[:]
-    dwt_impl(img2, m, 'cdf97', True, 2)
-    dwt_impl(img2, m, 'cdf97', False, 2)
+    DWT2Impl(img2, m, 'cdf97')
+    IDWT2Impl(img2, m, 'cdf97')
     diff = abs(img2-img).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
@@ -793,8 +916,8 @@ def _test_dwt_different_sizes():
     sd = random.random(32)
     sd2 = zeros_like(sd)
     sd2[:] = sd[:]
-    dwt_impl(sd2, m, 'cdf97')
-    dwt_impl(sd2, m, 'cdf97', False)
+    DWTImpl(sd2, m, 'cdf97')
+    IDWTImpl(sd2, m, 'cdf97')
     diff = abs(sd2-sd).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
@@ -802,8 +925,8 @@ def _test_dwt_different_sizes():
     sd = random.random((32,2))
     sd2 = zeros_like(sd)
     sd2[:] = sd[:]
-    dwt_impl(sd2, m, 'cdf97')
-    dwt_impl(sd2, m, 'cdf97', False)
+    DWTImpl(sd2, m, 'cdf97')
+    IDWTImpl(sd2, m, 'cdf97')
     diff = abs(sd2-sd).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
@@ -813,15 +936,15 @@ def _test_orthogonality():
     
     print 'Testing that the IDWT inverts the DWT'
     x = x0.copy()
-    dwt_impl(x, 2, 'db4x', True, 1, 0, False)
-    dwt_impl(x, 2, 'db4x', False, 1, 0, False);
+    DWTImpl(x, 2, 'db4x', 'per', False)
+    IDWTImpl(x, 2, 'db4x', 'per', False)
     diff = abs(x-x0).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
     print 'Apply the transpose, to see that the transpose equals the inverse'
     x = x0.copy()
-    dwt_impl(x, 2, 'db4x', True, 1, 0, False)
-    dwt_impl(x, 2, 'db4x', False, 1, 0, True)
+    DWTImpl(x, 2, 'db4x', 'per', False)
+    IDWTImpl(x, 2, 'db4x', 'per', True)
     diff = abs(x-x0).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
 
@@ -834,8 +957,8 @@ def _test_orthogonality():
 
     print 'See that the wavelet transform equals the dual wavelet transform'
     x = x0.copy()
-    dwt_impl(x, 2, 'db4x', True, 1, 0, True)
-    dwt_impl(x0, 2, 'db4x', True, 1, 0, False)
+    DWTImpl(x, 2, 'db4x', 'per', True)
+    DWTImpl(x0, 2, 'db4x', 'per', False)
     diff = abs(x-x0).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
 
