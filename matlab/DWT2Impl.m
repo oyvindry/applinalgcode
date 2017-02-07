@@ -1,27 +1,32 @@
-function X = DWT2Impl(X, nres, wave_name, bd_mode, dual)
-    if (~exist('bd_mode')) bd_mode = 1; end
-    if (~exist('dual')) dual  = 0; end
+function x=DWT2Impl(x, nres, wave_name, bd_mode, dual, transpose)
+    % x:         Matrix whose DWT will be computed along the first dimension(s).      
+    % nres:      Number of resolutions.
+    % wave_name: Name of the wavelet. Possible names are:
+    %            'cdf97' - CDF 9/7 wavelet
+    %            'cdf53' - Spline 5/3 wavelet  
+    %            'pwl0'  - Piecewise linear wavelets with 0 vanishing moments
+    %            'pwl2'  - Piecewise linear wavelets with 2 vanishing moments
+    %            'Haar'  - The Haar wavelet
+    %            'dbX'   - Dauberchies orthnormal wavelet with X vanishing
+    %                      moments
+    %            'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
+    %                      with X vanishing moments
+    % bd_mode:   Boundary extension mode. Possible modes are. 
+    %            'per'    - Periodic extension
+    %            'symm'   - Symmetric extension (default)
+    %            'bd'     - Boundary wavelets
+    %            'bd_pre' - Boundary wavelets with preconditioning
+    % dual:      Whether to apply the dual wavelet rather than the wavelet itself. Default: 0
+    % transpose: Whether the transpose is to be taken. Default: 0
     
-    f = findDWTKernel(wave_name);
-    M = size(X, 1); N = size(X, 2); sz = size(X);
-    M0 = size(X, 1); N0 = size(X, 2);
-    sz1 = sz; sz1(1) = [];
-    sz2 = sz; sz2(2) = [];
-    for res = 0:(nres - 1)
-        sz2(1) = M; Y2 = zeros(sz2);
-        sz1(1) = N; Y1 = zeros(sz1);
-        if length(sz1)==1
-            Y1=zeros(sz1, 1); Y2=zeros(sz2, 1);
-        end
-        for n = 1:2^res:N0
-            Y2(:, :) = X(1:2^res:M0, n, :);
-            X(1:2^res:M0, n, :) = f(Y2, bd_mode, dual);
-        end
-        for m = 1:2^res:M0
-            Y1(:, :) = X(m, 1:2^res:N0, :);
-            X(m, 1:2^res:N0, :) = f(Y1, bd_mode, dual);
-        end
-        M = ceil(M/2); N = ceil(N/2);
+    if (~exist('bd_mode','var')) bd_mode = 'symm'; end
+    if (~exist('dual','var')) dual  = 0; end
+    if (~exist('transpose','var')) transpose = 0; end
+    
+    f = find_kernel(wave_name, 1, dual, transpose);
+    if transpose
+        x = IDWT2Impl_internal(x, nres, f, bd_mode);
+    else
+        x = DWT2Impl_internal(x, nres, f, bd_mode);
     end
-    
-    X = reorganize_coefficients2(X, nres, 1);   
+end

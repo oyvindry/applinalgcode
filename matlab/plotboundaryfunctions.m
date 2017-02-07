@@ -8,7 +8,7 @@ function plotboundaryfunctions(N)
     for k=1:N
         coords = zeros(M*2^m,1);
         coords(k) = 1;
-        coords=IDWTImpl(coords, m, wave_name, 2);
+        coords=IDWTImpl(coords, m, wave_name, 'bd');
         subplot(2,N,k);
         plot(t, 2^(m/2)*coords, 'k-');
         title(strcat('\phi^{left}_', sprintf('%u',k-1)))
@@ -17,7 +17,7 @@ function plotboundaryfunctions(N)
     for k=1:N
         coords = zeros(M*2^m,1);
         coords(M+k) = 1;
-        coords=IDWTImpl(coords, m, wave_name, 2);
+        coords=IDWTImpl(coords, m, wave_name, 'bd');
         subplot(2,N,k+N);
         plot(t, 2^(m/2)*coords, 'k-')
         title(strcat('\psi^{left}_', sprintf('%u',k-1)))
@@ -28,7 +28,7 @@ function plotboundaryfunctions(N)
     for k=1:N
         coords = zeros(M*2^m,1);
         coords(N+k) = 1;
-        coords=IDWTImpl(coords, m, wave_name, 2);
+        coords=IDWTImpl(coords, m, wave_name, 'bd');
         subplot(2,N,k);
         plot(t, 2^(m/2)*coords, 'k-')
         title(strcat('\phi_', sprintf('%u',N+k-1)))
@@ -37,7 +37,7 @@ function plotboundaryfunctions(N)
     for k=1:N
         coords = zeros(M*2^m,1);
         coords(M+N+k) = 1;
-        coords=IDWTImpl(coords, m, wave_name, 2);
+        coords=IDWTImpl(coords, m, wave_name, 'bd');
         subplot(2,N,k+N);
         plot(t, 2^(m/2)*coords, 'k-')
         title(strcat('\psi_', sprintf('%u',N+k-1)))
@@ -48,7 +48,7 @@ function plotboundaryfunctions(N)
     for k=1:N
         coords = zeros(M*2^m,1);
         coords(M-N+k) = 1;
-        coords=IDWTImpl(coords, m, wave_name, 2);
+        coords=IDWTImpl(coords, m, wave_name, 'bd');
         subplot(2,N,k);
         plot(t, 2^(m/2)*coords, 'k-')
         title(strcat('\phi^{right}_', sprintf('%u',M-N+k-1)))
@@ -57,7 +57,7 @@ function plotboundaryfunctions(N)
     for k=1:N
         coords = zeros(M*2^m,1);
         coords(M+M-N+k) = 1;
-        coords=IDWTImpl(coords, m, wave_name, 2);
+        coords=IDWTImpl(coords, m, wave_name, 'bd');
         subplot(2,N,k+N);
         plot(t, 2^(m/2)*coords, 'k-')
         title(strcat('\psi^{right}_', sprintf('%u',M-N+k-1)))

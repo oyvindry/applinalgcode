@@ -8,14 +8,14 @@ function plotsymlets(N);
     k = 1;
     coords = zeros(M*2^m,1);
     coords(N) = 1;
-    coords=IDWTImpl(coords, m, wave_name, 0);
+    coords=IDWTImpl(coords, m, wave_name, 'per');
     subplot(2,1,k);
     plot(t, 2^(m/2)*coords, 'k-')
     title(strcat('\phi_', sprintf('%u',N+k-1)))
     
     coords = zeros(M*2^m,1);
     coords(M+N) = -1;
-    coords=IDWTImpl(coords, m, wave_name, 0);
+    coords=IDWTImpl(coords, m, wave_name, 'per');
     subplot(2,1,k+1);
     plot(t, 2^(m/2)*coords, 'k-')
     title(strcat('\psi_', sprintf('%u',N+k-1)))
