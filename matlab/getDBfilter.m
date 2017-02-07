@@ -1,5 +1,4 @@
 function filter = getDBfilter(vm, type)
-    
     dest = 'var';
     if (type == 0)
         filename = sprintf('%s/DB%d.mat', dest, vm);
