@@ -500,8 +500,6 @@ def idwt_kernel_haar(x, bd_mode):
         for k in range(0,len(x) - 1, 2):
             a, b = x[k] + x[k+1], x[k] - x[k+1] 
             x[k], x[k+1] = a, b   
-            
-# Piecewise linear wavelets
 
 def dwt_kernel_pwl0_dual(x, bd_mode):
     x /= sqrt(2)
@@ -701,7 +699,7 @@ def h0h1computeortho(N):
 def liftingfactortho(N, type=0, debug_mode=False):
     """
     Assume that len(h1)==len(h0), and that h0 and h1 are even length and as symmetric as possible, with h0 with a minimum possible overweight of filter coefficients to the left, h1 to the right
-    This function computes lifting steps l1, l2,...,ln, and constants alpha, beta so that ln ... l2 l1 H =  diag(alpha,beta), and stores these as global variables
+    This function computes lifting steps l1, l2,...,ln, and constants alpha, beta so that ln ... l2 l1 H =  diag(alpha,beta), and stores these in files.
     This gives the following recipes for 
         Computing H: first multiply with diag(alpha,beta), then the inverses of the lifting steps in reverse order 
         Computing G: apply the lifting steps in the order given, finally multiply with diag(1/alpha,1/beta)

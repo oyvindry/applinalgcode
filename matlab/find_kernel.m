@@ -138,7 +138,28 @@ function f = find_kernel_idwt(wave_name)
     end
 end
 
-function x = dwt_kernel_97_dual(x,bd_mode)
+function filter=getDBfilter(vm, type)
+    dest = 'var';
+    if (type == 0)
+        filename = sprintf('%s/DB%d.mat', dest, vm);
+    else
+        filename = sprintf('%s/sym%d.mat', dest, vm);
+    end
+
+    if (exist(filename) == 2);
+        load(filename);
+    else
+        filter = liftingfactortho(vm, type);
+        
+        if (exist(dest) ~= 7)
+            mkdir(dest);
+        end
+        
+        save(filename, 'filter');
+    end
+end
+
+function x=dwt_kernel_97_dual(x,bd_mode)
     lambda1 = -0.586134342059950;
     lambda2 = -0.668067171029734;
     lambda3 = 0.070018009414994;
@@ -154,7 +175,7 @@ function x = dwt_kernel_97_dual(x,bd_mode)
     x = lifting_odd_symm(lambda1, x, bd_mode);
 end
 
-function x = dwt_kernel_97(x,bd_mode)
+function x=dwt_kernel_97(x,bd_mode)
     lambda1 = -0.586134342059950;
     lambda2 = -0.668067171029734;
     lambda3 = 0.070018009414994;
@@ -170,7 +191,7 @@ function x = dwt_kernel_97(x,bd_mode)
     x = lifting_even_symm(-lambda1, x, bd_mode);
 end
     
-function x = idwt_kernel_97_dual(x, bd_mode)
+function x=idwt_kernel_97_dual(x, bd_mode)
     lambda1 = -0.586134342059950;
     lambda2 = -0.668067171029734;
     lambda3 = 0.070018009414994;
@@ -186,7 +207,7 @@ function x = idwt_kernel_97_dual(x, bd_mode)
     x(2:2:end, :) = x(2:2:end, :)*beta;
 end
     
-function x = idwt_kernel_97(x, bd_mode)
+function x=idwt_kernel_97(x, bd_mode)
     lambda1 = -0.586134342059950;
     lambda2 = -0.668067171029734;
     lambda3 = 0.070018009414994;
@@ -202,7 +223,7 @@ function x = idwt_kernel_97(x, bd_mode)
     x(2:2:end, :) = x(2:2:end, :)/beta;
 end
     
-function x = dwt_kernel_53_dual(x, bd_mode)
+function x=dwt_kernel_53_dual(x, bd_mode)
     lambda1 = -1;
     lambda2 = 0.125;
     alpha = 2;
@@ -214,7 +235,7 @@ function x = dwt_kernel_53_dual(x, bd_mode)
     x = lifting_odd_symm(lambda1, x, bd_mode);
 end
     
-function x = dwt_kernel_53(x, bd_mode)
+function x=dwt_kernel_53(x, bd_mode)
     lambda1 = -1;
     lambda2 = 0.125;
     alpha = 2;
@@ -226,7 +247,7 @@ function x = dwt_kernel_53(x, bd_mode)
     x = lifting_even_symm(-lambda1, x, bd_mode);
 end
     
-function x = idwt_kernel_53_dual(x, bd_mode)
+function x=idwt_kernel_53_dual(x, bd_mode)
     lambda1 = -1;
     lambda2 = 0.125;
     alpha = 2;
@@ -238,7 +259,7 @@ function x = idwt_kernel_53_dual(x, bd_mode)
     x(2:2:end, :) = x(2:2:end, :)*beta;
 end
    
-function x = idwt_kernel_53(x, bd_mode)
+function x=idwt_kernel_53(x, bd_mode)
     lambda1 = -1;
     lambda2 = 0.125;
     alpha = 2;
@@ -250,51 +271,51 @@ function x = idwt_kernel_53(x, bd_mode)
     x(2:2:end, :) = x(2:2:end, :)/beta;
 end
     
-function x = dwt_kernel_pwl0_dual(x, bd_mode)
+function x=dwt_kernel_pwl0_dual(x, bd_mode)
     x = x/sqrt(2);
     x = lifting_even_symm(0.5, x, bd_mode);
 end
     
-function x = dwt_kernel_pwl0(x, bd_mode)
+function x=dwt_kernel_pwl0(x, bd_mode)
     x = x*sqrt(2);
     x = lifting_odd_symm(-0.5, x, bd_mode);
 end
     
-function x = idwt_kernel_pwl0_dual(x, bd_mode)
+function x=idwt_kernel_pwl0_dual(x, bd_mode)
     x = x*sqrt(2);
     x = lifting_even_symm(-0.5, x, bd_mode);
 end
     
-function x = idwt_kernel_pwl0(x, bd_mode)
+function x=idwt_kernel_pwl0(x, bd_mode)
     x = x/sqrt(2);
     x = lifting_odd_symm(0.5, x, bd_mode);
 end
 
-function x = dwt_kernel_pwl2_dual(x, bd_mode)
+function x=dwt_kernel_pwl2_dual(x, bd_mode)
     x = x/sqrt(2);
     x = lifting_even_symm(0.5, x, bd_mode);
     x = lifting_odd_symm(-0.25, x, bd_mode);
 end
     
-function x = dwt_kernel_pwl2(x, bd_mode)
+function x=dwt_kernel_pwl2(x, bd_mode)
     x = x*sqrt(2);
     x = lifting_odd_symm(-0.5, x, bd_mode);
     x = lifting_even_symm(0.25, x, bd_mode);
 end
     
-function x = idwt_kernel_pwl2_dual(x, bd_mode)
+function x=idwt_kernel_pwl2_dual(x, bd_mode)
     x = x*sqrt(2);
     x = lifting_odd_symm(0.25, x, bd_mode);
     x = lifting_even_symm(-0.5, x, bd_mode);
 end
 
-function x = idwt_kernel_pwl2(x, bd_mode)
+function x=idwt_kernel_pwl2(x, bd_mode)
     x = x/sqrt(2);
     x = lifting_even_symm(-0.25, x, bd_mode);
     x = lifting_odd_symm(0.5, x, bd_mode);
 end
     
-function x = dwt_kernel_haar(x, bd_mode)
+function x=dwt_kernel_haar(x, bd_mode)
     x = x/sqrt(2);
     N = size(x, 1);
     if mod(N,2) == 1
@@ -308,7 +329,7 @@ function x = dwt_kernel_haar(x, bd_mode)
     end
 end
     
-function x = idwt_kernel_haar(x, bd_mode)
+function x=idwt_kernel_haar(x, bd_mode)
     x = x/sqrt(2);
     N = size(x, 1);
     if mod(N,2) == 1
@@ -321,7 +342,7 @@ function x = idwt_kernel_haar(x, bd_mode)
     end  
 end
     
-function x = dwt_kernel_ortho_dual(x, filters, bd_mode)
+function x=dwt_kernel_ortho_dual(x, filters, bd_mode)
     N = size(x, 1);
   
     y1 = 0; y2 = 0;
@@ -365,7 +386,7 @@ end
 
 
 
-function x = dwt_kernel_ortho(x, filters, bd_mode)
+function x=dwt_kernel_ortho(x, filters, bd_mode)
     N = size(x, 1);
   
     y1 = 0; y2 = 0;
@@ -409,7 +430,7 @@ end
 
 
     
-function x = idwt_kernel_ortho_dual(x, filters, bd_mode)
+function x=idwt_kernel_ortho_dual(x, filters, bd_mode)
     N = size(x, 1);
     y1 = 0; y2 = 0;
     
@@ -444,7 +465,7 @@ function x = idwt_kernel_ortho_dual(x, filters, bd_mode)
 end
 
 
-function x = idwt_kernel_ortho(x, filters, bd_mode)
+function x=idwt_kernel_ortho(x, filters, bd_mode)
     N = size(x, 1);
     y1 = 0; y2 = 0;
     
@@ -510,7 +531,7 @@ function x=lifting_odd_symm(lambda, x, bd_mode)
     end
 end
     
-function x = lifting_even(lambda1, lambda2, x, bd_mode)
+function x=lifting_even(lambda1, lambda2, x, bd_mode)
     N = size(x, 1);
     assert(mod(N,2) == 0)
     if strcmpi(bd_mode, 'per')
@@ -521,7 +542,7 @@ function x = lifting_even(lambda1, lambda2, x, bd_mode)
     x(3:2:(N-1), :) = lambda1*x(4:2:N, :) + x(3:2:(N-1), :) + lambda2*x(2:2:(N-2), :);
 end
   
-function x = lifting_odd(lambda1, lambda2, x, bd_mode)
+function x=lifting_odd(lambda1, lambda2, x, bd_mode)
     N = size(x, 1);
     assert(mod(N,2) == 0)
     x(2:2:(N-1), :) = lambda1*x(3:2:N, :) + x(2:2:(N-1), :) + lambda2*x(1:2:(N-2), :);
@@ -530,4 +551,217 @@ function x = lifting_odd(lambda1, lambda2, x, bd_mode)
     elseif strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'bd_pre')
         x(N, :) = x(N, :) + lambda2*x(N-1, :);
     end
+end
+
+
+
+
+
+
+function filters=liftingfactortho(N, type, debug_mode)
+    % Computes the filter coefficients of orthonormal wavelets with N vanishing
+    % moments.
+    %
+    % N:    Number of vanishing moments
+    % type: The type of orthonormal wavelet.
+    %       0: Daubechies wavelets with minimum phase (default)  
+    %       1: Symlets - wavelets with close to linear phase (almost symetric) 
+    % debug_mode: Wheter or not this function should be ran in debug mode
+    % 
+    if (nargin <  3)
+        debug_mode = 0;
+    end
+    if (nargin == 1)
+        type = 0;
+    end
+    
+    % We remove the persistent variables until we are done testing, so that
+    % everything is recomputed each time one call this function.
+
+    %persistent filterMap;
+    %if (isempty(filterMap)) 
+    %    filterMap = containers.Map('KeyType', 'double', 'ValueType', 'any');
+    %end
+    %if (filterMap.isKey(N) && debugMode == 0) 
+    %    filters = filterMap(N);
+    %else
+        
+    % First the right edge
+    if (type == 0)
+        [h0, h1, g0, g1] = h0h1computeortho(N);
+    elseif (type == 1)
+        [h0, h1, g0, g1] = h0h1computesym(N);
+    end
+    h0 = flip(h0);
+    h1 = flip(h1);
+    g0 = flip(g0);
+    g1 = flip(g1);
+    filters = liftingstepscomputeortho(h0, h1);
+    
+    [W, A_pre, A_pre_inv] = bw_compute_left(h0, g0, debug_mode); % Lower right (3N-1)x(2N) matrix
+    %filters.A_R_pre = fliplr(flipud(A_pre));
+    %filters.A_R_pre_inv = fliplr(flipud(A_pre_inv));
+    WR = zeros(size(W));
+    for k=1:N
+        WR(:,[2*k-1 2*k]) = W(size(W,1):(-1):1,2*N+1-[2*k 2*k-1]); 
+    end
+
+    % Then the left edge
+    h0 = flip(h0);
+    h1 = flip(h1);
+    g0 = flip(g0);
+    g1 = flip(g1);
+    filters = liftingstepscomputeortho(h0, h1);
+    filters.A_R_pre = fliplr(flipud(A_pre));
+    filters.A_R_pre_inv = fliplr(flipud(A_pre_inv));
+    [WL,A_pre, A_pre_inv] = bw_compute_left(h0, g0, debug_mode); % Upper left (3N-1)x(2N) matrix
+    filters.A_L_pre = A_pre;
+    filters.A_L_pre_inv = A_pre_inv;
+  
+    % Compute the left and right parts of the IDWT for boundary handling
+    M = 6*N;
+    seg1 = zeros(M); % One bigger than is actually needed
+    
+    filters.AL = zeros(size(WL));
+    filters.AR = zeros(size(WR));
+    for k=0:(M-1)
+        x = zeros(M,1);
+        x(k+1) = 1;
+        seg1(:,k+1) = idwt_kernel_ortho(x, filters, 2, 0);
+    end
+    
+    [w1, w2] = size(WL);
+    filters.AL=WL-seg1(1:w1,1:w2);
+    filters.AR=WR-seg1((M-w1+1):M,(M-w2+1):M);
+    
+        %if (debugMode == 0)
+        %    % Store filters to current session
+        %    filterMap(N) = filters;
+        %end
+    %end
+end
+
+function [h0, h1, g0, g1]=h0h1computeortho(N)
+    % Comptues the wavelet coefficients of the orthonormal Daubechies wavelet
+    % N vanishing moments and with minimum phase   
+    vals=computeQN(N);
+    rts=roots(vals)';
+    rts1=rts(find(abs(rts)>1));
+
+    g0=1;
+    for rt=rts1
+        g0=conv(g0,[-rt 1]);
+    end
+    g0 = real(g0);
+    K=sqrt(vals(1)*(-1)^(length(rts1))/abs(prod(rts1)));
+    g0=K*g0;
+    for k=1:N
+        g0=conv(g0,[1/2 1/2]);
+    end
+    h0=fliplr(g0);
+    g1=h0.*(-1).^(0:(length(g0)-1)); 
+    h1=fliplr(g1);
+end
+
+function [h0, h1, g0, g1]=h0h1computesym(N)
+    % Comptues the wavelet coefficients of the orthonormal wavelet with N
+    % vanishing moments and close to linear phase. This makes the wavelet
+    % almost symmetric. These wavelets are called 'symlets'
+    %
+    % This function relies on matlabs wavelet coefficients. In the next version
+    % this will be changed 
+    currDWTmode = dwtmode('status', 'nodisp');
+    dwtmode('per','nodisp');
+    nu = 7;
+    n = 2^nu;
+    x = zeros([1,n]);
+    x(ceil(N/2)) = 1;
+    
+    S = [2^(nu-1); 2^(nu-1); n]; % compute the S given by wavedec
+    wave_name = sprintf('sym%d', N);
+    
+    y = waverec(x, S, wave_name);
+    if (mod(N,2) == 1) % is odd
+        g0 = y(1:2*N);
+    else % is even 
+        g0 = [y(end), y(1:2*N-1)];
+    end
+    
+    h0=fliplr(g0);
+    g1=h0.*(-1).^(0:(length(g0)-1)); 
+    h1=fliplr(g1);
+    
+    dwtmode(currDWTmode, 'nodisp');
+
+end
+
+
+function filters = liftingstepscomputeortho(h0, h1)
+    
+    %global wavlib_lambdas wavlib_alpha wavlib_beta h0 h1
+    
+    stepnr=1;
+    len1=length(h0)/2; len2=len1;
+    filters.lambdas=zeros(len1+1,2);
+    if mod(len1,2)==0
+        h00=h0(1:2:length(h0));
+        h01=h0(2:2:length(h0));
+        h10=h1(1:2:length(h1));
+        h11=h1(2:2:length(h1));
+  
+        lambda1=-h00(1)/h10(1);
+        h00=h00+lambda1*h10; 
+        h01=h01+lambda1*h11;
+        start1=2; end1=len1; len1=len1-1; start2=1; end2=len2;
+        filters.lambdas(stepnr,:)=[lambda1 0];
+    else
+        h00=h0(2:2:length(h0));
+        h01=h0(1:2:length(h0));
+        h10=h1(2:2:length(h1));
+        h11=h1(1:2:length(h1));
+    
+        lambda1=-h10(len1)/h00(len1); 
+        h10=h10+lambda1*h00; 
+        h11=h11+lambda1*h01;
+        start2=1; end2=len2-1; len2=len2-1; start1=1; end1=len1;
+        filters.lambdas(stepnr,:)=[0 lambda1];
+    end
+  
+    %[h00 h01; h10 h11]
+    %conv(h00,h11)-conv(h10,h01)
+    stepnr=stepnr+1;
+
+    %[h00 h01; h10 h11]
+    %conv(h00,h11)-conv(h10,h01)
+    while len2>0 % Stop when the second element in the first column is zero
+        if len1>len2 % Reduce the degree in the first row. 
+            lambda1=-h00(start1)/h10(start2);
+            lambda2=-h00(end1)/h10(end2);
+            h00(start1:end1)=h00(start1:end1)+conv(h10(start2:end2),[lambda1 lambda2]);
+            h01(start1:end1)=h01(start1:end1)+conv(h11(start2:end2),[lambda1 lambda2]);
+            start1=start1+1; end1=end1-1; len1=len1-2;
+        else % reduce the degree in the second row. 
+            lambda1=-h10(start2)/h00(start1);
+            lambda2=-h10(end2)/h00(end1);
+            h10(start2:end2)=h10(start2:end2)+conv(h00(start1:end1),[lambda1 lambda2]);
+            h11(start2:end2)=h11(start2:end2)+conv(h01(start1:end1),[lambda1 lambda2]);
+            start2=start2+1; end2=end2-1; len2=len2-2;
+        end
+        filters.lambdas(stepnr,:)=[lambda1 lambda2];
+        stepnr=stepnr+1;
+    
+        %[h00 h01; h10 h11]
+        %conv(h00,h11)-conv(h10,h01)
+    end
+  
+    % Add the final lifting, and alpha,beta
+    filters.alpha=sum(h00);
+    filters.beta=sum(h11);
+    lastlift=-sum(h01)/filters.beta;
+    if mod(length(h0)/2,2)==0
+        filters.lambdas(stepnr,:)=[0 lastlift];
+    else
+        filters.lambdas(stepnr,:)=[lastlift 0];
+    end
+    %[h00 h01; h10 h11]
 end
