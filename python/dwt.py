@@ -872,8 +872,8 @@ def _test_kernel_ortho():
     
     print 'Testing that the transform is orthogonal, i.e. that the transform and its dual are equal'
     x[0:16] = res[0:16]
-    DWTImpl(x, 2, 'db4x', 'per')
-    DWTImpl(res, 2, 'db4x', 'per', True)
+    DWTImpl(x, 2, 'db4', 'per')
+    DWTImpl(res, 2, 'db4', 'per', True)
     diff = max(abs(x-res))
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
@@ -923,22 +923,22 @@ def _test_orthogonality():
     
     print 'Testing that the IDWT inverts the DWT'
     x = x0.copy()
-    DWTImpl(x, 2, 'db4x', 'per', False)
-    IDWTImpl(x, 2, 'db4x', 'per', False)
+    DWTImpl(x, 2, 'db4', 'per', False)
+    IDWTImpl(x, 2, 'db4', 'per', False)
     diff = abs(x-x0).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
     print 'Apply the transpose, to see that the transpose equals the inverse'
     x = x0.copy()
-    DWTImpl(x, 2, 'db4x', 'per', False)
-    IDWTImpl(x, 2, 'db4x', 'per', True)
+    DWTImpl(x, 2, 'db4', 'per', False)
+    IDWTImpl(x, 2, 'db4', 'per', True)
     diff = abs(x-x0).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
 
     print 'See that the wavelet transform equals the dual wavelet transform'
     x = x0.copy()
-    DWTImpl(x, 2, 'db4x', 'per', True)
-    DWTImpl(x0, 2, 'db4x', 'per', False)
+    DWTImpl(x, 2, 'db4', 'per', True)
+    DWTImpl(x0, 2, 'db4', 'per', False)
     diff = abs(x-x0).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
 
