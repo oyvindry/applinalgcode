@@ -10,7 +10,7 @@ import os.path
 
 
 
-function x=dwt_impl(x, nres, wave_name, forward=True, dim=1, bd_mode='symm', dual=False, transpose=False)
+def dwt_impl(x, nres, wave_name, forward=True, dim=1, bd_mode='symm', dual=False, transpose=False):
     # For classes
     
     f=find_kernel(wave_name, forward, dual, transpose)
@@ -27,7 +27,7 @@ function x=dwt_impl(x, nres, wave_name, forward=True, dim=1, bd_mode='symm', dua
         elif dim == 1:
             IDWTImpl_internal(x, nres, f, bd_mode)
 
-def DWT2Impl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False)
+def DWT2Impl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False):
     """
     x:         Matrix whose DWT will be computed along the first dimension(s).      
     nres:      Number of resolutions.
@@ -55,7 +55,7 @@ def DWT2Impl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False)
     else:
         DWT2Impl_internal(x, nres, f, bd_mode)
         
-def DWTImpl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False)
+def DWTImpl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False):
     """
     x:         Matrix whose DWT will be computed along the first dimension(s).      
     nres:      Number of resolutions.
@@ -83,7 +83,7 @@ def DWTImpl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False)
     else:
         DWTImpl_internal(x, nres, f, bd_mode)
 
-def IDWT2Impl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False)
+def IDWT2Impl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False):
     """
     x:         Matrix whose IDWT will be computed along the first dimension(s).      
     nres:      Number of resolutions.
@@ -111,7 +111,7 @@ def IDWT2Impl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False)
     else:
         IDWT2Impl_internal(x, nres, f, bd_mode)
         
-def IDWTImpl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False)
+def IDWTImpl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False):
     """
     x:         Matrix whose IDWT will be computed along the first dimension(s).      
     nres:      Number of resolutions.
@@ -160,7 +160,7 @@ def IDWT2Impl_internal(X, nres, f, bd_mode):
         for m in range(0, M, 2**res):
             f(X[m, 0::2**res], bd_mode)
   
-def DWTImpl_internal(x, nres, f, bdmode):
+def DWTImpl_internal(x, nres, f, bd_mode):
     for res in range(nres):
         f(x[0::2**res], bd_mode)
     reorganize_coeffs_forward(x, nres)
@@ -174,7 +174,7 @@ def IDWTImpl_internal(x, nres, f, bd_mode):
         
         
         
-def find_kernel(wave_name, forward, dual, transpose)
+def find_kernel(wave_name, forward, dual, transpose):
     if transpose:
         forward = not forward
         dual = not dual
@@ -188,8 +188,8 @@ def find_kernel(wave_name, forward, dual, transpose)
             f = find_kernel_idwt_dual(wave_name)
         else:
             f = find_kernel_idwt(wave_name)
+    return f
 
-function f= find_kernel_dwt_dual(wave_name)
 
 
 def find_kernel_dwt_dual(wave_name):
@@ -205,19 +205,19 @@ def find_kernel_dwt_dual(wave_name):
     elif wave_name.lower() == 'haar':
         f = dwt_kernel_haar
     elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
-        vm = float(wave_name[2::])
+        vm = int(wave_name[2::])
         filters = getDBfilter(vm, 0)
         f = lambda x, bd_mode: dwt_kernel_ortho_dual(x, filters, bd_mode)
     elif wave_name[:2].lower() == 'db':
-        vm = float(wave_name[2::-1])
+        vm = int(wave_name[2:-1])
         filters = liftingfactortho(vm, 0, 1)
         f = lambda x, bd_mode: dwt_kernel_ortho_dual(x, filters, bd_mode)
     elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
-        vm = float(wave_name[3::])
+        vm = int(wave_name[3::])
         filters = getDBfilter(vm, 1)
         f = lambda x, bd_mode: det_kernel_ortho_dual(x, filters, bd_mode)
     elif wave_name[:3].lower() == 'sym':
-        vm = float(wave_name[3::-1])
+        vm = int(wave_name[3:-1])
         filters = liftingfactortho(vm, 1, 1)
         f = lambda x, bd_mode: dwt_kernel_ortho_dual(x, filters, bd_mode)
     return f
@@ -234,20 +234,20 @@ def find_kernel_dwt(wave_name):
         f = dwt_kernel_pwl2
     elif wave_name.lower() == 'haar':
         f = dwt_kernel_haar
-    elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
-        vm = float(wave_name[2::])
+    elif wave_name[:2].lower() == 'db' and wave_name[-1].lower() != 'x':
+        vm = int(wave_name[2::])
         filters = getDBfilter(vm, 0)
         f = lambda x, bd_mode: dwt_kernel_ortho(x, filters, bd_mode)
     elif wave_name[:2].lower() == 'db':
-        vm = float(wave_name[2::-1])
+        vm = int(wave_name[2:-1])
         filters = liftingfactortho(vm, 0, 1)
         f = lambda x, bd_mode: dwt_kernel_ortho(x, filters, bd_mode)
     elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
-        vm = float(wave_name[3::])
+        vm = int(wave_name[3:])
         filters = getDBfilter(vm, 1)
         f = lambda x, bd_mode: dwt_kernel_ortho(x, filters, bd_mode)
     elif wave_name[:3].lower() == 'sym':
-        vm = float(wave_name[3::-1])
+        vm = int(wave_name[3:-1])
         filters = liftingfactortho(vm, 1, 1)
         f = lambda x, bd_mode: dwt_kernel_ortho(x, filters, bd_mode)
     return f
@@ -265,19 +265,19 @@ def find_kernel_idwt_dual(wave_name):
     elif wave_name.lower() == 'haar':
         f = idwt_kernel_haar
     elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
-        vm = float(wave_name[2::])
+        vm = int(wave_name[2::])
         filters = getDBfilter(vm, 0)
         f = lambda x, bd_mode: idwt_kernel_ortho_dual(x, filters, bd_mode)
     elif wave_name[:2].lower() == 'db':
-        vm = float(wave_name[2::-1])
+        vm = int(wave_name[2:-1])
         filters = liftingfactortho(vm, 0, 1)
         f = lambda x, bd_mode: idwt_kernel_ortho_dual(x, filters, bd_mode)
     elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
-        vm = float(wave_name[3::])
+        vm = int(wave_name[3::])
         filters = getDBfilter(vm, 1)
         f = lambda x, bd_mode: idwt_kernel_ortho_dual(x, filters, bd_mode)
     elif wave_name[:3].lower() == 'sym':
-        vm = float(wave_name[3::-1])
+        vm = int(wave_name[3:-1])
         filters = liftingfactortho(vm, 1, 1)
         f = lambda x, bd_mode: idwt_kernel_ortho_dual(x, filters, bd_mode)
     return f
@@ -293,35 +293,36 @@ def find_kernel_idwt(wave_name):
     elif wave_name.lower() == 'pwl2':
         f = idwt_kernel_pwl2
     elif wave_name.lower() == 'haar':
-        f = IDWTKernelHaar
+        f = idwt_kernel_haar
     elif wave_name[:2].lower() == 'db' and not wave_name[-1].lower() =='x':
-        vm = float(wave_name[2::])
+        vm = int(wave_name[2::])
         filters = getDBfilter(vm, 0)
         f = lambda x, bd_mode: idwt_kernel_ortho(x, filters, bd_mode)
     elif wave_name[:2].lower() == 'db':
-        vm = float(wave_name[2::-1])
+        vm = int(wave_name[2:-1])
         filters = liftingfactortho(vm, 0, 1)
         f = lambda x, bd_mode: idwt_kernel_ortho(x, filters, bd_mode)
     elif wave_name[:3].lower() == 'sym' and not wave_name[-1].lower() =='x':
-        vm = float(wave_name[3::])
+        vm = int(wave_name[3::])
         filters = getDBfilter(vm, 1)
         f = lambda x, bd_mode: idwt_kernel_ortho(x, filters, bd_mode)
     elif wave_name[:3].lower() == 'sym':
-        vm = float(wave_name[3::-1])
+        vm = int(wave_name[3:-1])
         filters = liftingfactortho(vm, 1, 1)
         f = lambda x, bd_mode: idwt_kernel_ortho(x, filters, bd_mode)
     return f
 
 def getDBfilter(vm, type):
     filter = 0;
-    dest = 'var'
+    dest = '../matlab/var' 
     if (type == 0):
         filename = '%s/DB%d.mat' % (dest, vm)
     else:
         filename = '%s/sym%d.mat' % (dest, vm)
-
     if os.path.isfile(filename):
-        sio.loadmat(filename)
+        vals = sio.loadmat(filename)
+        newfilter = vals['filter']
+        filter = {'lambdas': newfilter['lambdas'][0][0],'alpha': float(newfilter['alpha']),'beta': float(newfilter['beta'])}
     else:
         filter = liftingfactortho(vm, type)
         
@@ -628,61 +629,47 @@ def idwt_kernel_97(x, bd_mode):
         
 # Orthonormal wavelets
         
-def dwt_kernel_ortho_dual( x, bd_mode):
-    global lambdas, alpha, beta
-    global beta
-    
-    x[0::2] /= alpha
-    x[1::2] /= beta
-    for stepnr in range(lambdas.shape[0] - 1, 0, -2):
-        liftingstepodd(lambdas[stepnr, 1], lambdas[stepnr, 0], x)
-        liftingstepeven(lambdas[stepnr -1, 1], lambdas[stepnr - 1, 0], x)   
-    if mod(lambdas.shape[0], 2)==1:
-        liftingstepodd(lambdas[0, 1], lambdas[0, 0], x)
+def dwt_kernel_ortho_dual( x, filters, bd_mode):
+    x[0::2] /= filters['alpha']
+    x[1::2] /= filters['beta']
+    for stepnr in range(filters['lambdas'].shape[0] - 1, 0, -2):
+        liftingstepodd(filters['lambdas'][stepnr, 1], filters['lambdas'][stepnr, 0], x)
+        liftingstepeven(filters['lambdas'][stepnr -1, 1], filters['lambdas'][stepnr - 1, 0], x)   
+    if mod(filters['lambdas'].shape[0], 2)==1:
+        liftingstepodd(filters['lambdas'][0, 1], filters['lambdas'][0, 0], x)
 
-def dwt_kernel_ortho( x, bd_mode):
-    global lambdas, alpha, beta
-    global beta
-    
-    x[0::2] *= alpha
-    x[1::2] *= beta
-    for stepnr in range(lambdas.shape[0] - 1, 0, -2):
-        liftingstepeven(-lambdas[stepnr, 0], -lambdas[stepnr, 1], x)
-        liftingstepodd(-lambdas[stepnr - 1, 0], -lambdas[stepnr - 1, 1], x)  
-    if mod(lambdas.shape[0], 2)==1:
-        liftingstepeven(-lambdas[0, 0], -lambdas[0, 1], x)
+def dwt_kernel_ortho( x, filters, bd_mode):
+    x[0::2] *= filters['alpha']
+    x[1::2] *= filters['beta']
+    for stepnr in range(filters['lambdas'].shape[0] - 1, 0, -2):
+        liftingstepeven(-filters['lambdas'][stepnr, 0], -filters['lambdas'][stepnr, 1], x)
+        liftingstepodd(-filters['lambdas'][stepnr - 1, 0], -filters['lambdas'][stepnr - 1, 1], x)  
+    if mod(filters['lambdas'].shape[0], 2)==1:
+        liftingstepeven(-filters['lambdas'][0, 0], -filters['lambdas'][0, 1], x)
   
-def idwt_kernel_ortho_dual( x, bd_mode):
-    global lambdas
-    global alpha
-    global beta
-
+def idwt_kernel_ortho_dual( x, filters, bd_mode):
     stepnr = 0
-    if mod(lambdas.shape[0], 2) == 1: # Start with an odd step
-        liftingstepodd(-lambdas[stepnr, 1], -lambdas[stepnr, 0], x)
+    if mod(filters['lambdas'].shape[0], 2) == 1: # Start with an odd step
+        liftingstepodd(-filters['lambdas'][stepnr, 1], -filters['lambdas'][stepnr, 0], x)
         stepnr += 1
-    while stepnr < lambdas.shape[0]:
-        liftingstepeven(-lambdas[stepnr, 1], -lambdas[stepnr, 0], x)
-        liftingstepodd(-lambdas[stepnr + 1, 1], -lambdas[stepnr + 1, 0], x)
+    while stepnr < filters['lambdas'].shape[0]:
+        liftingstepeven(-filters['lambdas'][stepnr, 1], -filters['lambdas'][stepnr, 0], x)
+        liftingstepodd(-filters['lambdas'][stepnr + 1, 1], -filters['lambdas'][stepnr + 1, 0], x)
         stepnr += 2
-    x[0::2] *= alpha
-    x[1::2] *= beta
+    x[0::2] *= filters['alpha']
+    x[1::2] *= filters['beta']
     
-def idwt_kernel_ortho( x, bd_mode):
-    global lambdas
-    global alpha
-    global beta
-    
+def idwt_kernel_ortho( x, filters, bd_mode):
     stepnr = 0
-    if mod(lambdas.shape[0],2) == 1: # Start with an even step
-        liftingstepeven(lambdas[stepnr, 0], lambdas[stepnr, 1], x)
+    if mod(filters['lambdas'].shape[0],2) == 1: # Start with an even step
+        liftingstepeven(filters['lambdas'][stepnr, 0], filters['lambdas'][stepnr, 1], x)
         stepnr += 1
-    while stepnr < lambdas.shape[0]:
-        liftingstepodd(lambdas[stepnr, 0], lambdas[stepnr, 1], x)
-        liftingstepeven(lambdas[stepnr + 1, 0], lambdas[stepnr + 1, 1], x)
+    while stepnr < filters['lambdas'].shape[0]:
+        liftingstepodd(filters['lambdas'][stepnr, 0], filters['lambdas'][stepnr, 1], x)
+        liftingstepeven(filters['lambdas'][stepnr + 1, 0], filters['lambdas'][stepnr + 1, 1], x)
         stepnr += 2
-    x[0::2] /= alpha
-    x[1::2] /=beta
+    x[0::2] /= filters['alpha']
+    x[1::2] /=filters['beta']
             
 
 
@@ -721,7 +708,6 @@ def liftingfactortho(N, type=0, debug_mode=False):
     ln is always odd, so that l1 is odd if and only if n is odd.
     All even lifting steps have only filter coefficients 0,1. All odd lifting steps have only filter coefficients -1,0
     """
-    global lambdas, alpha, beta
     h0, h1 = h0h1computeortho(N)
     stepnr=0
     start1, end1, len1, start2, end2, len2 = 0, len(h0)/2-1, len(h0)/2,  0, len(h1)/2-1, len(h1)/2
@@ -777,6 +763,7 @@ def liftingfactortho(N, type=0, debug_mode=False):
     else:
         lambdas[stepnr,:] = [lastlift,0]
     # [h00 h01; h10 h11]
+    return {'lambdas': lambdas, 'alpha': alpha, 'beta': beta}
     
 def computeQN(N):
     """
@@ -878,8 +865,8 @@ def _test_kernel_ortho():
     
     print 'Testing that the reverse inverts the forward transform'
     x[0:16] = res[0:16]
-    DWTImpl(x, 2, 'db4x')
-    IDWTImpl(x, 2, 'db4x')
+    DWTImpl(x, 2, 'db4')
+    IDWTImpl(x, 2, 'db4')
     diff = max(abs(x-res))
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
@@ -945,13 +932,6 @@ def _test_orthogonality():
     x = x0.copy()
     DWTImpl(x, 2, 'db4x', 'per', False)
     IDWTImpl(x, 2, 'db4x', 'per', True)
-    diff = abs(x-x0).max()
-    assert diff < 1E-13, 'bug, diff=%s' % diff
-
-    print 'To see this at the level of kernel transformations'
-    x = x0.copy()
-    dwt_kernel_ortho(x, 0) # TODO
-    idwt_kernel_ortho_dual(x, 0)
     diff = abs(x-x0).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
 
