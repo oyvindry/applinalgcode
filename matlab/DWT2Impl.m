@@ -12,8 +12,8 @@ function x=DWT2Impl(x, nres, wave_name, bd_mode, dual, transpose)
     %            'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
     %                      with X vanishing moments
     % bd_mode:   Boundary extension mode. Possible modes are. 
-    %            'per'    - Periodic extension
-    %            'symm'   - Symmetric extension (default)
+    %            'ppd'    - Periodic-padding (periodic extension at the edges) % per
+    %            'symw'   - Symmetric-padding (whole-point): boundary value symmetric replication % symm
     %            'bd'     - Boundary wavelets
     %            'bd_pre' - Boundary wavelets with preconditioning
     % dual:      Whether to apply the dual wavelet rather than the wavelet itself. Default: 0
