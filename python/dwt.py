@@ -412,14 +412,7 @@ def reorganize_coeffs2_reverse(X, nres):
             
 # Lifting steps
             
-def liftingstepevensymm(lmbda, x, bd_mode):
-    """
-    Apply an elementary symmetric lifting step of even type to x. 
-    
-    lmbda: The common value of the two filter coefficients
-    x: The vector which we apply the lifting step to
-    bd_mode: Whether to apply symmetric extension to the input
-    """
+def lifting_even_symm(lmbda, x, bd_mode):
     if (bd_mode.lower() == 'per') and mod(len(x), 2)!=0:
         raise AssertionError()
     if bd_mode.lower() == 'symm':
@@ -430,14 +423,7 @@ def liftingstepevensymm(lmbda, x, bd_mode):
     if mod(len(x), 2)==1 and bd_mode.lower() == 'symm':
         x[-1] += 2*lmbda*x[-2] # With symmetric extension
   
-def liftingstepoddsymm(lmbda, x, bd_mode):
-    """
-    Apply an elementary symmetric lifting step of odd type to x. 
-    
-    lmbda: The common value of the two filter coefficients
-    x: The vector which we apply the lifting step to
-    bd_mode: Whether to apply symmetric extension to the input
-    """
+def lifting_odd_symm(lmbda, x, bd_mode):
     if (bd_mode.lower() == 'per') and mod(len(x), 2)!=0:
         raise AssertionError()
     x[1:-1:2] += lmbda*(x[0:-2:2] + x[2::2])
@@ -447,27 +433,13 @@ def liftingstepoddsymm(lmbda, x, bd_mode):
         else:
             x[-1] += lmbda*(x[0]+x[-2])
 
-def liftingstepeven(lmbda1, lmbda2, x):
-    """
-    Apply an elementary non-symmetric lifting step of even type to x.
-    
-    lmbda1: The first filter coefficient
-    lmbda2: The second filter coefficient
-    x: The vector which we apply the lifting step to
-    """
+def lifting_even(lmbda1, lmbda2, x):
     if mod(len(x), 2)!=0:
         raise AssertionError()
     x[0] += lmbda1*x[1] + lmbda2*x[-1]
     x[2:-1:2] += lmbda1*x[3::2] + lmbda2*x[1:-2:2]
             
-def liftingstepodd(lmbda1, lmbda2, x):
-    """
-    Apply an elementary non-symmetric lifting step of odd type to x.
-    
-    lmbda1: The first filter coefficient
-    lmbda2: The second filter coefficient
-    x: The vector which we apply the lifting step to
-    """
+def lifting_odd(lmbda1, lmbda2, x):
     if mod(len(x), 2)!=0:
         raise AssertionError()
     x[1:-2:2] += lmbda1*x[2:-1:2] + lmbda2*x[0:-3:2]
@@ -503,39 +475,39 @@ def idwt_kernel_haar(x, bd_mode):
 
 def dwt_kernel_pwl0_dual(x, bd_mode):
     x /= sqrt(2)
-    liftingstepevensymm(0.5, x, bd_mode)
+    lifting_even_symm(0.5, x, bd_mode)
         
 def dwt_kernel_pwl0(x, bd_mode):
     x *= sqrt(2)
-    liftingstepoddsymm(-0.5, x, bd_mode)
+    lifting_odd_symm(-0.5, x, bd_mode)
         
 def idwt_kernel_pwl0_dual(x, bd_mode):
     x *= sqrt(2)
-    liftingstepevensymm(-0.5, x, bd_mode)
+    lifting_even_symm(-0.5, x, bd_mode)
         
 def idwt_kernel_pwl0(x, bd_mode):
     x /= sqrt(2)
-    liftingstepoddsymm(0.5, x, bd_mode)
+    lifting_odd_symm(0.5, x, bd_mode)
 
 def dwt_kernel_pwl2_dual(x, bd_mode):
-    liftingstepevensymm(0.5, x, bd_mode)
-    liftingstepoddsymm(-0.25, x, bd_mode)
+    lifting_even_symm(0.5, x, bd_mode)
+    lifting_odd_symm(-0.25, x, bd_mode)
     x /= sqrt(2)
     
 def dwt_kernel_pwl2(x, bd_mode):
-    liftingstepoddsymm(-0.5, x, bd_mode)
-    liftingstepevensymm(0.25, x, bd_mode)
+    lifting_odd_symm(-0.5, x, bd_mode)
+    lifting_even_symm(0.25, x, bd_mode)
     x *= sqrt(2)
     
 def idwt_kernel_pwl2_dual(x, bd_mode):
     x *= sqrt(2)
-    liftingstepoddsymm(0.25, x, bd_mode)
-    liftingstepevensymm(-0.5, x, bd_mode)
+    lifting_odd_symm(0.25, x, bd_mode)
+    lifting_even_symm(-0.5, x, bd_mode)
     
 def idwt_kernel_pwl2(x, bd_mode):
     x /= sqrt(2)
-    liftingstepevensymm(-0.25, x, bd_mode)
-    liftingstepoddsymm(0.5, x, bd_mode)       
+    lifting_even_symm(-0.25, x, bd_mode)
+    lifting_odd_symm(0.5, x, bd_mode)       
                 
         
 # JPEG2000-related wavelet kernels
@@ -543,24 +515,24 @@ def idwt_kernel_pwl2(x, bd_mode):
 def dwt_kernel_53_dual(x, bd_mode):
     x[0::2] *= 0.5
     x[1::2] *= 2
-    liftingstepevensymm(0.125, x, bd_mode)
-    liftingstepoddsymm(-1, x, bd_mode)
+    lifting_even_symm(0.125, x, bd_mode)
+    lifting_odd_symm(-1, x, bd_mode)
     
 def dwt_kernel_53(x, bd_mode):
     x[0::2] *= 2
     x[1::2] *= 0.5
-    liftingstepoddsymm(-0.125, x, bd_mode)
-    liftingstepevensymm(1, x, bd_mode)
+    lifting_odd_symm(-0.125, x, bd_mode)
+    lifting_even_symm(1, x, bd_mode)
             
 def idwt_kernel_53_dual(x, bd_mode):
-    liftingstepoddsymm(1, x, bd_mode)
-    liftingstepevensymm(-0.125, x, bd_mode)     
+    lifting_odd_symm(1, x, bd_mode)
+    lifting_even_symm(-0.125, x, bd_mode)     
     x[0::2] *= 2
     x[1::2] *= 0.5
     
 def idwt_kernel_53(x, bd_mode):
-    liftingstepevensymm(-1, x, bd_mode)
-    liftingstepoddsymm(0.125, x, bd_mode)     
+    lifting_even_symm(-1, x, bd_mode)
+    lifting_odd_symm(0.125, x, bd_mode)     
     x[0::2] *= 0.5
     x[1::2] *= 2
 
@@ -575,10 +547,10 @@ def dwt_kernel_97_dual(x, bd_mode):
     
     x[0::2] /= alpha
     x[1::2] /= beta
-    liftingstepevensymm(lambda4, x, bd_mode)
-    liftingstepoddsymm(lambda3, x, bd_mode)
-    liftingstepevensymm(lambda2, x, bd_mode)
-    liftingstepoddsymm(lambda1, x, bd_mode)
+    lifting_even_symm(lambda4, x, bd_mode)
+    lifting_odd_symm(lambda3, x, bd_mode)
+    lifting_even_symm(lambda2, x, bd_mode)
+    lifting_odd_symm(lambda1, x, bd_mode)
         
 def dwt_kernel_97(x, bd_mode):
     lambda1=-0.586134342059950
@@ -590,10 +562,10 @@ def dwt_kernel_97(x, bd_mode):
     
     x[0::2] *= alpha
     x[1::2] *= beta
-    liftingstepoddsymm(-lambda4, x, bd_mode)
-    liftingstepevensymm(-lambda3, x, bd_mode)
-    liftingstepoddsymm(-lambda2, x, bd_mode)
-    liftingstepevensymm(-lambda1, x, bd_mode)
+    lifting_odd_symm(-lambda4, x, bd_mode)
+    lifting_even_symm(-lambda3, x, bd_mode)
+    lifting_odd_symm(-lambda2, x, bd_mode)
+    lifting_even_symm(-lambda1, x, bd_mode)
                 
 def idwt_kernel_97_dual(x, bd_mode):
     lambda1=-0.586134342059950
@@ -603,10 +575,10 @@ def idwt_kernel_97_dual(x, bd_mode):
     alpha=-1.149604398860250
     beta=-0.869864451624777
     
-    liftingstepoddsymm(-lambda1, x, bd_mode)
-    liftingstepevensymm(-lambda2, x, bd_mode)   
-    liftingstepoddsymm(-lambda3, x, bd_mode)
-    liftingstepevensymm(-lambda4, x, bd_mode)      
+    lifting_odd_symm(-lambda1, x, bd_mode)
+    lifting_even_symm(-lambda2, x, bd_mode)   
+    lifting_odd_symm(-lambda3, x, bd_mode)
+    lifting_even_symm(-lambda4, x, bd_mode)      
     x[0::2] *= alpha
     x[1::2] *= beta
 
@@ -618,10 +590,10 @@ def idwt_kernel_97(x, bd_mode):
     alpha=-1.149604398860250
     beta=-0.869864451624777
         
-    liftingstepevensymm(lambda1, x, bd_mode)
-    liftingstepoddsymm(lambda2, x, bd_mode)   
-    liftingstepevensymm(lambda3, x, bd_mode)
-    liftingstepoddsymm(lambda4, x, bd_mode)      
+    lifting_even_symm(lambda1, x, bd_mode)
+    lifting_odd_symm(lambda2, x, bd_mode)   
+    lifting_even_symm(lambda3, x, bd_mode)
+    lifting_odd_symm(lambda4, x, bd_mode)      
     x[0::2] /= alpha
     x[1::2] /= beta
         
@@ -631,28 +603,28 @@ def dwt_kernel_ortho_dual( x, filters, bd_mode):
     x[0::2] /= filters['alpha']
     x[1::2] /= filters['beta']
     for stepnr in range(filters['lambdas'].shape[0] - 1, 0, -2):
-        liftingstepodd(filters['lambdas'][stepnr, 1], filters['lambdas'][stepnr, 0], x)
-        liftingstepeven(filters['lambdas'][stepnr -1, 1], filters['lambdas'][stepnr - 1, 0], x)   
+        lifting_odd(filters['lambdas'][stepnr, 1], filters['lambdas'][stepnr, 0], x)
+        lifting_even(filters['lambdas'][stepnr -1, 1], filters['lambdas'][stepnr - 1, 0], x)   
     if mod(filters['lambdas'].shape[0], 2)==1:
-        liftingstepodd(filters['lambdas'][0, 1], filters['lambdas'][0, 0], x)
+        lifting_odd(filters['lambdas'][0, 1], filters['lambdas'][0, 0], x)
 
 def dwt_kernel_ortho( x, filters, bd_mode):
     x[0::2] *= filters['alpha']
     x[1::2] *= filters['beta']
     for stepnr in range(filters['lambdas'].shape[0] - 1, 0, -2):
-        liftingstepeven(-filters['lambdas'][stepnr, 0], -filters['lambdas'][stepnr, 1], x)
-        liftingstepodd(-filters['lambdas'][stepnr - 1, 0], -filters['lambdas'][stepnr - 1, 1], x)  
+        lifting_even(-filters['lambdas'][stepnr, 0], -filters['lambdas'][stepnr, 1], x)
+        lifting_odd(-filters['lambdas'][stepnr - 1, 0], -filters['lambdas'][stepnr - 1, 1], x)  
     if mod(filters['lambdas'].shape[0], 2)==1:
-        liftingstepeven(-filters['lambdas'][0, 0], -filters['lambdas'][0, 1], x)
+        lifting_even(-filters['lambdas'][0, 0], -filters['lambdas'][0, 1], x)
   
 def idwt_kernel_ortho_dual( x, filters, bd_mode):
     stepnr = 0
     if mod(filters['lambdas'].shape[0], 2) == 1: # Start with an odd step
-        liftingstepodd(-filters['lambdas'][stepnr, 1], -filters['lambdas'][stepnr, 0], x)
+        lifting_odd(-filters['lambdas'][stepnr, 1], -filters['lambdas'][stepnr, 0], x)
         stepnr += 1
     while stepnr < filters['lambdas'].shape[0]:
-        liftingstepeven(-filters['lambdas'][stepnr, 1], -filters['lambdas'][stepnr, 0], x)
-        liftingstepodd(-filters['lambdas'][stepnr + 1, 1], -filters['lambdas'][stepnr + 1, 0], x)
+        lifting_even(-filters['lambdas'][stepnr, 1], -filters['lambdas'][stepnr, 0], x)
+        lifting_odd(-filters['lambdas'][stepnr + 1, 1], -filters['lambdas'][stepnr + 1, 0], x)
         stepnr += 2
     x[0::2] *= filters['alpha']
     x[1::2] *= filters['beta']
@@ -660,11 +632,11 @@ def idwt_kernel_ortho_dual( x, filters, bd_mode):
 def idwt_kernel_ortho( x, filters, bd_mode):
     stepnr = 0
     if mod(filters['lambdas'].shape[0],2) == 1: # Start with an even step
-        liftingstepeven(filters['lambdas'][stepnr, 0], filters['lambdas'][stepnr, 1], x)
+        lifting_even(filters['lambdas'][stepnr, 0], filters['lambdas'][stepnr, 1], x)
         stepnr += 1
     while stepnr < filters['lambdas'].shape[0]:
-        liftingstepodd(filters['lambdas'][stepnr, 0], filters['lambdas'][stepnr, 1], x)
-        liftingstepeven(filters['lambdas'][stepnr + 1, 0], filters['lambdas'][stepnr + 1, 1], x)
+        lifting_odd(filters['lambdas'][stepnr, 0], filters['lambdas'][stepnr, 1], x)
+        lifting_even(filters['lambdas'][stepnr + 1, 0], filters['lambdas'][stepnr + 1, 1], x)
         stepnr += 2
     x[0::2] /= filters['alpha']
     x[1::2] /=filters['beta']
