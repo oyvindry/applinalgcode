@@ -45,6 +45,11 @@ function f= find_kernel_dwt_dual(wave_name)
         vm = str2double(wave_name(4:end-1));
         filters = liftingfactortho(vm, 1, 1);
         f = @(x, bd_mode) dwt_kernel_ortho_dual(x, filters, bd_mode);
+    elseif strcmpi(wave_name(1:6), 'spline')
+        N1 = str2double(wave_name(7));
+        N2 = str2double(wave_name(9));
+        [h0,h1,g0,g1]=compute_spline_filters(N1, N2);
+        f = @(x, bd_mode) dwt_kernel_filters_dual(h0, h1, g0, g1, x, bd_mode);
     end
 end
     
@@ -75,6 +80,11 @@ function f= find_kernel_dwt(wave_name)
         vm = str2double(wave_name(4:end-1));
         filters = liftingfactortho(vm, 1, 1);
         f = @(x, bd_mode) dwt_kernel_ortho(x, filters, bd_mode);
+    elseif strcmpi(wave_name(1:6), 'spline')
+        N1 = str2double(wave_name(7));
+        N2 = str2double(wave_name(9));
+        [h0,h1,g0,g1]=compute_spline_filters(N1, N2);
+        f = @(x, bd_mode) dwt_kernel_filters(h0, h1, g0, g1, x, bd_mode);
     end
 end
 
@@ -105,6 +115,11 @@ function f = find_kernel_idwt_dual(wave_name)
         vm = str2double(wave_name(4:end-1));
         filters = liftingfactortho(vm, 1, 1);
         f = @(x, bd_mode) idwt_kernel_ortho_dual(x, filters, bd_mode);
+    elseif strcmpi(wave_name(1:6), 'spline')
+        N1 = str2double(wave_name(7));
+        N2 = str2double(wave_name(9));
+        [h0,h1,g0,g1]=compute_spline_filters(N1, N2);
+        f = @(x, bd_mode) idwt_kernel_filters_dual(h0, h1, g0, g1, x, bd_mode);
     end
 end
 
@@ -135,6 +150,11 @@ function f = find_kernel_idwt(wave_name)
         vm = str2double(wave_name(4:end-1));
         filters = liftingfactortho(vm, 1, 1);
         f = @(x, bd_mode) idwt_kernel_ortho(x, filters, bd_mode);
+    elseif strcmpi(wave_name(1:6), 'spline')
+        N1 = str2double(wave_name(7));
+        N2 = str2double(wave_name(9));
+        [h0,h1,g0,g1]=compute_spline_filters(N1, N2);
+        f = @(x, bd_mode) idwt_kernel_filters(h0, h1, g0, g1, x, bd_mode);
     end
 end
 
@@ -159,6 +179,29 @@ function filter=getDBfilter(vm, type)
     end
 end
 
+function [h0,h1,g0,g1]=compute_spline_filters(N1, N2)
+  N=(N1+N2)/2;
+  vals=computeQN(N);
+  
+  for k=1:(N1/2)
+    h0=conv(h0,[1/4 1/2 1/4]);
+  end
+  h0=h0*vals(1);
+  h0 = conv(h0, vals);
+  
+  g0=1;
+  for k=1:(N2/2)
+    g0=conv(g0,[1/4 1/2 1/4]);
+  end
+  
+  x = sqrt(2)/abs(sum(h0));
+  g0=g0/x;
+  h0=h0*x;
+  
+  h1=g0.*(-1).^((-(length(g0)-1)/2):((length(g0)-1)/2));
+  g1=h0.*(-1).^((-(length(h0)-1)/2):((length(h0)-1)/2));
+end
+
 function x=dwt_kernel_filters(H0, H1, G0, G1, x, bd_mode)
     symm = strcmpi(bd_mode, 'symm');
     f0 = H0; f1 = H1;
@@ -166,6 +209,7 @@ function x=dwt_kernel_filters(H0, H1, G0, G1, x, bd_mode)
     x1 = filterS(f1, x, symm);
     x(1:2:end) = x0(1:2:end);
     x(2:2:end) = x1(2:2:end);
+end
     
 function x=dwt_kernel_filters_dual(H0, H1, G0, G1, x, bd_mode)
     symm = strcmpi(bd_mode, 'symm');
@@ -174,6 +218,7 @@ function x=dwt_kernel_filters_dual(H0, H1, G0, G1, x, bd_mode)
     x1 = filterS(f1, x, symm);
     x(1:2:end) = x0(1:2:end);
     x(2:2:end) = x1(2:2:end);
+end
     
 function x=idwt_kernel_filters(H0, H1, G0, G1, x, bd_mode)
     symm = strcmpi(bd_mode, 'symm');
@@ -183,6 +228,7 @@ function x=idwt_kernel_filters(H0, H1, G0, G1, x, bd_mode)
     x0 = filterS(f0, x0, symm);
     x1 = filterS(f1, x1, symm);
     x = x0 + x1;
+end
     
 function x=idwt_kernel_filters_dual(H0, H1, G0, G1, x, bd_mode)
     symm = strcmpi(bd_mode, 'symm');
@@ -192,6 +238,7 @@ function x=idwt_kernel_filters_dual(H0, H1, G0, G1, x, bd_mode)
     x0 = filterS(f0, x0, symm);
     x1 = filterS(f1, x1, symm);
     x = x0 + x1;
+end
     
 function x=dwt_kernel_97_dual(x,bd_mode)
     lambda1 = -0.586134342059950;

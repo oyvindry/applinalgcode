@@ -61,3 +61,12 @@ function [h0,h1]=h0h1compute97()
   h1=g0.*(-1).^((-(length(g0)-1)/2):((length(g0)-1)/2));
   g1=h0.*(-1).^((-(length(h0)-1)/2):((length(h0)-1)/2));
 end
+
+
+
+
+
+
+
+
+
