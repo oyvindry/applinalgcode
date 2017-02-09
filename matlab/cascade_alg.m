@@ -10,3 +10,4 @@ function cascade_alg(m, a, b, wave_name, scaling, dual)
     coords = [ coords((b*2^m+1):((b-a)*2^m)); coords(1:(b*2^m)) ];
     figure()
     plot(t, 2^(m/2)*coords, 'k-')
+end

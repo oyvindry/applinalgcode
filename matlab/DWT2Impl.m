@@ -3,7 +3,8 @@ function x=DWT2Impl(x, nres, wave_name, bd_mode, dual, transpose)
     % nres:      Number of resolutions.
     % wave_name: Name of the wavelet. Possible names are:
     %            'cdf97' - CDF 9/7 wavelet
-    %            'cdf53' - Spline 5/3 wavelet  
+    %            'cdf53' - Spline 5/3 wavelet
+    %            'splinex.x' - Spline wavelet with given number of vanishing moments for each filter
     %            'pwl0'  - Piecewise linear wavelets with 0 vanishing moments
     %            'pwl2'  - Piecewise linear wavelets with 2 vanishing moments
     %            'Haar'  - The Haar wavelet
