@@ -870,6 +870,24 @@ def liftingfact97():
     alpha, beta = h00[2], h11[1] 
     return lambdas, alpha, beta    
     
+    
+def freqresp_alg(wave_name, lowpass, dual):
+    idwt_kernel = find_kernel(wave_name, 0, dual);
+    N = 128
+    n = arange(0,N)
+    omega = 2*pi*n/float(N)
+
+    g = zeros(N)
+    if lowpass:
+        g[0] = 1
+    else:
+        g[1] = 1
+    
+    idwtkernel(g, 'per')
+    plt.figure()
+    plt.plot(omega, abs(fft.fft(g)), 'k-')
+
+
 def _test_kernel(wave_name):
     print 'Testing %s, 1D' % wave_name
     res = random.random(16)
