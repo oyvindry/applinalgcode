@@ -34,6 +34,7 @@ def DWT2Impl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False):
     wave_name: Name of the wavelet. Possible names are:
                'cdf97' - CDF 9/7 wavelet
                'cdf53' - Spline 5/3 wavelet  
+               'splinex.x' - Spline wavelet with given number of vanishing moments for each filter
                'pwl0'  - Piecewise linear wavelets with 0 vanishing moments
                'pwl2'  - Piecewise linear wavelets with 2 vanishing moments
                'Haar'  - The Haar wavelet
@@ -62,6 +63,7 @@ def DWTImpl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False):
     wave_name: Name of the wavelet. Possible names are:
                'cdf97' - CDF 9/7 wavelet
                'cdf53' - Spline 5/3 wavelet  
+               'splinex.x' - Spline wavelet with given number of vanishing moments for each filter
                'pwl0'  - Piecewise linear wavelets with 0 vanishing moments
                'pwl2'  - Piecewise linear wavelets with 2 vanishing moments
                'Haar'  - The Haar wavelet
@@ -90,6 +92,7 @@ def IDWT2Impl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False):
     wave_name: Name of the wavelet. Possible names are:
                'cdf97' - CDF 9/7 wavelet
                'cdf53' - Spline 5/3 wavelet  
+               'splinex.x' - Spline wavelet with given number of vanishing moments for each filter
                'pwl0'  - Piecewise linear wavelets with 0 vanishing moments
                'pwl2'  - Piecewise linear wavelets with 2 vanishing moments
                'Haar'  - The Haar wavelet
@@ -118,6 +121,7 @@ def IDWTImpl(x, nres, wave_name, bd_mode='symm', dual=False, transpose=False):
     wave_name: Name of the wavelet. Possible names are:
                'cdf97' - CDF 9/7 wavelet
                'cdf53' - Spline 5/3 wavelet  
+               'splinex.x' - Spline wavelet with given number of vanishing moments for each filter
                'pwl0'  - Piecewise linear wavelets with 0 vanishing moments
                'pwl2'  - Piecewise linear wavelets with 2 vanishing moments
                'Haar'  - The Haar wavelet
@@ -220,6 +224,11 @@ def find_kernel_dwt_dual(wave_name):
         vm = int(wave_name[3:-1])
         filters = liftingfactortho(vm, 1, 1)
         f = lambda x, bd_mode: dwt_kernel_ortho_dual(x, filters, bd_mode)
+    elif wave_name[:6].lower() == 'spline':
+        N1 = int(wave_name[6])
+        N2 = int(wave_name[8])
+        h0, h1, g0, g1 = compute_spline_filters(N1, N2)
+        f = lambda x, bd_mode: dwt_kernel_filters_dual(h0, h1, g0, g1, x, bd_mode)
     return f
 
 def find_kernel_dwt(wave_name):
@@ -250,6 +259,11 @@ def find_kernel_dwt(wave_name):
         vm = int(wave_name[3:-1])
         filters = liftingfactortho(vm, 1, 1)
         f = lambda x, bd_mode: dwt_kernel_ortho(x, filters, bd_mode)
+    elif wave_name[:6].lower() == 'spline':
+        N1 = int(wave_name[6])
+        N2 = int(wave_name[8])
+        h0, h1, g0, g1 = compute_spline_filters(N1, N2)
+        f = lambda x, bd_mode: dwt_kernel_filters(h0, h1, g0, g1, x, bd_mode)
     return f
     
 def find_kernel_idwt_dual(wave_name):
@@ -280,6 +294,11 @@ def find_kernel_idwt_dual(wave_name):
         vm = int(wave_name[3:-1])
         filters = liftingfactortho(vm, 1, 1)
         f = lambda x, bd_mode: idwt_kernel_ortho_dual(x, filters, bd_mode)
+    elif wave_name[:6].lower() == 'spline':
+        N1 = int(wave_name[6])
+        N2 = int(wave_name[8])
+        h0, h1, g0, g1 = compute_spline_filters(N1, N2)
+        f = lambda x, bd_mode: idwt_kernel_filters_dual(h0, h1, g0, g1, x, bd_mode)
     return f
 
 def find_kernel_idwt(wave_name):
@@ -310,6 +329,11 @@ def find_kernel_idwt(wave_name):
         vm = int(wave_name[3:-1])
         filters = liftingfactortho(vm, 1, 1)
         f = lambda x, bd_mode: idwt_kernel_ortho(x, filters, bd_mode)
+    elif wave_name[:6].lower() == 'spline':
+        N1 = int(wave_name[6])
+        N2 = int(wave_name[8])
+        h0, h1, g0, g1 = compute_spline_filters(N1, N2)
+        f = lambda x, bd_mode: idwt_kernel_filters(h0, h1, g0, g1, x, bd_mode)
     return f
 
 def getDBfilter(vm, type):
@@ -332,6 +356,26 @@ def getDBfilter(vm, type):
         sio.savemat(filename, {'filter': filter})
     return filter
 
+def compute_spline_filters(N1, N2):
+    N=(N1+N2)/2;
+    QN = computeQN(N)
+    
+    h0=array([1])
+    for k in range(N1/2):
+        h0 = convolve(h0,[1/4.,1/2.,1/4.])
+    h0=h0*QN[0]
+    
+    g0=array([1])
+    for k in range(N2/2):
+        g0 = convolve(g0,[1/4.,1/2.,1/4.])
+    
+    x = sqrt(2)/abs(sum(h0))
+    g0, h0 = g0/x, h0*x
+    N= g0.shape[0]
+    h1=g0*(-1)**(array(range(-(N-1)/2,(N+1)/2)))
+    N= h0.shape[0]
+    g1=h0*(-1)**(array(range(-(N-1)/2,(N+1)/2)))
+    return h0, h1, g0, g1
     
 def dwt_kernel_filters(H0, H1, G0, G1, x, bd_mode):
     symm = bd_mode.lower() =='symm'
