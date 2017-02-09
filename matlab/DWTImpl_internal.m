@@ -1,11 +1,11 @@
-function x = DWTImpl_internal(x, nres, f, bd_mode)
-    for res=0:(nres - 1)
-        x(1:2^res:end, :) = f(x(1:2^res:end, :), bd_mode);
+function x=DWTImpl_internal(x, m, dwt_kernel, bd_mode)
+    for res=0:(m - 1)
+        x(1:2^res:end, :) = dwt_kernel(x(1:2^res:end, :), bd_mode);
     end
-    x = reorganize_coeffs_forward(x, nres);
+    x = reorganize_coeffs_forward(x, m);
 end
 
-function y = reorganize_coeffs_forward(x, nres)
+function y=reorganize_coeffs_forward(x, nres)
     N = size(x,1);
     y = zeros(size(x));
     inds = 1:2^nres:N;

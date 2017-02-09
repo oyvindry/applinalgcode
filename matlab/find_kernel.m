@@ -159,6 +159,40 @@ function filter=getDBfilter(vm, type)
     end
 end
 
+function x=dwt_kernel_filters(H0, H1, G0, G1, x, bd_mode)
+    symm = strcmpi(bd_mode, 'symm');
+    f0 = H0; f1 = H1;
+    x0 = filterS(f0, x, symm);
+    x1 = filterS(f1, x, symm);
+    x(1:2:end) = x0(1:2:end);
+    x(2:2:end) = x1(2:2:end);
+    
+function x=dwt_kernel_filters_dual(H0, H1, G0, G1, x, bd_mode)
+    symm = strcmpi(bd_mode, 'symm');
+    f0 = G0; f1 = G1;
+    x0 = filterS(f0, x, symm);
+    x1 = filterS(f1, x, symm);
+    x(1:2:end) = x0(1:2:end);
+    x(2:2:end) = x1(2:2:end);
+    
+function x=idwt_kernel_filters(H0, H1, G0, G1, x, bd_mode)
+    symm = strcmpi(bd_mode, 'symm');
+    f0 = G0; f1 = G1;
+    x0 = x; x0(2:2:end) = 0;
+    x1 = x; x1(1:2:end) = 0;
+    x0 = filterS(f0, x0, symm);
+    x1 = filterS(f1, x1, symm);
+    x = x0 + x1;
+    
+function x=idwt_kernel_filters_dual(H0, H1, G0, G1, x, bd_mode)
+    symm = strcmpi(bd_mode, 'symm');
+    f0 = H0; f1 = H1;
+    x0 = x; x0(2:2:end) = 0;
+    x1 = x; x1(1:2:end) = 0;
+    x0 = filterS(f0, x0, symm);
+    x1 = filterS(f1, x1, symm);
+    x = x0 + x1;
+    
 function x=dwt_kernel_97_dual(x,bd_mode)
     lambda1 = -0.586134342059950;
     lambda2 = -0.668067171029734;

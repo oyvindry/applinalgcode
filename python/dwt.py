@@ -160,14 +160,14 @@ def IDWT2Impl_internal(X, nres, f, bd_mode):
         for m in range(0, M, 2**res):
             f(X[m, 0::2**res], bd_mode)
   
-def DWTImpl_internal(x, nres, f, bd_mode):
-    for res in range(nres):
+def DWTImpl_internal(x, m, f, bd_mode):
+    for res in range(m):
         f(x[0::2**res], bd_mode)
-    reorganize_coeffs_forward(x, nres)
+    reorganize_coeffs_forward(x, m)
             
-def IDWTImpl_internal(x, nres, f, bd_mode):
-    reorganize_coeffs_reverse(x, nres)
-    for res in range(nres - 1, -1, -1):
+def IDWTImpl_internal(x, m, f, bd_mode):
+    reorganize_coeffs_reverse(x, m)
+    for res in range(m - 1, -1, -1):
         f(x[0::2**res], bd_mode)
         
         
@@ -332,29 +332,46 @@ def getDBfilter(vm, type):
         sio.savemat(filename, {'filter': filter})
     return filter
 
-
-def DWTKernelFilters(H0, H1, G0, G1, x, bd_mode, dual):
+    
+def dwt_kernel_filters(H0, H1, G0, G1, x, bd_mode):
+    symm = bd_mode.lower() =='symm'
     f0, f1 = H0, H1
-    if dual:
-        f0, f1 = G0, G1
-    N = len(x)
     x0 = x.copy()
     x1 = x.copy()
-    filterS(f0, x0, bd_mode)
-    filterS(f1, x1, bd_mode)
+    filterS(f0, x0, symm)
+    filterS(f1, x1, symm)
+    x[::2] = x0[::2]
+    x[1::2] = x1[1::2]
+    
+def dwt_kernel_filters_dual(H0, H1, G0, G1, x, bd_mode):
+    symm = bd_mode.lower() =='symm'
+    f0, f1 = G0, G1
+    x0 = x.copy()
+    x1 = x.copy()
+    filterS(f0, x0, symm)
+    filterS(f1, x1, symm)
     x[::2] = x0[::2]
     x[1::2] = x1[1::2]
 
-def IDWTKernelFilters(H0, H1, G0, G1, x, bd_mode, dual):
+def idwt_kernel_filters(H0, H1, G0, G1, x, bd_mode):
+    symm = bd_mode.lower() =='symm'
     f0, f1 = G0, G1
-    if dual:
-        f0, f1 = H0, H1
-    N = len(x)
     x0 = x.copy(); x0[1::2] = 0
     x1 = x.copy(); x1[::2] = 0
-    filterS(f0, x0, bd_mode)
-    filterS(f1, x1, bd_mode)
+    filterS(f0, x0, symm)
+    filterS(f1, x1, symm)
     x[:] = x0 + x1
+    
+def idwt_kernel_filters_dual(H0, H1, G0, G1, x, bd_mode):
+    symm = bd_mode.lower() =='symm'
+    f0, f1 = H0, H1
+    x0 = x.copy(); x0[1::2] = 0
+    x1 = x.copy(); x1[::2] = 0
+    filterS(f0, x0, symm)
+    filterS(f1, x1, symm)
+    x[:] = x0 + x1
+    
+    
         
 def reorganize_coeffs_forward(x, nres):
     N = shape(x)[0]
