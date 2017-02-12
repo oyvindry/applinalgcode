@@ -870,9 +870,22 @@ def liftingfact97():
     alpha, beta = h00[2], h11[1] 
     return lambdas, alpha, beta    
     
+def cascade_alg(m, a, b, wave_name, scaling, dual):
+    coords = zeros((b-a)*2**m)
+    if scaling:
+        coords[0] = 1
+    else:
+        coords[b - a] = 1
     
+    t = linspace(a, b, (b-a)*2**m)
+    IDWTImpl(coords, m, wave_name, 'per', dual)
+    coords = concatenate([coords[(b*2**m):((b-a)*2**m)], \
+                          coords[0:(b*2**m)]])
+    plt.figure()
+    plt.plot(t, 2**(m/2.)*coords, 'k-')
+
 def freqresp_alg(wave_name, lowpass, dual):
-    idwt_kernel = find_kernel(wave_name, 0, dual);
+    idwt_kernel = find_kernel(wave_name, 0, dual, False);
     N = 128
     n = arange(0,N)
     omega = 2*pi*n/float(N)
@@ -883,7 +896,7 @@ def freqresp_alg(wave_name, lowpass, dual):
     else:
         g[1] = 1
     
-    idwtkernel(g, 'per')
+    idwt_kernel(g, 'per')
     plt.figure()
     plt.plot(omega, abs(fft.fft(g)), 'k-')
 

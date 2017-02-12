@@ -5,7 +5,7 @@ function [x,fs]=forw_comp_rev_DWT(m, wave_name, lr)
     end
     [x, fs] = audioread('sounds/castanets.wav');
     N = 2^17;
-    x = x(1:N);
+    x = x(1:N,1);
     x = DWTImpl(x, m, wave_name);
     if lowres==1
         x((N/2^m+1):end) = 0;
