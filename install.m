@@ -12,7 +12,7 @@ dependent_paths = {'matlab', 'sounds', 'images'};
 us_root = userpath();
 startup_file = strcat(us_root(1:end-1), '/startup.m'); 
 
-if (exist(us_root(1:end-1)) == 7 && exist(startup_file) == 2)
+if (exist(us_root(1:end-1)) == 7)
     
     fID = fopen(startup_file, 'a');
 
