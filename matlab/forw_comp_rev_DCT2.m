@@ -1,5 +1,5 @@
 function X=forw_comp_rev_DCT2(f, invf, threshold)
-    X = CreatExcerpt();
+    X = CreateExcerpt();
     X = tensor_impl(X, f, f);
     tot = prod(size(X));
   
@@ -10,3 +10,4 @@ function X=forw_comp_rev_DCT2(f, invf, threshold)
     X = mapto01(X);
     X = X*255;
     print sprintf('%f percent of samples zeroed out', 100*zeroedout/tot);
+end

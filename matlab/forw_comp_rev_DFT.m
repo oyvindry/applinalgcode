@@ -61,3 +61,4 @@ function [x, fs] =forw_comp_rev_DFT(varargin)
     if threshold ~= 0
         100*numzeroed/prod(size(x))
     end
+end

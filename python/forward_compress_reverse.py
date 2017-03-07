@@ -31,10 +31,6 @@ def forw_comp_rev_DFT(L=0, lower=-1, threshold=0, n=0, N=0):
     if threshold != 0:
         print 100*numzeroed/float(prod(shape(x)))
     return x, fs
-            
-def CreateExcerpt():
-    img = double(imread('images/lena.png','png'))
-    return img[128:384,128:384,:]
     
 def forw_comp_rev_DFT2(f, invf, threshold):
     # TODO: f, invf

@@ -14,3 +14,4 @@ function [x,fs]=forw_comp_rev_DWT(m, wave_name, lr)
     end
     x = IDWTImpl(x, m, wave_name);
     x = x/max(max(abs(x)));
+end

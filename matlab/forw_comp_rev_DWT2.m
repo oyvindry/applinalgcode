@@ -1,4 +1,4 @@
-def img=forw_comp_rev_DWT2(m, wave_name, lr)
+function img=forw_comp_rev_DWT2(m, wave_name, lr)
     lowres = 1;
     if nargin >= 3
         lowres = lr;
@@ -17,3 +17,4 @@ def img=forw_comp_rev_DWT2(m, wave_name, lr)
     img = IDWT2Impl(img, m, wave_name);
     img = mapto01(img);
     img = img*255;
+end

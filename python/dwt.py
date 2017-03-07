@@ -919,7 +919,35 @@ def _test_kernel(wave_name):
     IDWTImpl(x,2,wave_name)
     diff = abs(x-res).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
+
+def mmsubbands(m):
+    img = CreateExcerpt()
+    l1, l2, l3 = shape(img)
+    X = zeros((3,l1,l2,l3))
     
+    X[0] = img.copy()
+    DWT2Impl(X[0],m,'cdf53')
+    X[0, (l1/2**(m-1)):, :, :] = 0
+    X[0, :(l1/2**(m-1)), (l2/2**(m-1)):, :] = 0
+    X[0, (l1/2**m):(l1/2**(m-1)), (l2/2**m):(l2/2**(m-1)), :] = 0
+    X[1] = X[0]
+    IDWT2Impl(X[0], m, 'cdf53')
+    
+    X[1, (l1/2**m):(l1/2**(m-1)), :(l2/2**m), :] = 0
+    X[2] = X[1]
+    IDWT2Impl(X[1], m, 'cdf53')
+    
+    X[2, :(l1/2**m), (l2/2**m):(l2/2**(m-1)), :] = 0
+    IDWT2Impl(X[2], m, 'cdf53')
+    
+    for k in range(3):
+        mapto01(X[k])
+        X[k] *= 255
+    return X[0], X[1], X[2]
+    
+    
+    
+        
 def _test_kernel_ortho():
     print 'Testing orthonormal wavelets'
     res = random.random(16) # only this assumes that N is even
