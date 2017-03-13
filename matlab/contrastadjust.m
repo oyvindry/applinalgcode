@@ -3,3 +3,4 @@ function Z=contrastadjust(X,epsilon)
   Z = (log(Z+epsilon) - log(epsilon))/...
            (log(1+epsilon)-log(epsilon));
   Z = Z*255; % Maps the values back to [0,255]
+end

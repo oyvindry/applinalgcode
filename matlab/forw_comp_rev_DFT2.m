@@ -14,4 +14,4 @@ function X=forw_comp_rev_DFT2(f, invf, threshold)
     X = mapto01(X);
     X = X*255;
     disp sprintf('%f percent of samples zeroed out', 100*zeroedout/tot);
-    
+end 

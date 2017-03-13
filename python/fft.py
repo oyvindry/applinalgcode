@@ -2,7 +2,7 @@ from math import *
 from numpy import *
 from sound import *
 from images import *
-from scipy.fftpack import dct
+from scipy.fftpack import dct, idct
 
 #bitreverse
 
@@ -215,6 +215,26 @@ def tensor_impl(X, S1, S2):
         S2(X[m, :])
     
 # We can use classes to make a more efficient FFT implementation
+
+def DFTImpl8(x):
+    N = shape(x)[0]
+    for n in range(0,N,8):
+        x[n:(n+8), :] = fft.fft(x[n:(n+8), :], axis=0)
+
+def IDFTImpl8(x):
+    N = shape(x)[0]
+    for n in range(0, N, 8):
+        x[n:(n+8), :] = fft.ifft(x[n:(n+8), :], axis=0)
+
+def DCTImpl8(x):
+    N = shape(x)[0]
+    for n in range(0,N,8):
+        x[n:(n+8), :] = dct(x[n:(n+8), :], norm='ortho', axis=0)
+        
+def IDCTImpl8(x):
+    N = shape(x)[0]
+    for n in range(0, N, 8):
+        x[n:(n+8), :] = idct(x[n:(n+8), :], norm='ortho', axis=0)
     
 def _testfft():   
     x1 = random.random(32).astype(complex)
