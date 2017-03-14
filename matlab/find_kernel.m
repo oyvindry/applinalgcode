@@ -31,16 +31,24 @@ function f= find_kernel_dwt_dual(wave_name)
         f = @dwt_kernel_haar;
     elseif (strcmpi(wave_name(1:2), 'db') && ~strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(3:end));
-        filters = getDBfilter(vm, 0);
-        f = @(x, bd_mode) dwt_kernel_ortho_dual(x, filters, bd_mode);
+        if (vm == 1) 
+            f = @dwt_kernel_haar;
+        else
+            filters = getDBfilter(vm, 0);
+            f = @(x, bd_mode) dwt_kernel_ortho_dual(x, filters, bd_mode);
+        end
     elseif (strcmpi(wave_name(1:2), 'db') && strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(3:end-1));
         filters = liftingfactortho(vm, 0, 1);
         f = @(x, bd_mode) dwt_kernel_ortho_dual(x, filters, bd_mode);
     elseif (strcmpi(wave_name(1:3), 'sym') && ~strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(4:end));
-        filters = getDBfilter(vm, 1);
-        f = @(x, bd_mode) dwt_kernel_ortho_dual(x, filters, bd_mode);
+        if (vm == 1) 
+            f = @dwt_kernel_haar;
+        else
+            filters = getDBfilter(vm, 1);
+            f = @(x, bd_mode) dwt_kernel_ortho_dual(x, filters, bd_mode);
+        end
     elseif (strcmpi(wave_name(1:3), 'sym') && strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(4:end-1));
         filters = liftingfactortho(vm, 1, 1);
@@ -67,16 +75,24 @@ function f= find_kernel_dwt(wave_name)
         f = @dwt_kernel_haar;
     elseif (strcmpi(wave_name(1:2), 'db') && ~strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(3:end));
-        filters = getDBfilter(vm, 0);
-        f = @(x, bd_mode) dwt_kernel_ortho(x, filters, bd_mode);
+        if (vm == 1) 
+            f = @dwt_kernel_haar;
+        else
+            filters = getDBfilter(vm, 0);
+            f = @(x, bd_mode) dwt_kernel_ortho(x, filters, bd_mode);
+        end
     elseif (strcmpi(wave_name(1:2), 'db') && strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(3:end-1));
         filters = liftingfactortho(vm, 0, 1);
         f = @(x, bd_mode) dwt_kernel_ortho(x, filters, bd_mode);
     elseif (strcmpi(wave_name(1:3), 'sym') && ~strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(4:end));
-        filters = getDBfilter(vm, 1);
-        f = @(x, bd_mode) dwt_kernel_ortho(x, filters, bd_mode);
+        if (vm == 1) 
+            f = @dwt_kernel_haar;
+        else
+            filters = getDBfilter(vm, 1);
+            f = @(x, bd_mode) dwt_kernel_ortho(x, filters, bd_mode);
+        end
     elseif (strcmpi(wave_name(1:3), 'sym') && strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(4:end-1));
         filters = liftingfactortho(vm, 1, 1);
@@ -102,16 +118,24 @@ function f = find_kernel_idwt_dual(wave_name)
         f = @idwt_kernel_haar;
     elseif (strcmpi(wave_name(1:2), 'db') && ~strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(3:end));
-        filters = getDBfilter(vm, 0);
-        f = @(x, bd_mode) idwt_kernel_ortho_dual(x, filters, bd_mode);
+        if (vm == 1)
+            f = @idwt_kernel_haar;
+        else
+            filters = getDBfilter(vm, 0);
+            f = @(x, bd_mode) idwt_kernel_ortho_dual(x, filters, bd_mode);
+        end
     elseif (strcmpi(wave_name(1:2), 'db') && strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(3:end-1));
         filters = liftingfactortho(vm, 0, 1);
         f = @(x, bd_mode) idwt_kernel_ortho_dual(x, filters, bd_mode);
     elseif (strcmpi(wave_name(1:3), 'sym') && ~strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(4:end));
-        filters = getDBfilter(vm, 1);
-        f = @(x, bd_mode) idwt_kernel_ortho_dual(x, filters, bd_mode);
+        if (vm == 1)
+            f = @idwt_kernel_haar;
+        else
+            filters = getDBfilter(vm, 1);
+            f = @(x, bd_mode) idwt_kernel_ortho_dual(x, filters, bd_mode);
+        end
     elseif (strcmpi(wave_name(1:3), 'sym') && strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(4:end-1));
         filters = liftingfactortho(vm, 1, 1);
@@ -137,16 +161,24 @@ function f = find_kernel_idwt(wave_name)
         f = @idwt_kernel_haar;
     elseif (strcmpi(wave_name(1:2), 'db') && ~strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(3:end));
-        filters = getDBfilter(vm, 0);
-        f = @(x, bd_mode) idwt_kernel_ortho(x, filters, bd_mode);
+        if (vm == 1)
+            f = @idwt_kernel_haar;
+        else
+            filters = getDBfilter(vm, 0);
+            f = @(x, bd_mode) idwt_kernel_ortho(x, filters, bd_mode);
+        end
     elseif (strcmpi(wave_name(1:2), 'db') && strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(3:end-1));
         filters = liftingfactortho(vm, 0, 1);
         f = @(x, bd_mode) idwt_kernel_ortho(x, filters, bd_mode);
     elseif (strcmpi(wave_name(1:3), 'sym') && ~strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(4:end));
-        filters = getDBfilter(vm, 1);
-        f = @(x, bd_mode) idwt_kernel_ortho(x, filters, bd_mode);
+        if (vm == 1)
+            f = @idwt_kernel_haar;
+        else
+            filters = getDBfilter(vm, 1);
+            f = @(x, bd_mode) idwt_kernel_ortho(x, filters, bd_mode);
+        end
     elseif (strcmpi(wave_name(1:3), 'sym') && strcmpi(wave_name(end), 'x'))
         vm = str2double(wave_name(4:end-1));
         filters = liftingfactortho(vm, 1, 1);
