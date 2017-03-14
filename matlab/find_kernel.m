@@ -206,8 +206,8 @@ function filter=getDBfilter(vm, type)
     else
         filter = liftingfactortho(vm, type);
         
-        if (exist('var') ~= 7)
-            mkdir('var');
+        if (exist(strcat(cur_dir, '/var')) ~= 7)
+            mkdir(strcat(cur_dir,'/var'));
         end
         
         save(filename, 'filter');
