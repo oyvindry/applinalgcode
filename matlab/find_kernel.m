@@ -160,20 +160,22 @@ function f = find_kernel_idwt(wave_name)
 end
 
 function filter=getDBfilter(vm, type)
-    dest = 'var';
+    
+    cur_dir =  fileparts(mfilename('fullpath'));
+    
     if (type == 0)
-        filename = sprintf('%s/DB%d.mat', dest, vm);
+        filename = sprintf('%s/var/DB%d.mat', cur_dir, vm);
     else
-        filename = sprintf('%s/sym%d.mat', dest, vm);
+        filename = sprintf('%s/var/sym%d.mat', cur_dir, vm);
     end
-
+    
     if (exist(filename) == 2);
         load(filename);
     else
         filter = liftingfactortho(vm, type);
         
-        if (exist(dest) ~= 7)
-            mkdir(dest);
+        if (exist('var') ~= 7)
+            mkdir('var');
         end
         
         save(filename, 'filter');
