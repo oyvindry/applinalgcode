@@ -629,7 +629,7 @@ function x=idwt_kernel_ortho(x, filters, bd_mode)
     N = size(x, 1);
     y1 = 0; y2 = 0;
     
-    if strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'bd_pre')
+    if ( strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'bd_pre') )
        y1 = filters.AL*x(1:size(filters.AL,2));
        y2 = filters.AR*x((N-size(filters.AR,2)+1):N);
     end
@@ -650,7 +650,7 @@ function x=idwt_kernel_ortho(x, filters, bd_mode)
     x(1:2:N, :)=x(1:2:N, :)/filters.alpha;
     x(2:2:N, :)=x(2:2:N, :)/filters.beta;
 
-    if strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'bd_pre')
+    if ( strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'bd_pre') )
         x(1:size(filters.AL,1)) = x(1:size(filters.AL,1)) + y1;
         x((N-size(filters.AR,1)+1):N) = x((N-size(filters.AR,1)+1):N) + y2;
         if strcmpi(bd_mode, 'bd_pre')
@@ -734,17 +734,6 @@ function filters=liftingfactortho(N, type, debug_mode)
     if (nargin == 1)
         type = 0;
     end
-    
-    % We remove the persistent variables until we are done testing, so that
-    % everything is recomputed each time one call this function.
-
-    %persistent filterMap;
-    %if (isempty(filterMap)) 
-    %    filterMap = containers.Map('KeyType', 'double', 'ValueType', 'any');
-    %end
-    %if (filterMap.isKey(N) && debugMode == 0) 
-    %    filters = filterMap(N);
-    %else
         
     % First the right edge
     if (type == 0)
@@ -757,48 +746,44 @@ function filters=liftingfactortho(N, type, debug_mode)
     g0 = flip(g0);
     g1 = flip(g1);
     filters = liftingstepscomputeortho(h0, h1);
-    
+     
     [W, A_pre, A_pre_inv] = bw_compute_left(h0, g0, debug_mode); % Lower right (3N-1)x(2N) matrix
-    %filters.A_R_pre = fliplr(flipud(A_pre));
-    %filters.A_R_pre_inv = fliplr(flipud(A_pre_inv));
+    
     WR = zeros(size(W));
     for k=1:N
         WR(:,[2*k-1 2*k]) = W(size(W,1):(-1):1,2*N+1-[2*k 2*k-1]); 
     end
-
+     
     % Then the left edge
     h0 = flip(h0);
     h1 = flip(h1);
     g0 = flip(g0);
     g1 = flip(g1);
+     
     filters = liftingstepscomputeortho(h0, h1);
     filters.A_R_pre = fliplr(flipud(A_pre));
     filters.A_R_pre_inv = fliplr(flipud(A_pre_inv));
     [WL,A_pre, A_pre_inv] = bw_compute_left(h0, g0, debug_mode); % Upper left (3N-1)x(2N) matrix
     filters.A_L_pre = A_pre;
     filters.A_L_pre_inv = A_pre_inv;
-  
+     
     % Compute the left and right parts of the IDWT for boundary handling
     M = 6*N;
     seg1 = zeros(M); % One bigger than is actually needed
-    
+     
     filters.AL = zeros(size(WL));
     filters.AR = zeros(size(WR));
+    
     for k=0:(M-1)
         x = zeros(M,1);
         x(k+1) = 1;
-        seg1(:,k+1) = idwt_kernel_ortho(x, filters, 2, 0);
+        seg1(:,k+1) = idwt_kernel_ortho(x, filters, 'bd');
     end
-    
+     
     [w1, w2] = size(WL);
     filters.AL=WL-seg1(1:w1,1:w2);
     filters.AR=WR-seg1((M-w1+1):M,(M-w2+1):M);
-    
-        %if (debugMode == 0)
-        %    % Store filters to current session
-        %    filterMap(N) = filters;
-        %end
-    %end
+     
 end
 
 function [h0, h1, g0, g1]=h0h1computeortho(N)
