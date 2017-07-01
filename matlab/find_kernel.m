@@ -735,6 +735,9 @@ function filter=getDBfilter(vm, type)
     %    load(filename);
     %else
         filter = liftingfactortho(vm, type);
+        %global AL AR;
+        %AL = filter.AL;
+        %AR = filter.AR
     %    
     %    if (exist(strcat(cur_dir, '/var')) ~= 7)
     %        mkdir(strcat(cur_dir,'/var'));
@@ -880,7 +883,7 @@ function filters=liftingfactortho(N, type, debug_mode)
         x(k+1) = 1;
         seg1(:,k+1) = idwt_kernel_ortho(x, filters, 'bd');
     end
-     
+    
     [w1, w2] = size(WL);
     filters.AL=WL-seg1(1:w1,1:w2);
     filters.AR=WR-seg1((M-w1+1):M,(M-w2+1):M);
