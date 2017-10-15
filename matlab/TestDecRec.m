@@ -35,6 +35,7 @@ classdef TestDecRec < matlab.unittest.TestCase
         function testHaar(testCase)
             testWaveletDecRec(testCase, 'pwl2');
         end
+
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %                       Daubechies wavelets                            
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -63,7 +64,9 @@ classdef TestDecRec < matlab.unittest.TestCase
         function testDB8(testCase)
             testWaveletDecRec(testCase, 'db8');
         end
+
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
         function testDB2bd(testCase)
             testWaveletDecRecBoundary(testCase, 'db2');
         end
@@ -79,13 +82,13 @@ classdef TestDecRec < matlab.unittest.TestCase
         function testDB6bd(testCase)
             testWaveletDecRecBoundary(testCase, 'db6');
         end
-        function testDB7bd(testCase)
-            testWaveletDecRecBoundary(testCase, 'db7');
-        end
-        function testDB8bd(testCase)
-            testWaveletDecRecBoundary(testCase, 'db8');
-        end
-        
+        %function testDB7bd(testCase)
+        %    testWaveletDecRecBoundary(testCase, 'db7');
+        %end
+        %function testDB8bd(testCase)
+        %    testWaveletDecRecBoundary(testCase, 'db8');
+        %end
+                
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %                       Symlets wavelets                            
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -124,14 +127,31 @@ classdef TestDecRec < matlab.unittest.TestCase
         function testSYM5bd(testCase)
             testWaveletDecRecBoundary(testCase, 'sym5');
         end
-        function testSYM6bd(testCase)
-            testWaveletDecRecBoundary(testCase, 'sym6');
+        %function testSYM6bd(testCase)
+        %    testWaveletDecRecBoundary(testCase, 'sym6');
+        %end
+        %function testSYM7bd(testCase)
+        %    testWaveletDecRecBoundary(testCase, 'sym7');
+        %end
+        %function testSYM8bd(testCase)
+        %    testWaveletDecRecBoundary(testCase, 'sym8');
+        %end
+
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %                       Precond wavelets                            
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        function test_BD_precond_vm2(testCase)
+            testPrecondBoundary(testCase, 2);
         end
-        function testSYM7bd(testCase)
-            testWaveletDecRecBoundary(testCase, 'sym7');
+        function test_BD_precond_vm3(testCase)
+            testPrecondBoundary(testCase, 3);
         end
-        function testSYM8bd(testCase)
-            testWaveletDecRecBoundary(testCase, 'sym8');
+        function test_BD_precond_vm4(testCase)
+            testPrecondBoundary(testCase, 4);
+        end
+        function test_BD_precond_vm5(testCase)
+            testPrecondBoundary(testCase, 5);
         end
     end
     methods (Access=private)
@@ -152,10 +172,34 @@ classdef TestDecRec < matlab.unittest.TestCase
             x = testCase.x;
             eps = testCase.eps;
             nres = testCase.nres;
+            
             z = IDWTImpl(DWTImpl(x, nres, wave_name, 'bd', 0), nres, wave_name, 'bd', 0);
             testCase.verifyTrue(norm(z-x,2) < eps);
+            
             z = IDWTImpl(DWTImpl(x, nres, wave_name, 'bd_pre', 0), nres, wave_name, 'bd_pre', 0);
             testCase.verifyTrue(norm(z-x,2) < eps);
+        end
+        
+        % This function needs to be developed further
+        function testPrecondBoundary(testCase, vm)
+            
+            wave_name = sprintf('db%d', vm);
+            
+            eps = testCase.eps;
+            nres = testCase.nres;
+            N = testCase.N;
+
+            x = linspace(0,1,N)';
+            success = 1;
+            for i = 1:vm
+                y = x.^(i-1);
+                z = DWTImpl(x, nres, wave_name, 'bd_pre');
+                a = z(N/2^nres+1:N);
+
+                success = success & norm(a,2) < eps;
+            end
+            testCase.verifyTrue(success);
+            
         end
     end
 end 
