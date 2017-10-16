@@ -4,19 +4,28 @@ function x = DWT2Impl_internal(x, nres, f, bd_mode)
     sz1 = sz; sz1(1) = [];
     sz2 = sz; sz2(2) = [];
     for res = 0:(nres - 1)
-        sz2(1) = M; Y2 = zeros(sz2);
-        sz1(1) = N; Y1 = zeros(sz1);
+        
+        sz2(1) = M; 
+        sz1(1) = N; 
+        
         if length(sz1)==1
-            Y1=zeros(sz1, 1); Y2=zeros(sz2, 1);
+            Y1=zeros(sz1, 1); 
+            Y2=zeros(sz2, 1);
+        else
+            Y2 = zeros(sz2);
+            Y1 = zeros(sz1);         
         end
+        
         for n = 1:2^res:N0
             Y2(:, :) = x(1:2^res:M0, n, :);
             x(1:2^res:M0, n, :) = f(Y2, bd_mode);
         end
+        
         for m = 1:2^res:M0
             Y1(:, :) = x(m, 1:2^res:N0, :);
             x(m, 1:2^res:N0, :) = f(Y1, bd_mode);
         end
+        
         M = ceil(M/2); N = ceil(N/2);
     end
     
@@ -39,8 +48,8 @@ function Y=reorganize_coeffs2_forward(X, nres)
         lw1 = length(inds1);
         lw2 = length(inds2);
         
-        Y((lc1 + 1):(lc1 + lw1), 1:lc2, :) = X(inds1, 1:2^res:M, :);
-        Y((lc1 + 1):(lc1 + lw1), (lc2+1):(lc2+lw2), :) = X(inds1, (1+2^(res-1)):2^res:M, :);
+        Y((lc1 + 1):(lc1 + lw1), 1:lc2, :) = X(inds1, 1:2^res:N, :);
+        Y((lc1 + 1):(lc1 + lw1), (lc2+1):(lc2+lw2), :) = X(inds1, (1+2^(res-1)):2^res:N, :);
         Y(1:lc1, (lc2 + 1):(lc2 + lw2), :) = X(1:2^res:M, inds2, :);
 
         lc1 = lc1 + lw1;
