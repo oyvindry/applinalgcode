@@ -513,8 +513,8 @@ function x=dwt_kernel_ortho_dual(x, filters, bd_mode)
 %        x((end-size(filters.A_R_pre,1)+1):end) = filters.A_R_pre*x((end-size(filters.A_R_pre,1)+1):end);
 %    end
     if strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'bd_pre')
-        y1 = filters.AL'*x(1:size(filters.AL,1));
-        y2 = filters.AR'*x((N-size(filters.AR,1)+1):N);
+        y1 = filters.AL'*x(1:size(filters.AL,1), :);
+        y2 = filters.AR'*x((N-size(filters.AR,1)+1):N, :);
         
         x(1:2:N, :) = x(1:2:N, :)*filters.alpha;
         x(2:2:N, :) = x(2:2:N, :)*filters.beta;
@@ -539,8 +539,8 @@ function x=dwt_kernel_ortho_dual(x, filters, bd_mode)
         end
     end
     if strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'bd_pre')
-        x(1:size(filters.AL,2)) = x(1:size(filters.AL,2)) + y1;
-        x((N-size(filters.AR,2)+1):N) = x((N-size(filters.AR,2)+1):N) + y2;
+        x(1:size(filters.AL,2), :) = x(1:size(filters.AL,2), :) + y1;
+        x((N-size(filters.AR,2)+1):N, :) = x((N-size(filters.AR,2)+1):N, :) + y2;
     end
 end
 
@@ -559,8 +559,8 @@ function x=dwt_kernel_ortho(x, filters, bd_mode)
 %    end
     if strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'bd_pre')
         % Store the boundary coefficients
-        y1 = filters.AL'*x(1:size(filters.AL,1));
-        y2 = filters.AR'*x((N-size(filters.AR,1)+1):N);
+        y1 = filters.AL'*x(1:size(filters.AL,1), :);
+        y2 = filters.AR'*x((N-size(filters.AR,1)+1):N, :);
         
         % Why is we dividing on filters.alpha in this step, while multipling on
         % if we do not use boundary wavelets. 
@@ -590,8 +590,8 @@ function x=dwt_kernel_ortho(x, filters, bd_mode)
     end
     if strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'bd_pre')
         % Add the boundary coefficents 
-        x(1:size(filters.AL,2)) = x(1:size(filters.AL,2)) + y1;
-        x((N-size(filters.AR,2)+1):N) = x((N-size(filters.AR,2)+1):N) + y2;
+        x(1:size(filters.AL,2), :) = x(1:size(filters.AL,2), :) + y1;
+        x((N-size(filters.AR,2)+1):N, :) = x((N-size(filters.AR,2)+1):N, :) + y2;
     end
 end
 
@@ -604,8 +604,8 @@ function x=idwt_kernel_ortho_dual(x, filters, bd_mode)
     y1 = 0; y2 = 0;
     
     if strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'bd_pre')
-       y1 = filters.AL*x(1:size(filters.AL,2));
-       y2 = filters.AR*x((N-size(filters.AR,2)+1):N);
+       y1 = filters.AL*x(1:size(filters.AL,2), :);
+       y2 = filters.AR*x((N-size(filters.AR,2)+1):N, :);
     end
     stepnr = 1;
     if mod(size(filters.lambdas, 1), 2) == 1
@@ -624,8 +624,8 @@ function x=idwt_kernel_ortho_dual(x, filters, bd_mode)
     x(2:2:N, :) = x(2:2:N, :)*filters.beta;
     
     if strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'bd_pre')
-        x(1:size(filters.AL,1)) = x(1:size(filters.AL,1)) + y1;
-        x((N-size(filters.AR,1)+1):N) = x((N-size(filters.AR,1)+1):N) + y2;
+        x(1:size(filters.AL,1), :) = x(1:size(filters.AL,1), :) + y1;
+        x((N-size(filters.AR,1)+1):N, :) = x((N-size(filters.AR,1)+1):N, :) + y2;
 %        if strcmpi(bd_mode, 'bd_pre')
 %            x(1:size(filters.A_L_pre_inv,1)) = filters.A_L_pre_inv*x(1:size(filters.A_L_pre_inv,1));
 %            x((end-size(filters.A_R_pre_inv,1)+1):end) = filters.A_R_pre_inv*x((end-size(filters.A_R_pre_inv,1)+1):end);
