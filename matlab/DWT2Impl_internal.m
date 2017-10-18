@@ -49,7 +49,7 @@ function Y=reorganize_coeffs2_forward(X, nres)
         lw2 = length(inds2);
         
         Y((lc1 + 1):(lc1 + lw1), 1:lc2, :) = X(inds1, 1:2^res:N, :);
-        Y((lc1 + 1):(lc1 + lw1), (lc2+1):(lc2+lw2), :) = X(inds1, (1+2^(res-1)):2^res:N, :);
+        Y((lc1 + 1):(lc1 + lw1), (lc2+1):(lc2+lw2), :) = X(inds1, inds2, :);
         Y(1:lc1, (lc2 + 1):(lc2 + lw2), :) = X(1:2^res:M, inds2, :);
 
         lc1 = lc1 + lw1;

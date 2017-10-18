@@ -44,7 +44,7 @@ function Y=reorganize_coeffs2_reverse(X, nres)
         lw2 = length(inds2);
         
         Y(inds1, 1:2^res:N, :) = X((lc1 + 1):(lc1 + lw1), 1:lc2, :);
-        Y(inds1, (1+2^(res-1)):2^res:N, :) = X((lc1 + 1):(lc1 + lw1), (lc2+1):(lc2+lw2), :);
+        Y(inds1, inds2, :) = X((lc1 + 1):(lc1 + lw1), (lc2+1):(lc2+lw2), :);
         Y(1:2^res:M, inds2, :) = X(1:lc1, (lc2 + 1):(lc2 + lw2), :);
         
         lc1 = lc1 + lw1;
