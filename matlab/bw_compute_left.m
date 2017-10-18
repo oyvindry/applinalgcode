@@ -70,22 +70,9 @@ function [W,A_pre,A_pre_inv]=bw_compute_left(h0, g0, debugMode)
     % Theorem 3.4
     X_e = inv(P)*X_e*P;
     Z_e = Z_e*P;
+    
     A_pre_inv = A_pre_inv*P;
     A_pre = inv(A_pre_inv);
-    
-    if (debugMode == 1)
-        % Step 2: Orthogonalize phi-functions
-        ls = eye(N^2)-kron(X_e',X_e');
-        rs = reshape(Z_e'*Z_e, [N^2, 1]); % From matrix to vector
-        Y  = reshape(ls\rs, [N, N]);      % From vector to matrix
-        P = ortho_from_gramm(Y, N);
-        
-        % Theorem 3.4
-        X_e = inv(P)*X_e*P;
-        Z_e = Z_e*P;
-        A_pre_inv = A_pre_inv*P;
-        A_pre = inv(A_pre_inv);
-    end
     
     % Step 3: Project the psi-functions onto the orthogonal complement of the,
     % phi-functions. 
@@ -109,6 +96,12 @@ function [W,A_pre,A_pre_inv]=bw_compute_left(h0, g0, debugMode)
     Z_o = Z_o*P;
     
     W = zeros(3*N-1,2*N);
+    %disp('-------');
+    %size(X_e)
+    %size(Z_e)
+    %X_e
+    %Z_e
+    %disp('-------');
     W(:, 1:2:(2*N-1)) = [X_e; Z_e];
     W(:, 2:2:(2*N)) = [X_o; Z_o];
 end    

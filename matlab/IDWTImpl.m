@@ -30,11 +30,11 @@ function x=IDWTImpl(x, nres, wave_name, bd_mode, dual, transpose)
         if (strcmpi(wave_name(1:2),'db') )
             vm = str2num(wave_name(3:end));
             filters = getDBfilter(vm, 0);
-        end
-        
-        if( strcmpi(wave_name(1:3),'sym') )
+        elseif( strcmpi(wave_name(1:3),'sym') )
             vm = str2num(wave_name(4:end));
             filters = getDBfilter(vm, 0);
+        else
+            error('Unknown wavelet for bd_pre option');
         end
     end
     

@@ -153,6 +153,24 @@ classdef TestDecRec < matlab.unittest.TestCase
         function test_BD_precond_vm5(testCase)
             testPrecondBoundary(testCase, 5);
         end
+        
+        function test_2d_input(testCase)
+            eps = testCase.eps;
+            N = 32;
+            nres = 2;
+            wname = 'pwl0';
+            bd_mode = 'per';
+            
+            X = rand(N,N);
+            Z = DWTImpl(X, nres, wname, bd_mode);
+            Y = IDWTImpl(Z, nres, wname, bd_mode);
+            err = norm(X-Y,'fro');
+            testCase.verifyTrue(err < eps);
+        end
+
+
+
+
     end
     methods (Access=private)
         function testWaveletDecRec(testCase, wave_name)
