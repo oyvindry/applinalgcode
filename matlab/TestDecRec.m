@@ -198,7 +198,6 @@ classdef TestDecRec < matlab.unittest.TestCase
             testCase.verifyTrue(norm(z-x,2) < eps);
         end
         
-        % This function needs to be developed further
         function testPrecondBoundary(testCase, vm)
             
             wave_name = sprintf('db%d', vm);
