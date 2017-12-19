@@ -16,7 +16,7 @@ function filter=getDBfilter(vm, type)
     %if (exist(filename) == 2);
     %    load(filename);
     %else
-        filter = liftingfactortho(vm, type);
+        filter = liftingfactortho(vm, type, 1);
         
     %    if (exist(strcat(cur_dir, '/var')) ~= 7)
     %        mkdir(strcat(cur_dir,'/var'));

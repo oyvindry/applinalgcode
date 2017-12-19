@@ -52,10 +52,11 @@ function filters=liftingfactortho(N, type, debug_mode)
     end  
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     WR = zeros(size(W));
+    %W
     for k=1:N
         WR(:,[2*k-1 2*k]) = W(size(W,1):(-1):1,2*N+1-[2*k 2*k-1]); 
     end
-     
+    %WR 
     % Then the left edge
     h0 = flip(h0);
     h1 = flip(h1);
@@ -65,7 +66,7 @@ function filters=liftingfactortho(N, type, debug_mode)
     filters = liftingstepscomputeortho(h0, h1);
     filters.A_R_pre = fliplr(flipud(A_pre));
     filters.A_R_pre_inv = fliplr(flipud(A_pre_inv));
-    [WL,A_pre, A_pre_inv] = bw_compute_left(h0, g0, debug_mode); % Upper left (3N-1)x(2N) matrix
+    [WL, A_pre, A_pre_inv] = bw_compute_left(h0, g0, debug_mode); % Upper left (3N-1)x(2N) matrix
     if (type == 0)
         dest = 'my_CDJV_filters';
         
@@ -79,7 +80,7 @@ function filters=liftingfactortho(N, type, debug_mode)
         save(filenameA_pre, 'AL_pre');
         save(filenameA_pre_inv, 'AL_pre_inv');
     end  
-    
+    %WL
     filters.A_L_pre = A_pre;
     filters.A_L_pre_inv = A_pre_inv;
      
@@ -96,7 +97,7 @@ function filters=liftingfactortho(N, type, debug_mode)
         seg1(:,k+1) = idwt_kernel_ortho(x, filters, 'bd');
     end
 
-    % Why is WL computed in another way than WR? 
+    
     [w1, w2] = size(WL);
     filters.AL=WL-seg1(1:w1,1:w2);
     filters.AR=WR-seg1((M-w1+1):M,(M-w2+1):M);

@@ -82,9 +82,9 @@ classdef TestDecRec < matlab.unittest.TestCase
         function testDB6bd(testCase)
             testWaveletDecRecBoundary(testCase, 'db6');
         end
-        %function testDB7bd(testCase)
-        %    testWaveletDecRecBoundary(testCase, 'db7');
-        %end
+        function testDB7bd(testCase)
+            testWaveletDecRecBoundary(testCase, 'db7');
+        end
         %function testDB8bd(testCase)
         %    testWaveletDecRecBoundary(testCase, 'db8');
         %end
@@ -153,6 +153,9 @@ classdef TestDecRec < matlab.unittest.TestCase
         function test_BD_precond_vm5(testCase)
             testPrecondBoundary(testCase, 5);
         end
+        function test_BD_precond_vm6(testCase)
+            testPrecondBoundary(testCase, 6);
+        end
         
         function test_2d_input(testCase)
             eps = testCase.eps;
@@ -190,12 +193,18 @@ classdef TestDecRec < matlab.unittest.TestCase
             x = testCase.x;
             eps = testCase.eps;
             nres = testCase.nres;
-            
+
             z = IDWTImpl(DWTImpl(x, nres, wave_name, 'bd', 0), nres, wave_name, 'bd', 0);
             testCase.verifyTrue(norm(z-x,2) < eps);
-            
+            if(or(strcmp(wave_name, 'db6'),strcmp(wave_name, 'db7')) )
+                norm(z-x,2);
+            end
+
             z = IDWTImpl(DWTImpl(x, nres, wave_name, 'bd_pre', 0), nres, wave_name, 'bd_pre', 0);
             testCase.verifyTrue(norm(z-x,2) < eps);
+            if(or(strcmp(wave_name, 'db6'),strcmp(wave_name, 'db7')) )
+                norm(z-x,2); 
+            end
         end
         
         function testPrecondBoundary(testCase, vm)
