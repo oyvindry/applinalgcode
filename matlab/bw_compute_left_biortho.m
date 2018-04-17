@@ -1,8 +1,8 @@
-function [W,Wtilde,A_pre,A_pre_inv,Atilde_pre,Atilde_pre_inv]=bw_compute_left_biortho(g0,N,h0,Ntilde,debugMode)
-    % bw_compute_left_biortho(sym([1/4; 1/2; 1/4]), 2, sym([-1/4; 1/2; 3/2; 1/2; -1/4]), 2);
+function [W,Wtilde,A_pre,A_pre_inv,Atilde_pre,Atilde_pre_inv]=bw_compute_left_biortho(g0,g1,N,h0,h1,Ntilde,debugMode)
+    % bw_compute_left_biortho(sym([1/4; 1/2; 1/4]), 2, sym([-1/4; 1/2; 3/2; 1/2; -1/4]), 2); % not correct
     % general: 
     %   [h0,h1,g0,g1]=compute_spline_filters(N, Ntilde); % internal function
-    %   bw_compute_left_biortho(g0,N,h0,Ntilde);
+    %   bw_compute_left_biortho(g0,g1,N,h0,h1,Ntilde);
 
     Nprime = max(N,Ntilde);
     R = (length(g0)-1)/2; Rtilde = (length(h0)-1)/2;
@@ -59,11 +59,11 @@ function [W,Wtilde,A_pre,A_pre_inv,Atilde_pre,Atilde_pre_inv]=bw_compute_left_bi
     Ttilde = val/2;
 
     % Find initial boundary functions
-    Gup = Geven(g0,L:R,(-R+1):(K-1),(-2*R+2):2:(2*K-2));
-    Gdown = Geven(g0,L:R,K:(2*K+R-2),(-2*R+2):2:(2*K-2));
+    Gup = Gsegment(g0,L:R,(-R+1):(K-1),(-2*R+2):2:(2*K-2));
+    Gdown = Gsegment(g0,L:R,K:(2*K+R-2),(-2*R+2):2:(2*K-2));
     
-    Gtildeup = Geven(h0,Ltilde:Rtilde,(-Rtilde+1):(Ktilde-1),(-2*Rtilde+2):2:(2*Ktilde-2));
-    Gtildedown = Geven(h0,Ltilde:Rtilde,Ktilde:(2*Ktilde+Rtilde-2),(-2*Rtilde+2):2:(2*Ktilde-2));
+    Gtildeup = Gsegment(h0,Ltilde:Rtilde,(-Rtilde+1):(Ktilde-1),(-2*Rtilde+2):2:(2*Ktilde-2));
+    Gtildedown = Gsegment(h0,Ltilde:Rtilde,Ktilde:(2*Ktilde+Rtilde-2),(-2*Rtilde+2):2:(2*Ktilde-2));
     
     [C,C_c]=findc(R,K,N);
     [Ctilde,C_ctilde]=findc(Rtilde,Ktilde,Ntilde);
@@ -79,6 +79,9 @@ function [W,Wtilde,A_pre,A_pre_inv,Atilde_pre,Atilde_pre_inv]=bw_compute_left_bi
     P = inv(invP);
     Xe = inv(P)*Xe*P;
     Ze = Ze*P;
+    if N == Ntilde
+        A_pre_inv = C((K+R-N):end,:)*P;
+    end
     
     % Make phitilde staggered
     [Lmatr,Umatr] = lu((flipud(Ctilde((Rtilde+Ktilde-Ntilde):end,:)))');
@@ -86,18 +89,21 @@ function [W,Wtilde,A_pre,A_pre_inv,Atilde_pre,Atilde_pre_inv]=bw_compute_left_bi
     P = inv(invP);
     Xtildee = inv(P)*Xtildee*P;
     Ztildee = Ztildee*P;
-
+    if N == Ntilde
+        Atilde_pre_inv = Ctilde((Ktilde+Rtilde-Ntilde):end,:)*P;
+    end
+    
     % Address when Ntilde and N are different
     if Ntilde > N    
-        XG = Geven(g0,L:R,(2*K+L):(Ktilde-1),(2*K):2:(2*Ktilde-2));
-        ZG = Geven(g0,L:R,Ktilde:(2*Ktilde+R-2),(2*K):2:(2*Ktilde-2));
+        XG = Gsegment(g0,L:R,(2*K+L):(Ktilde-1),(2*K):2:(2*Ktilde-2));
+        ZG = Gsegment(g0,L:R,Ktilde:(2*Ktilde+R-2),(2*K):2:(2*Ktilde-2));
                    
         Xe = [Xe zeros(K+L+N,Ntilde-N); Ze(1:(Ntilde-N),:) XG];
         [Ze,ZG] = expand_cols_smallest(Ze((Ntilde-N+1):end,:), ZG);
         Ze = [Ze ZG];
     elseif N > Ntilde
-        XG = Geven(h0,Ltilde:Rtilde,(2*Ktilde+Ltilde):(K-1),(2*Ktilde):2:(2*K-2));
-        ZG = Geven(h0,Ltilde:Rtilde,K:(2*K+Rtilde-2),(2*Ktilde):2:(2*K-2));
+        XG = Gsegment(h0,Ltilde:Rtilde,(2*Ktilde+Ltilde):(K-1),(2*Ktilde):2:(2*K-2));
+        ZG = Gsegment(h0,Ltilde:Rtilde,K:(2*K+Rtilde-2),(2*Ktilde):2:(2*K-2));
                 
         Xtildee = [Xtildee zeros(Ktilde+Ltilde+Ntilde,N-Ntilde); Ztildee(1:(N-Ntilde),:) XG];
         [Ztildee,ZG] = expand_cols_smallest(Ztildee((N-Ntilde+1):end,:), ZG);
@@ -124,14 +130,22 @@ function [W,Wtilde,A_pre,A_pre_inv,Atilde_pre,Atilde_pre_inv]=bw_compute_left_bi
     [Xtildee;Ztildee];
     % [Xe' Ze'] * [Xtildee; Ztildee] % ok
     
+    if N == Ntilde
+        A_pre_inv = A_pre_inv*P1;
+        Atilde_pre_inv = Atilde_pre_inv*P2;
+    
+        A_pre = inv(A_pre_inv);
+        Atilde_pre = inv(Atilde_pre_inv);
+    end
+    
     % psi-funksjoner
 
     % Construct Xo
-    newcols = Geven(g0,L:R,0:(2*T + R + K - N),(2*Nprime):2:(2*T));
+    newcols = Gsegment(g0,L:R,0:(2*T + R + K - N),(2*Nprime):2:(2*T));
     [Rmatr, newcols] = expand_cols_smallest([Xe;Ze], newcols);
     G = [Rmatr newcols];
     
-    newcols = Geven(h0,Ltilde:Rtilde,0:(2*T + Rtilde + K - N),(2*Nprime):2:(2*T));
+    newcols = Gsegment(h0,Ltilde:Rtilde,0:(2*T + Rtilde + K - N),(2*Nprime):2:(2*T));
     [Rmatr, newcols] = expand_cols_smallest([Xtildee;Ztildee], newcols);
     Gtilde = [Rmatr newcols];
     
@@ -150,11 +164,11 @@ function [W,Wtilde,A_pre,A_pre_inv,Atilde_pre,Atilde_pre_inv]=bw_compute_left_bi
     Xo = Xo*P;
     
     % Construct Xtildeo
-    newcols = Geven(h0,Ltilde:Rtilde,0:(2*Ttilde + Rtilde + K - N),(2*Nprime):2:(2*Ttilde));
+    newcols = Gsegment(h0,Ltilde:Rtilde,0:(2*Ttilde + Rtilde + K - N),(2*Nprime):2:(2*Ttilde));
     [Rmatr, newcols] = expand_cols_smallest([Xtildee;Ztildee], newcols);
     Gtilde = [Rmatr newcols];
     
-    newcols = Geven(g0,L:R,0:(2*Ttilde + R + K - N),(2*Nprime):2:(2*Ttilde));
+    newcols = Gsegment(g0,L:R,0:(2*Ttilde + R + K - N),(2*Nprime):2:(2*Ttilde));
     [Rmatr, newcols] = expand_cols_smallest([Xe;Ze], newcols);
     G = [Rmatr newcols];
     
@@ -180,16 +194,41 @@ function [W,Wtilde,A_pre,A_pre_inv,Atilde_pre,Atilde_pre_inv]=bw_compute_left_bi
     Xo = Xo*P1;
     Xtildeo = Xtildeo*P2;
 
-    % testcode
-    Xe_test = [Xe;Ze]; Xtildee_test=[Xtildee; Ztildee];
-    [Xe_test, Xo_test]=expand_cols_smallest(Xe_test, Xo);
-    [Xtildee_test, Xtildeo_test]=expand_cols_smallest(Xtildee_test, Xtildeo);
-    W = [Xe_test Xo_test];
-    W(:,1:2:end) = Xe_test; W(:,2:2:end) = Xo_test; % TODO: adjust placement
-    Wtilde = [Xtildee_test Xtildeo_test];
-    Wtilde(:,1:2:end) = Xtildee_test; Wtilde(:,2:2:end) = Xtildeo_test; % TODO: adjust placement
-    [W, Wtilde]=expand_cols_smallest(W, Wtilde);
+    % Assemble W
+    Xe = [Xe; Ze];
+    [Xe, Xo] = expand_cols_smallest(Xe, Xo);
+    numcolsW = K-N + 2*max(Nprime,N0);
+    W = sym(zeros(size(Xe,1),numcolsW));
+    W(:,1:(K-N)) = Xo(:,1:(K-N));                       % K-N psi-functions at the beginning.
+    W(:,K - N     + 2*(1:N0))     = Xo(:,(K-N+1):end);  % the remaining psi-functions
+    W(:,K - N - 1 + 2*(1:Nprime)) = Xe;                 % all phi functions
+    if Nprime > N0 % Add internal psi-functions
+        insertpsi = Gsegment(g1, [-Rtilde,-Ltilde], (2*(N0+K-N) - Rtilde + 1):(2*(Nprime+K-N) - Ltilde + 1), 2*((N0:(Nprime-1))+K-N) + 1);
+        W( (2* N0+K-N - Rtilde + 1):(2*Nprime+K-N - Ltilde + 1), (K - N + 2*N0 + 2):2:end) = insertpsi;
+    end
+    if N0 > Nprime % Add internal phi-functions
+        insertphi = Gsegment(g0, [L,R], (2*(Nprime+K-N) + L):(2*(N0+K-N) + R), 2*((Nprime:(N0-1))+K-N));
+        W( (2*Nprime + K - N + L):(2*N0 + K - N + R), (K - N + 1 + 2*(Nprime:end)) = insertphi;
+    end
     
+    % Assemble Wtilde
+    Xtildee = [Xtildee; Ztildee];
+    [Xtildee, Xtildeo]=expand_cols_smallest(Xtildee, Xtildeo);
+    numcolsWtilde = K-N + 2*max(Nprime,N0);
+    Wtilde = sym(zeros(size(Xtildee,1),numcolsWtilde));
+    Wtilde(:,1:(K-N)) = Xtildeo(:,1:(K-N));
+    Wtilde(:,K - N     + 2*(1:N0))     = Xtildeo(:,(K-N+1):end);
+    Wtilde(:,K - N - 1 + 2*(1:Nprime)) = Xtildee;
+    if Nprime > N0 % Add internal psi-functions
+        insertpsi = Gsegment(h1, [-R,-L], (2*(N0+K-N) - R + 1):(2*(Nprime+K-N) - L + 1), 2*((N0:(Nprime-1))+K-N) + 1);
+        Wtilde( (2* N0+K-N - R + 1):(2*Nprime+K-N - L + 1), (K - N + 2*N0 + 2):2:end) = insertpsi;
+    end
+    if N0 > Nprime % Add internal phi-functions
+        insertphi = Gsegment(h0, [Ltilde,Rtilde], (2*(Nprime+K-N) + Ltilde):(2*(N0+K-N) + Rtilde), 2*((Nprime:(N0-1))+K-N));
+        Wtilde( (2*Nprime + K - N + Ltilde):(2*N0 + K - N + Rtilde), (K - N + 1 + 2*(Nprime:end)) = insertphi;
+    end
+    
+    [W, Wtilde]=expand_cols_smallest(W, Wtilde);    
     W % only dyadic fractions?
     Wtilde % only dyadic fractions?
     W'*Wtilde % Should be identity matrix
@@ -205,7 +244,7 @@ function [Anew,Bnew]=expand_cols_smallest(A,B)
     end
 end
 
-function val=Geven(g0,supp,rowrange,colrange)
+function val=Gsegment(g0,supp,rowrange,colrange)
     val = sym(zeros(length(rowrange),length(colrange)));
     k=1;
     for col_ind = colrange
