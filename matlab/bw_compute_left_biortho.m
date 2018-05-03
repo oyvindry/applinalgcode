@@ -3,7 +3,11 @@ function [W,Wtilde,A_pre,A_pre_inv,Atilde_pre,Atilde_pre_inv]=bw_compute_left_bi
     % general: 
     %   [h0,h1,g0,g1]=compute_spline_filters(N, Ntilde); % internal function
     %   bw_compute_left_biortho(g0,g1,N,h0,h1,Ntilde);
-
+    
+    A_pre = eye(N);
+    A_pre_inv = eye(N);
+    Atilde_pre = eye(Ntilde);
+    Atilde_pre_inv = eye(Ntilde);
     Nprime = max(N,Ntilde);
     R = (length(g0)-1)/2; Rtilde = (length(h0)-1)/2;
     L  = -R; Ltilde = -Rtilde;
@@ -91,15 +95,17 @@ function [W,Wtilde,A_pre,A_pre_inv,Atilde_pre,Atilde_pre_inv]=bw_compute_left_bi
     if Ntilde > N    
         XG = Gsegment(g0,L:R,(2*K+L):(Ktilde-1),(2*K):2:(2*Ktilde-2));
         ZG = Gsegment(g0,L:R,Ktilde:(2*Ktilde+R-2),(2*K):2:(2*Ktilde-2));
-                   
-        Xe = [Xe zeros(K+L+N,Ntilde-N); Ze(1:(Ntilde-N),:) XG];
+        
+        Xe = [Xe; Ze(1:(Ntilde-N),:)];
+        Xe = [Xe [zeros(K+L+N,Ntilde-N); XG]];
         [Ze,ZG] = expand_cols_smallest(Ze((Ntilde-N+1):end,:), ZG);
         Ze = [Ze ZG];
     elseif N > Ntilde
         XG = Gsegment(h0,Ltilde:Rtilde,(2*Ktilde+Ltilde):(K-1),(2*Ktilde):2:(2*K-2));
         ZG = Gsegment(h0,Ltilde:Rtilde,K:(2*K+Rtilde-2),(2*Ktilde):2:(2*K-2));
-                
-        Xtildee = [Xtildee zeros(Ktilde+Ltilde+Ntilde,N-Ntilde); Ztildee(1:(N-Ntilde),:) XG];
+        
+        Xtildee = [Xtildee; Ztildee(1:(N-Ntilde),:)];
+        Xtildee = [Xtildee [zeros(Ktilde+Ltilde+Ntilde,N-Ntilde); XG]];
         [Ztildee,ZG] = expand_cols_smallest(Ztildee((N-Ntilde+1):end,:), ZG);
         Ztildee = [Ztildee ZG];
     end
@@ -189,46 +195,35 @@ function [W,Wtilde,A_pre,A_pre_inv,Atilde_pre,Atilde_pre_inv]=bw_compute_left_bi
     Xtildeo = Xtildeo*P2;
 
     % Assemble W and Wtilde
-    Xe = [Xe; Ze];
-    [Xe, Xo] = expand_cols_smallest(Xe, Xo);
-    numcols = K-N + 2*max(Nprime,N0);
-    W = sym(zeros(size(Xe,1),numcols));
-    W(:,1:(K-N)) = Xo(:,1:(K-N));                       % K-N psi-functions at the beginning.
-    W(:,K - N     + 2*(1:N0))     = Xo(:,(K-N+1):end);  % the remaining psi-functions
-    W(:,K - N - 1 + 2*(1:Nprime)) = Xe;                 % all phi functions
-    
-    Xtildee = [Xtildee; Ztildee];
-    [Xtildee, Xtildeo]=expand_cols_smallest(Xtildee, Xtildeo);
-    Wtilde = sym(zeros(size(Xtildee,1),numcols));
-    Wtilde(:,1:(K-N)) = Xtildeo(:,1:(K-N));
-    Wtilde(:,K - N     + 2*(1:N0))     = Xtildeo(:,(K-N+1):end);
-    Wtilde(:,K - N - 1 + 2*(1:Nprime)) = Xtildee;
-    
-    if Nprime > N0  % Add internal psi-functions in W and internal psitilde functions in Wtilde
-        % Add coordinates of \bpsi_{0,N_0},...,\bpsi_{0,N'-1}^b in phi_1^b. These come at columns (K-N+2N0+1):(K-N+2(N'-1)+1)
-        insertpsi = Gsegment(g1, (-Rtilde):(-Ltilde), 0:(K - N + 2*(Nprime-1) + 1 - Ltilde), K-N + 2*(N0:(Nprime-1)) + 1);
-        [W, insertpsi] = expand_cols_smallest(W, insertpsi);
-        W( :, K-N + 2*(N0:(Nprime-1)) + 2) = insertpsi;
-        
-        insertpsi = Gsegment(h1, (-R):(-L), 0:(K-N+2*(Nprime-1) + 1 - L), K-N + 2*(N0:(Nprime-1)) + 1);
-        [Wtilde, insertpsi] = expand_cols_smallest(Wtilde, insertpsi);
-        Wtilde( :, K-N + 2*(N0:(Nprime-1)) + 2) = insertpsi;
-    end
-    if N0 > Nprime % Add internal phi-functions in W and internal phitilde functions in Wtilde
-        % Add coordinates of \bphi_{0,N'},...,\bphi_{0,N0-1}^b in phi_1^b. These come at columns (K-N+2N'):(K-N+2(N0-1))
-        insertphi = Gsegment(g0, L:R, 0:(K-N + 2*N0-2 + R), K-N + 2*(Nprime:(N0-1)));
-        [W, insertphi] = expand_cols_smallest(W, insertphi);
-        W( :, K-N + 2*(Nprime:(N0-1)) + 1) = insertphi;
-        
-        insertphi = Gsegment(h0, Ltilde:Rtilde, 0:(K-N + 2*N0-2 + Rtilde), K-N + 2*(Nprime:(N0-1)) );
-        [Wtilde, insertphi] = expand_cols_smallest(Wtilde, insertphi);
-        Wtilde( :, K-N + 2*(Nprime:(N0-1)) + 1) = insertphi;
-    end
-    
+    Xe = [Xe; Ze]; Xtildee = [Xtildee; Ztildee];
+    W=     assembleW(Xe,      Xo,      g0, L:R,           g1, (-Rtilde):(-Ltilde), K - N, Nprime, N0);
+    Wtilde=assembleW(Xtildee, Xtildeo, h0, Ltilde:Rtilde, h1, (-R):(-L),           K - N, Nprime, N0);
     [W, Wtilde]=expand_cols_smallest(W, Wtilde);    
-    % W % only dyadic fractions?
+    % only dyadic fractions?
     % Wtilde % only dyadic fractions?
     % W'*Wtilde % Should be identity matrix
+end
+
+function W=assembleW(Xe, Xo, g0, suppg0, g1, suppg1, KminN, Nprime, N0)
+    [Xe, Xo] = expand_cols_smallest(Xe, Xo);
+    numcols = KminN + 2*max(Nprime,N0);
+    W = sym(zeros(size(Xe,1),numcols));
+    W(:,1:(KminN)) = Xo(:,1:(KminN));                       % K-N psi-functions at the beginning.
+    W(:,KminN     + 2*(1:N0))     = Xo(:,(KminN+1):end);  % the remaining psi-functions
+    W(:,KminN - 1 + 2*(1:Nprime)) = Xe;                 % all phi functions
+    
+    if Nprime > N0  % Add internal psi-functions in W
+        % Add coordinates of \bpsi_{0,N_0},...,\bpsi_{0,N'-1}^b in phi_1^b. These come at columns (K-N+2N0+1):(K-N+2(N'-1)+1)
+        insertpsi = Gsegment(g1, suppg1, 0:(KminN + 2*(Nprime-1) + 1 + suppg1(end)), KminN + 2*(N0:(Nprime-1)) + 1);
+        [W, insertpsi] = expand_cols_smallest(W, insertpsi);
+        W( :, KminN + 2*(N0:(Nprime-1)) + 2) = insertpsi;
+    end
+    if N0 > Nprime % Add internal phi-functions in W
+        % Add coordinates of \bphi_{0,N'},...,\bphi_{0,N0-1}^b in phi_1^b. These come at columns (K-N+2N'):(K-N+2(N0-1))
+        insertphi = Gsegment(g0, suppg0, 0:(KminN + 2*N0-2 + suppg0(end)), KminN + 2*(Nprime:(N0-1)));
+        [W, insertphi] = expand_cols_smallest(W, insertphi);
+        W( :, KminN + 2*(Nprime:(N0-1)) + 1) = insertphi;
+    end
 end
 
 function [Anew,Bnew]=expand_cols_smallest(A,B)

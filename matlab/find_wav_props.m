@@ -56,32 +56,35 @@ function [wav_props, dual_wav_props]=wav_props_ortho_bd(N, wav_props, dual_wav_p
         K_R = K_R + ceil(toadd/2);
     end
     wav_props.offset_L = K_L - N; wav_props.offset_R = K_R - N; dual_wav_props.offset_L = K_L - N; dual_wav_props.offset_R = K_R - N; 
+    Mint = (wav_props.lengthsignal -2*N + K_L + K_R)/2^wav_props.m;
+    assert(K_L+K_R+1 <= Mint)
         
     % First the right edge
     wav_props.h0 = flip(wav_props.h0); wav_props.h1 = flip(wav_props.h1); wav_props.g0 = flip(wav_props.g0); wav_props.g1 = flip(wav_props.g1);
     [W, A_pre, A_pre_inv] = bw_compute_left_ortho(wav_props.g0, wav_props.g1, N, K_R); % Lower right (3N-1)x(2N) matrix
+    
+    % Mirror right hand side variables  
     wav_props.A_R_pre = fliplr(flipud(A_pre)); wav_props.A_R_pre_inv = fliplr(flipud(A_pre_inv));
     dual_wav_props.A_R_pre = wav_props.A_R_pre; dual_wav_props.A_R_pre_inv = wav_props.A_R_pre_inv;
-        
-    WR = zeros(size(W));
+    WR = fliplr(flipud(W));
     for k = (size(W,2)-(K_R-N)):(-2):1
-        WR(:,[k-1 k]) = W( size(W,1):(-1):1, size(W,2) + 1 - [k k-1]); 
+        WR(:, [k-1 k]) = W(:, [k k-1]); 
     end
-       
+    
     % Then the left edge
     wav_props.h0 = flip(wav_props.h0); wav_props.h1 = flip(wav_props.h1); wav_props.g0 = flip(wav_props.g0); wav_props.g1 = flip(wav_props.g1);
     [WL, wav_props.A_L_pre, wav_props.A_L_pre_inv] = bw_compute_left_ortho(wav_props.g0, wav_props.g1, N, K_L); % Upper left (3N-1)x(2N) matrix
     dual_wav_props.A_L_pre = wav_props.A_L_pre; dual_wav_props.A_L_pre_inv = wav_props.A_L_pre_inv;
     
-    % Compute the left and right parts of the IDWT
-    M = 6*N;
-    x = IDWTImpl(eye(M), 1, wav_props.wave_name, 'none', 'none', 0, 0, 'time');
-        
-    [w1, w2] = size(WL);
-    wav_props.A_L = WL - x(1:w1,1:w2); dual_wav_props.A_L = wav_props.A_L;
-    wav_props.A_R = WR - x((M-w1+1):M,(M-w2+1):M); dual_wav_props.A_R = wav_props.A_R;
+    [wav_props.A_L,wav_props.A_R]=find_AL_AR(WL, WR, wav_props, (-N+1):N, (-N):(N-1));
+    dual_wav_props.A_L = wav_props.A_L; dual_wav_props.A_R = wav_props.A_R;
+    % swap filters if offset is odd
+    if mod(wav_props.offset_L,2) == 1
+        g0temp = wav_props.g0; wav_props.g0 = wav_props.g1; wav_props.g1 = g0temp;
+        h0temp = wav_props.h0; wav_props.h0 = wav_props.h1; wav_props.h1 = h0temp;
+        dual_wav_props.g0 = wav_props.g0; dual_wav_props.g1 = wav_props.g1; dual_wav_props.h0 = wav_props.h0; dual_wav_props.h1 = wav_props.h1;
+    end
 end
-
 
 function [wav_props, dual_wav_props] = wav_props_biortho(N, Ntilde, wav_props, dual_wav_props, bd_mode)
     [wav_props.h0, wav_props.h1, wav_props.g0, wav_props.g1]=compute_spline_filters(N, Ntilde);
@@ -113,47 +116,48 @@ function [wav_props, dual_wav_props]=wav_props_biortho_bd(N, Ntilde, wav_props, 
         K_R = K_R + ceil(toadd/2);  K_R_tilde = K_R_tilde + ceil(toadd/2);
     end
     wav_props.offset_L = K_L - N; wav_props.offset_R = K_R - N; dual_wav_props.offset_L = wav_props.offset_L; dual_wav_props.offset_R = wav_props.offset_R;
+    Mint = (wav_props.lengthsignal -2*Nprime + K_L + K_R-1)/2^wav_props.m;
+    assert(K_L+K_R <= Mint)
         
         
     [WL, WLtilde, wav_props.A_L_pre, wav_props.A_L_pre_inv, dual_wav_props.A_L_pre, dual_wav_props.A_L_pre_inv] = bw_compute_left_biortho(wav_props.g0, wav_props.g1, N, wav_props.h0, wav_props.h1, Ntilde, K_L, K_L_tilde);
     [WR, WRtilde, wav_props.A_R_pre, wav_props.A_R_pre_inv, dual_wav_props.A_R_pre, dual_wav_props.A_R_pre_inv] = bw_compute_left_biortho(wav_props.g0, wav_props.g1, N, wav_props.h0, wav_props.h1, Ntilde, K_R, K_R_tilde);
     
-    % Mirror WR and WRtilde
-    W = sym(zeros(size(WR)));
-    W(:,1:(K_R-N)) = flipud(fliplr(WR(:,(size(WR,2)-(K_R-N-1)):end)));
-    for k = (size(WR,2)-(K_R-N)):(-2):1
-        W(:,[k-1 k]) = WR( size(WR,1):(-1):1, size(WR,2) + 1 - [k k-1]); 
+    % Mirror right hand side variables
+    wav_props.A_R_pre = flipud(fliplr(wav_props.A_R_pre));
+    wav_props.A_R_pre_inv = flipud(fliplr(wav_props.A_R_pre_inv));
+    dual_wav_props.A_R_pre = flipud(fliplr(dual_wav_props.A_R_pre));
+    dual_wav_props.A_R_pre_inv = flipud(fliplr(dual_wav_props.A_R_pre_inv));
+    
+    WR = flipud(fliplr(WR)); WRtilde = flipud(fliplr(WRtilde));
+    [wav_props.A_L,wav_props.A_R]=find_AL_AR(WL, WR, wav_props, L:R, (-Rtilde):(-Ltilde));
+    [dual_wav_props.A_L,dual_wav_props.A_R]=find_AL_AR(WLtilde, WRtilde, dual_wav_props, Ltilde:Rtilde, (-R):(-L));
+    % swap filters if offset is odd
+    if mod(wav_props.offset_L,2) == 1
+        g0temp = wav_props.g0; wav_props.g0 = wav_props.g1; wav_props.g1 = g0temp;
+        h0temp = wav_props.h0; wav_props.h0 = wav_props.h1; wav_props.h1 = h0temp;
+        dual_wav_props.g0 = wav_props.g0; dual_wav_props.g1 = wav_props.g1; dual_wav_props.h0 = wav_props.h0; dual_wav_props.h1 = wav_props.h1;
     end
-    WR = W;
-    W = sym(zeros(size(WRtilde)));
-    W(:,1:(K_R-N)) = flipud(fliplr(WRtilde(:,(size(WRtilde,2)-(K_R-N-1)):end)));
-    for k = (size(WRtilde,2)-(K_R-N)):(-2):1
-        W(:,[k-1 k]) = WRtilde( size(WRtilde,1):(-1):1, size(WRtilde,2) + 1 - [k k-1]); 
-    end
-    WRtilde = W;
-    
-    M = max( [size(WL)+size(WR) size(WLtilde)+size(WRtilde)] );
-    
-    x1 = zeros(M);
-    x1(:,1:2:end)=Gsegment(wav_props.g0, L:R, 0:(M-1), 0:2:(M-1));
-    x1(:,2:2:end)=Gsegment(wav_props.g1, (-Rtilde):(-Ltilde), 0:(M-1), 1:2:(M-1));
-    
-    [w1, w2] = size(WL); wav_props.A_L = WL - x1(1:w1,1:w2);
-    [w1, w2] = size(WR); wav_props.A_R = WR - x1((M-w1+1):M,(M-w2+1):M);
-    
-    % dual
-    x2 = zeros(M);
-    x2(:,1:2:end)=Gsegment(dual_wav_props.g0, Ltilde:Rtilde, 0:(M-1), 0:2:(M-1));
-    x2(:,2:2:end)=Gsegment(dual_wav_props.g1, (-R):(-L), 0:(M-1), 1:2:(M-1));
-    
-    [w1, w2] = size(WLtilde); dual_wav_props.A_L = WLtilde - x2(1:w1,1:w2);
-    [w1, w2] = size(WRtilde); dual_wav_props.A_R = WRtilde - x2((M-w1+1):M,(M-w2+1):M); 
-    
-    % wav_props.A_L
-    % wav_props.A_R
 end
 
-
+function [A_L,A_R]=find_AL_AR(WL, WR, wav_props, suppg0, suppg1)
+    M = max(size(WL)+size(WR));
+    if mod(M-wav_props.lengthsignal,2) == 1
+        M = M + 1;
+    end
+    
+    x1 = zeros(M);
+    if mod(wav_props.offset_L,2) == 0
+        x1(:,1:2:end)=Gsegment(wav_props.g0, suppg0, 0:(M-1), 0:2:(M-1));
+        x1(:,2:2:end)=Gsegment(wav_props.g1, suppg1, 0:(M-1), 1:2:(M-1));
+    else
+        x1(:,1:2:end)=Gsegment(wav_props.g1, suppg1, 0:(M-1), 0:2:(M-1));
+        x1(:,2:2:end)=Gsegment(wav_props.g0, suppg0, 0:(M-1), 1:2:(M-1));
+    end
+    
+    [w1, w2] = size(WL); A_L = WL - x1(1:w1,1:w2);
+    [w1, w2] = size(WR); A_R = WR - x1((M-w1+1):M,(M-w2+1):M);
+end
 
 
 
