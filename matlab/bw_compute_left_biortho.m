@@ -1,12 +1,10 @@
-function [W,Wtilde,A_pre,A_pre_inv,Atilde_pre,Atilde_pre_inv]=bw_compute_left_biortho(g0, g1, N, h0, h1, Ntilde, K, Ktilde)
+function [W,Wtilde,A_pre_inv,Atilde_pre_inv]=bw_compute_left_biortho(g0, g1, N, h0, h1, Ntilde, K, Ktilde)
     % bw_compute_left_biortho(sym([1/4; 1/2; 1/4]), 2, sym([-1/4; 1/2; 3/2; 1/2; -1/4]), 2); % not correct
     % general: 
     %   [h0,h1,g0,g1]=compute_spline_filters(N, Ntilde); % internal function
     %   bw_compute_left_biortho(g0,g1,N,h0,h1,Ntilde);
     
-    A_pre = eye(N);
     A_pre_inv = eye(N);
-    Atilde_pre = eye(Ntilde);
     Atilde_pre_inv = eye(Ntilde);
     Nprime = max(N,Ntilde);
     R = (length(g0)-1)/2; Rtilde = (length(h0)-1)/2;
@@ -133,9 +131,6 @@ function [W,Wtilde,A_pre,A_pre_inv,Atilde_pre,Atilde_pre_inv]=bw_compute_left_bi
     if N == Ntilde
         A_pre_inv = A_pre_inv*P1;
         Atilde_pre_inv = Atilde_pre_inv*P2;
-    
-        A_pre = inv(A_pre_inv);
-        Atilde_pre = inv(Atilde_pre_inv);
     end
     
     % psi-funksjoner

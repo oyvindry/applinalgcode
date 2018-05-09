@@ -1,6 +1,6 @@
-function x=IDWTImpl(x, nres, wave_name, bd_mode, dual, transpose)
+function x=IDWTImpl(x, m, wave_name, bd_mode, prefilter_mode, dual, transpose, data_layout)
     % x:         Matrix whose IDWT will be computed along the first dimension(s).      
-    % nres:      Number of resolutions.
+    % m:         Number of resolutions.
     % wave_name: Name of the wavelet. Possible names are:
     %            'cdf97' - CDF 9/7 wavelet
     %            'cdf53' - Spline 5/3 wavelet  
@@ -15,46 +15,29 @@ function x=IDWTImpl(x, nres, wave_name, bd_mode, dual, transpose)
     % bd_mode:   Boundary extension mode. Possible modes are. 
     %            'per'    - Periodic extension
     %            'symm'   - Symmetric extension (default)
+    %            'none'   - Take no extra action at the boundaries
     %            'bd'     - Boundary wavelets
+    % prefilter_mode: Possible modes are:
+    %            'none' (default)
+    %            'filter'
     %            'bd_pre' - Boundary wavelets with preconditioning
     % dual:      Whether to apply the dual wavelet rather than the wavelet itself. Default: 0
     % transpose: Whether the transpose is to be taken. Default: 0
+    % data_layout: How data should be assembled. Possible modes are:
+    %            'resolution': Lowest resolution first (default)
+    %            'time': Sort according to time
     
     if (~exist('bd_mode','var')) bd_mode = 'symm'; end
+    if (~exist('prefilter_mode','var')) prefilter_mode = 'none'; end
     if (~exist('dual','var')) dual  = 0; end
     if (~exist('transpose','var')) transpose = 0; end
+    if (~exist('data_layout','var')) data_layout = 'resolution'; end
     
-    f = find_kernel(wave_name, 0, dual, transpose);
-    
-    if (strcmpi(bd_mode, 'bd_pre')) % Apply postconditioning
-        if (strcmpi(wave_name(1:2),'db') )
-            vm = str2num(wave_name(3:end));
-            filters = getDBfilter(vm, 0);
-        elseif( strcmpi(wave_name(1:3),'sym') )
-            vm = str2num(wave_name(4:end));
-            filters = getDBfilter(vm, 0);
-        else
-            error('Unknown wavelet for bd_pre option');
-        end
-    end
-    
-    if transpose
-        
-        if (strcmpi(bd_mode, 'bd_pre')) % Apply preconditioning
-            n = size(filters.A_L_pre,1);
-            x(1:n) = filters.A_L_pre*x(1:n);
-            x((end-n+1):end) = filters.A_R_pre*x((end-n+1):end);
-        end
-        x = DWTImpl_internal(x, nres, f, bd_mode);
-    
+    [wav_props, dual_wav_props] = find_wav_props(m, wave_name, bd_mode, size(x,1));
+    [wav_props, f, prefilter] = find_kernel(wav_props, dual_wav_props, 0, dual, transpose, prefilter_mode);
+    if transpose % if transpose, then f will we a dwt_kernel, 
+        x = DWTImpl_internal(x, m, f, bd_mode, prefilter, wav_props, data_layout);
     else
-        
-        x = IDWTImpl_internal(x, nres, f, bd_mode);
-        if (strcmpi(bd_mode, 'bd_pre')) % Apply postconditioning
-            n = size(filters.A_L_pre_inv,1);
-            x(1:n) = filters.A_L_pre_inv*x(1:n);
-            x((end-n+1):end) = filters.A_R_pre_inv*x((end-n+1):end);
-        end
-    
+        x = IDWTImpl_internal(x, m, f, bd_mode, prefilter, wav_props, data_layout);
     end
 end

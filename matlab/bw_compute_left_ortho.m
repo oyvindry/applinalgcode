@@ -1,4 +1,4 @@
-function [W,A_pre,A_pre_inv]=bw_compute_left_ortho(g0,g1,N,K)
+function [W,A_pre_inv]=bw_compute_left_ortho(g0,g1,N,K)
     R = N; L = -N+1;
     
     [C,C_c]=findc(R,K,N); % dimension of C is (2N-1)xN
@@ -22,7 +22,7 @@ function [W,A_pre,A_pre_inv]=bw_compute_left_ortho(g0,g1,N,K)
     % Theorem 3.4
     X_e = invP*X_e*P;
     Z_e = Z_e*P;
-    A_pre_inv = C(R:end,:)*P;
+    A_pre_inv = C((R+K-N):end,:)*P;
     
     % Step 2: Orthogonalize phi-functions
     ls = eye(N^2)-kron(X_e',X_e');
@@ -37,7 +37,6 @@ function [W,A_pre,A_pre_inv]=bw_compute_left_ortho(g0,g1,N,K)
     Z_e = Z_e*P;
     
     A_pre_inv = A_pre_inv*P;
-    A_pre = inv(A_pre_inv);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%                            Psi-functions                            %%%

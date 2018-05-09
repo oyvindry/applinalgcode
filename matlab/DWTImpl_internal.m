@@ -1,20 +1,26 @@
-function x=DWTImpl_internal(x, m, dwt_kernel, bd_mode)
+function x=DWTImpl_internal(x, m, dwt_kernel, bd_mode, prefilter, wav_props, data_layout)
+    inds = 1:size(x,1);
+    x = prefilter(x, 1);
     for res=0:(m - 1)
-        x(1:2^res:end, :) = dwt_kernel(x(1:2^res:end, :), bd_mode);
+        x(inds, :) = dwt_kernel(x(inds, :), bd_mode);
+        inds = inds((wav_props.offset_L+1):2:(end-wav_props.offset_R));
     end
-    x = reorganize_coeffs_forward(x, m);
+    x(inds, :) = prefilter(x(inds, :),0);
+    x = reorganize_coeffs_forward(x, m, wav_props, data_layout);
 end
 
-function y=reorganize_coeffs_forward(x, nres)
-    N = size(x,1);
-    y = zeros(size(x));
-    inds = 1:2^nres:N;
-    lc = length(inds);
-    y(1:lc, :) = x(inds, :);
-    for res = nres:(-1):1
-        inds = (2^(res - 1) + 1):2^res:N;
-        lw = length(inds);
-        y((lc + 1):(lc + lw), :) = x(inds, :);
-        lc = lc + lw;
+function y=reorganize_coeffs_forward(x, m, wav_props, data_layout)
+    y = x;
+    if strcmpi(data_layout, 'resolution')
+        N = size(x,1);
+        inds = 1:N;
+        endy = N;
+        for res=1:m
+            xindices = [inds(1:wav_props.offset_L) inds((wav_props.offset_L + 2):2:(end-wav_props.offset_R)) inds((end-wav_props.offset_R+1):end)]; % psi-indices
+            y((endy-length(xindices)+1):endy,:) = x(xindices,:);
+            endy = endy-length(xindices);
+            inds = inds((wav_props.offset_L+1):2:(end-wav_props.offset_R)); 
+        end
+        y(1:endy, :) = x(inds, :);
     end
 end

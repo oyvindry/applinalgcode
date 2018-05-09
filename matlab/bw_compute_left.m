@@ -1,83 +1,55 @@
-
-
-function [W,A_pre,A_pre_inv, outMat]=bw_compute_left(h0, g0, debugMode)
-    
-    if (nargin < 3) 
+function [W,A_pre,A_pre_inv, outMat]=bw_compute_left(g0,g1,N,h0,h1,Nt,debugMode)
+    if (nargin < 7) 
         debugMode = 0;
     end
     outMat = 0;
-    N = length(h0)/2;
-    % We use the symbolic toolbox for computations with rational numbers 
-    C_c = sym(zeros(N));
-    C_c(1,1) = sym(1);
-
-    L = 2/sym((2*N-1));
-    C_c(2,2) = L;
-
-    for n = 1:(N-2) % fill out column n+2. n is as in paper
-        betaval = (sym(n^2)/sym(4*n^2-1))*(1-sym(n^2)/sym((2*N-1)^2)) ;
-        C_c(2:N,n+2) = L*C_c(1:(N-1),n+1);
-        C_c(:,n+2) = C_c(:,n+2) - betaval*C_c(:,n);
+    transl = 0;
+    if nargin < 4 % orthonormal mode
+        R = N;
+    else % biorthogonal mode. Translation is needed when the filters don't have dissimilar lengths.
+        L = (length(g0)-1)/2;
+        Lt = (length(h0)-1)/2;
+        Nmin = max(-N,-Nt);
+        transl = max(L,Lt) - Nmin;
+        R = L+transl;
+        Rt = Lt + transl;
     end
-
-    C_0 = sym(zeros(2*N-1,N));
-    for k=0:(N-1)
-        C_0(:,k+1) = sym((-N+1):(N-1)).^k;
+    
+    [C,C_c]=findc(R,N); % dimension of C is (R+N-1)xN
+    Cpinv = inv(C'*C)*C';
+    
+    if nargin < 4 % orthonormal mode
+        [Xgseg,Zgseg]=findsegments(g0,N);
+        C = double(C);
+        Cpinv = double(Cpinv);
+    else
+        [Xgseg,Zgseg]=findsegments(g0,N,h0,Nt,0);
     end
-
-    C = C_0*C_c;
-    m = C'*C;
-    for k=1:N
-        C(:,k) = C(:,k)/sym(sqrt(m(k,k)));
-    end
-
-    % dimension of C is (2*N-1)xN
-    C = double(C); % Use numerically from now on
-    %C'*C % Check for orthogonality
-
-    if (debugMode == 1) 
-        t = (-N+1:N-1)';
-        C = zeros(2*N-1,N);
-        C(:,N) = ones(2*N-1,1);
-        for i = N-1:-1:1
-            C(:,i) = (t-i).*C(:,i+1)/i;
-        end
-%        C
-%        cond(C)
-    end
-
-    % For the left edge we need the ((-N+1):(3N-2))x((-2N+2):(2N-2)) segment of
-    % G. The first 2N-1 rows are for X, the remaining 2N-1 rows are for Z.
-    % This equals the ((N-1):(5N-4))x(0:(4N-3)) segment of G, due to the
-    % Toeplitz structure.
-
-    seg1 = zeros(2*N-1);
-    seg2 = zeros(2*N-1);
-    for i =1:N-1
-        seg1(1:2*i, i) = g0((end-2*i+1):end); 
-    end
-    for i = 0:N-1
-        seg1((1+2*i):end, N+i) = g0(1:(end - 2*i - 1));
-        seg2(1:(2*i+1), N+i) = g0((end - 2*i):end);
-    end
-
+    
     % Theorem 3.3
-    %seg1
-    %C
-    X_e = pinv(C)*seg1*C; % dimensions NxN % OBS: Assumes C is orthonormal
-    Z_e =    seg2*C; % dimensions (2N-1)xN
-    outMat = C;
-    if (debugMode ~= 1)
-        % Step 1: Make phi-supports staggered.
-        [Q,R] = qr((flipud(C(N:end,:)))');
-        P = fliplr(Q);
-        invP = flipud(Q');
-
-        % Theorem 3.4
-        X_e = invP*X_e*P;
-        Z_e = Z_e*P;
-        A_pre_inv = C(N:end,:)*P;
+    X_e = Cpinv*Xgseg*C; % dimensions NxN
+    Z_e =    Zgseg*C; % dimensions (N+R-1)xN
+    % Lemma 4.2
+    if nargin >= 4 && Nt > N % biorthogonal mode and need to add more boundary functions
+        [X_e,Z_e]=expandxeze(X_e, Z_e, g0, N, h0, Nt)
     end
+    outMat = C;
+    
+    % Step 1: Make phi-supports staggered.
+    if nargin < 4 % orthonormal mode
+        [Qmatr,Rmatr] = qr((flipud(C(N:end,:)))');
+        P = fliplr(Qmatr);
+        invP = flipud(Qmatr');
+    else % biorthogonal mode. Use LU factorization to obtain exact results
+        [Lmatr,Umatr] = lu((flipud(C(R:end,:)))');
+        invP = flipud(Lmatr');
+        P = inv(invP);
+    end
+
+    % Theorem 3.4
+    X_e = invP*X_e*P;
+    Z_e = Z_e*P;
+    A_pre_inv = C(R:end,:)*P;
     
     % Step 2: Orthogonalize phi-functions
     ls = eye(N^2)-kron(X_e',X_e');
@@ -86,24 +58,15 @@ function [W,A_pre,A_pre_inv, outMat]=bw_compute_left(h0, g0, debugMode)
     Y;
     %fprintf('cond(Y): %g\n', cond(Y))
 
-    if (debugMode == 0)
-        P = ortho_from_gramm(Y, N);
-    else 
-        P = ortho_from_cholesky(Y);
-    end
-    
+    P = inv(chol(Y));
     
     % Theorem 3.4
     X_e = inv(P)*X_e*P;
     Z_e = Z_e*P;
     
-    if (debugMode ~= 1)
-        A_pre_inv = A_pre_inv*P;
-    else 
-        A_pre_inv = C(N:end,:)*P;
-    end
-    
+    A_pre_inv = A_pre_inv*P;
     A_pre = inv(A_pre_inv);
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%                            Psi-functions                            %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -114,8 +77,8 @@ function [W,A_pre,A_pre_inv, outMat]=bw_compute_left(h0, g0, debugMode)
     Z_o = -Z_e*X_e';
 
     % Step 4: Make psi-supports staggered
-    [Q,R] = qr((flipud(Z_o(1:2:(2*N-1),:)))');
-    P = fliplr(Q);
+    [Qmatr,Rmatr] = qr((flipud(Z_o(1:2:(2*N-1),:)))');
+    P = fliplr(Qmatr);
     
     % Theorem 4.1
     X_o = X_o*P;
@@ -124,11 +87,7 @@ function [W,A_pre,A_pre_inv, outMat]=bw_compute_left(h0, g0, debugMode)
     % Step 5: Orthogonalize psi-functions
     Y = X_o'*X_o + Z_o'*Z_o; % Gram matrix
 
-    if (debugMode == 0)
-        P = ortho_from_gramm(Y, N);
-    else 
-        P = ortho_from_cholesky(Y);
-    end
+    P = inv(chol(Y));
     
     % Theorem 4.1
     X_o = X_o*P;
@@ -137,25 +96,78 @@ function [W,A_pre,A_pre_inv, outMat]=bw_compute_left(h0, g0, debugMode)
     W = zeros(3*N-1,2*N);
     W(:, 1:2:(2*N-1)) = [X_e; Z_e];
     W(:, 2:2:(2*N)) = [X_o; Z_o];
-
 end    
 
-function P=ortho_from_gramm(Y, N)
+function [C,C_c]=findc(R,N)
+    C_c = sym(zeros(N));
+    C_c(1,1) = sym(1);
 
-    xmatr=zeros(N);
-    for k=2:N
-        xmatr(1:(k-1),k) = Y(1:(k-1),1:(k-1))\Y(1:(k-1),k);
+    L1 = 2/sym((R+N-1)); L0 = sym((R-N)/(R+N-1));
+    C_c(1,2) = L0; C_c(2,2) = L1;
+
+    for n = 1:(N-2) % fill out column n+2. n is as in paper
+        betaval = (sym(n^2)/sym(4*n^2-1))*(1-sym(n^2)/sym((R+N-1)^2)) ;
+        C_c(1,n+2) = L0*C_c(1,n+1); 
+        C_c(2:N,n+2) = L1*C_c(1:(N-1),n+1) + L0*C_c(2:N,n+1);
+        C_c(:,n+2) = C_c(:,n+2) - betaval*C_c(:,n);
     end
-    P = eye(N) - xmatr;             % The g_n are now orthogonal
-    P = P*diag(sqrt(diag(P'*Y*P)).^(-1)); % The g_n are now orthonormal
 
+    C_0 = sym(zeros(R+N-1,N));
+    for k=0:(N-1)
+        C_0(:,k+1) = sym((-R+1):(N-1)).^k;
+    end
+
+    C = C_0*C_c;
+    % C'*C check for orthogonality
 end
 
-function P=ortho_from_cholesky(Y)
-
-    P = chol(Y);
-    P = inv(P);
-
+function [Xgseg,Zgseg]=findsegments(g0,N,h0,Nt,increased)
+    R = N; transl = 0; supp = (-N+1):N;
+    if nargin >= 3 % biorthogonal mode
+        L = (length(g0)-1)/2;
+        Lt = (length(h0)-1)/2;
+        transl = max(L,Lt)-min(N,Nt)
+        R = L+transl;
+        supp = ((-L):L)  + transl;
+        if increased
+            % The columns are (2*N):2:(2*Nt-2) in both cases below
+            Xgseg = Geven(g0,supp,N:(Nt-1),(2*N):2:(2*Nt-2); % For X we need the rows N:(Nt-1) of G
+            Zgseq = Geven(g0,supp,Nt:(supp(end) + (2*Nt-2)),(2*N):2:(2*Nt-2); % For Z we need the rows >= Nt of G. These end at supp(end) + (2*Nt-2)
+            return
+        end
+    end
+    % The columns are (-2*R+2):2:(2*N-2) in both cases below
+    Xgseg = Geven(g0,supp,(-R+1):(N-1),(-2*R+2):2:(2*N-2)); % For X we need the rows (-R+1):(N-1) of G
+    Zgseq = Geven(g0,supp,N:(2*N+R-2),(-2*R+2):2:(2*N-2)); % For Z we need the rows N:(2*N+R-2) of G
 end
 
+function [X_e_new,Z_e_new]=expandxeze(X_e, Z_e, g0, N, h0, Nt)
+    [Xgseg,Zgseg]=findsegments(g0, N, h0, Nt, 1);
+    X_e_new = [X_e zeros(N,Nt-N); Z_e(1:(Nt-N),:) Xgseg];
+        
+    toadd = size(Zgseg,1)-size(Z_e((Nt-N+1):end,:),1);
+    Z_e_new = [Z_e((Nt-N+1):end,:); zeros(toadd,size(Ze,2))];
+    Z_e_new = [Z_e_new Zgseg];
+end
 
+function val=Geven(g0,supp,rowrange,colrange)
+    val = zeros(length(rowrange),length(colrange));
+    k=1;
+    for col_ind = colrange
+        actualinds =  supp + col_ind;
+        [intersec,i1,i2] = intersect(rowrange,actualinds);
+        val(i1,k) = g0( actualinds(i2) - actualinds(1) + 1 );
+        k = k+1;
+    end
+end
+
+function val=Godd(g1,supp,rowrange,colrange)
+    val = zeros(length(rowrange),length(colrange));
+    k=1;
+    for col_ind = colrange
+        actualinds =  supp + col_ind;
+        [intersec,i1,i2] = intersect(rowrange,actualinds);
+        val(i1,k) = g1( actualinds(i2) - actualinds(1) + 1 );
+        k = k+1;
+    end
+end

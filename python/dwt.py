@@ -885,7 +885,7 @@ def cascade_alg(m, a, b, wave_name, scaling, dual):
     plt.plot(t, 2**(m/2.)*coords, 'k-')
 
 def freqresp_alg(wave_name, lowpass, dual):
-    idwt_kernel = find_kernel(wave_name, 0, dual, False);
+    idwt_kernel = find_kernel(wave_name, 0, dual, False)
     N = 128
     n = arange(0,N)
     omega = 2*pi*n/float(N)
