@@ -131,6 +131,10 @@ function [W,Wtilde,A_pre_inv,Atilde_pre_inv]=bw_compute_left_biortho(g0, g1, N, 
     if N == Ntilde
         A_pre_inv = A_pre_inv*P1;
         Atilde_pre_inv = Atilde_pre_inv*P2;
+        % A_pre_inv
+        % Atilde_pre_inv
+        A_pre_inv = double(A_pre_inv);
+        Atilde_pre_inv = double(Atilde_pre_inv);
     end
     
     % psi-funksjoner

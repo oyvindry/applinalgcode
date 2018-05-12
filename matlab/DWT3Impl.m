@@ -1,55 +1,19 @@
-function x=DWT3Impl(x, nres, wave_name, bd_mode, dual, transpose)
-
+function x=DWT3Impl(x, m, wave_name, bd_mode, prefilter_mode, dual, transpose, data_layout)
     if (~exist('bd_mode','var')) bd_mode = 'symm'; end
+    if (~exist('prefilter_mode','var')) prefilter_mode = 'none'; end
     if (~exist('dual','var')) dual  = 0; end
     if (~exist('transpose','var')) transpose = 0; end
+    if (~exist('data_layout','var')) data_layout = 'resolution'; end
 
-    f = find_kernel(wave_name, 1, dual, transpose);
-    
-    if (strcmpi(bd_mode, 'bd_pre')) % Apply postconditioning
-        if (strcmpi(wave_name(1:2),'db') )
-            vm = str2num(wave_name(3:end));
-            filters = getDBfilter(vm, 0);
-        end
-        
-        if( strcmpi(wave_name(1:3),'sym') )
-            vm = str2num(wave_name(4:end));
-            filters = getDBfilter(vm, 0);
-        end
-    end
-
-    if transpose
-        x = IDWT3Impl_internal(x, nres, f, bd_mode);
-        
-        if (strcmpi(bd_mode, 'bd_pre')) % Apply postconditioning
-            n = size(filters.A_L_pre_inv,1);
-            x(1:n, :) = filters.A_L_pre_inv*x(1:n, :);
-            x((end-n+1):end, :) = filters.A_R_pre_inv*x((end-n+1):end, :);
-            
-            x = permute(x, [2,1,3]);
-            x(1:n, :) = filters.A_L_pre_inv*x(1:n, :);
-            x((end-n+1):end, :) = filters.A_R_pre_inv*x((end-n+1):end, :);
-            
-            x = permute(x, [3,2,1]);
-            x(1:n, :) = filters.A_L_pre_inv*x(1:n, :);
-            x((end-n+1):end, :) = filters.A_R_pre_inv*x((end-n+1):end, :);
-            
-            x = permute(x, [2,3,1]);
-        end
+    [wav_propsx, dual_wav_propsx] = find_wav_props(m, wave_name, bd_mode, size(x,1));
+    [wav_propsy, dual_wav_propsy] = find_wav_props(m, wave_name, bd_mode, size(x,2));
+    [wav_propsz, dual_wav_propsz] = find_wav_props(m, wave_name, bd_mode, size(x,3));
+    [wav_propsx, fx, prefilterx] = find_kernel(wav_propsx, dual_wav_propsx, 1, dual, transpose, prefilter_mode);
+    [wav_propsy, fy, prefiltery] = find_kernel(wav_propsy, dual_wav_propsy, 1, dual, transpose, prefilter_mode);
+    [wav_propsz, fz, prefilterz] = find_kernel(wav_propsz, dual_wav_propsz, 1, dual, transpose, prefilter_mode);
+    if transpose % if transpose, then f will we an idwt_kernel, 
+        x = IDWT3Impl_internal(x, m, fx, fy, fz, bd_mode, prefilterx, prefiltery, prefilterz, wav_propsx, wavpropsy, wav_propsz, data_layout);     
     else
-        if (strcmpi(bd_mode, 'bd_pre')) % Apply preconditioning
-            n = size(filters.A_L_pre,1);
-            x(1:n, :) = filters.A_L_pre*x(1:n, :);
-            x((end-n+1):end, :) = filters.A_R_pre*x((end-n+1):end, :);
-            x = permute(x, [2,1,3]);
-            x(1:n, :) = filters.A_L_pre*x(1:n, :);
-            x((end-n+1):end, :) = filters.A_R_pre*x((end-n+1):end, :);
-            x = permute(x, [3,2,1]);
-            x(1:n, :) = filters.A_L_pre*x(1:n, :);
-            x((end-n+1):end, :) = filters.A_R_pre*x((end-n+1):end, :);
-            x = permute(x, [2,3,1]);
-        end
-        
-        x = DWT3Impl_internal(x, nres, f, bd_mode);
+        x =  DWT3Impl_internal(x, m, fx, fy, fz, bd_mode, prefilterx, prefiltery, prefilterz, wav_propsx, wavpropsy, wav_propsz, data_layout);
     end
 end

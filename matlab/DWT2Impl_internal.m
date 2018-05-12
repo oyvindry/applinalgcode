@@ -1,58 +1,42 @@
-function x = DWT2Impl_internal(x, nres, f, bd_mode)
-    M = size(x, 1); N = size(x, 2); sz = size(x);
-    M0 = size(x, 1); N0 = size(x, 2);
-    sz1 = sz; sz1(1) = [];
-    sz2 = sz; sz2(2) = [];
-    for res = 0:(nres - 1)
-        
-        sz2(1) = M; 
-        sz1(1) = N; 
-        
-        if length(sz1)==1
-            Y1=zeros(sz1, 1); 
-            Y2=zeros(sz2, 1);
-        else
-            Y2 = zeros(sz2);
-            Y1 = zeros(sz1);         
-        end
-        
-        for n = 1:2^res:N0
-            Y2(:, :) = x(1:2^res:M0, n, :);
-            x(1:2^res:M0, n, :) = f(Y2, bd_mode);
-        end
-        
-        for m = 1:2^res:M0
-            Y1(:, :) = x(m, 1:2^res:N0, :);
-            x(m, 1:2^res:N0, :) = f(Y1, bd_mode);
-        end
-        
-        M = ceil(M/2); N = ceil(N/2);
+function x = DWT2Impl_internal(x, m, fx, fy, bd_mode, prefilterx, prefiltery, wav_propsx, wav_propsy, data_layout)
+    lastdim = 1;
+    if length(size(x)) == 3
+        lastdim = size(x, 3);
+    end 
+    indsx = 1:size(x,1); indsy = 1:size(x,2);
+
+    % preconditioning   
+    x=tensor2_kernel(x, indsx, indsy, @(x,bd_mode) prefilterx(x, 1), @(x,bd_mode) prefiltery(x, 1), lastdim, bd_mode);
+         
+    for res = 0:(m - 1)
+        x=tensor2_kernel(x, indsx, indsy, fx, fy, lastdim, bd_mode);  
+        indsx = indsx((wav_propsx.offset_L+1):2:(end-wav_propsx.offset_R));
+        indsy = indsy((wav_propsy.offset_L+1):2:(end-wav_propsy.offset_R));
     end
     
-    x = reorganize_coeffs2_forward(x, nres);   
-end
-
-function Y=reorganize_coeffs2_forward(X, nres)
-    M = size(X, 1);
-    N = size(X, 2);
-    Y = zeros(size(X));
-    inds1 = 1:2^nres:M;
-    inds2 = 1:2^nres:N;
-    lc1 = length(inds1);
-    lc2 = length(inds2);
+    % postconditioning
+    x=tensor2_kernel(x, indsx, indsy, @(x,bd_mode) prefilterx(x, 0), @(x,bd_mode) prefiltery(x, 0), lastdim, bd_mode);  
     
-    Y(1:lc1, 1:lc2, :) = X(inds1, inds2, :);
-    for res = nres:(-1):1
-        inds1 = (2^(res - 1) + 1):2^res:M;
-        inds2 = (2^(res - 1) + 1):2^res:N;
-        lw1 = length(inds1);
-        lw2 = length(inds2);
+    x = reorganize_coeffs2_forward(x, m, wav_propsx, wav_propsy, data_layout);   
+end     
         
-        Y((lc1 + 1):(lc1 + lw1), 1:lc2, :) = X(inds1, 1:2^res:N, :);
-        Y((lc1 + 1):(lc1 + lw1), (lc2+1):(lc2+lw2), :) = X(inds1, inds2, :);
-        Y(1:lc1, (lc2 + 1):(lc2 + lw2), :) = X(1:2^res:M, inds2, :);
-
-        lc1 = lc1 + lw1;
-        lc2 = lc2 + lw2;
-    end    
+function sig_out=reorganize_coeffs2_forward(sig_in, m, wav_propsx, wav_propsy, data_layout)
+    sig_out = sig_in;
+    if strcmpi(data_layout, 'resolution')
+        indsx = 1:size(sig_in,1); indsy = 1:size(sig_in,2);
+        endx = size(sig_in,1); endy = size(sig_in,2); 
+        for res=1:m
+            psiinds_x = [indsx(1:wav_propsx.offset_L) indsx((wav_propsx.offset_L + 2):2:(end-wav_propsx.offset_R)) indsx((end-wav_propsx.offset_R+1):end)]; % psi-indices
+            psiinds_y = [indsy(1:wav_propsy.offset_L) indsy((wav_propsy.offset_L + 2):2:(end-wav_propsy.offset_R)) indsy((end-wav_propsy.offset_R+1):end)];
+            phiinds_x = indsx((wav_propsx.offset_L + 1):2:(end-wav_propsx.offset_R));
+            
+            sig_out( (endx-length(psiinds_x)+1):endx, 1:endy, :) = sig_in(psiinds_x,indsy,:);
+            sig_out( 1:(endx-length(psiinds_x)), (endy-length(psiinds_y)+1):endy, :) = sig_in(phiinds_x,psiinds_y,:);
+            
+            endx = endx - length(psiinds_x); endy = endy - length(psiinds_y);
+            indsx = indsx((wav_propsx.offset_L+1):2:(end-wav_propsx.offset_R)); 
+            indsy = indsy((wav_propsy.offset_L+1):2:(end-wav_propsy.offset_R));
+        end
+        sig_out(1:endx, 1:endy, :) = sig_in(indsx, indsy, :);
+    end
 end

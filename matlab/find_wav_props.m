@@ -203,10 +203,13 @@ function [A_L,A_R]=find_AL_AR_lifting(WL, WR, wav_props)
     [wavpr, f, prefilter]=find_kernel(wav_props, 0, 0, 0, 0, 'none');
     x1 = IDWTImpl_internal(x1, 1, f, 'none', prefilter, wavpr, 'time');
     [w1, w2] = size(WL); A_L = WL - x1(1:w1,1:w2);
-    matr = zeros(size(x1)); 
-    matr(1:w1,1:w2) = A_L;
+    %matr = zeros(size(x1)); 
+    %matr(1:w1,1:w2) = A_L;
     [w1, w2] = size(WR); A_R = WR - x1((M-w1+1):M,(M-w2+1):M);
-    matr((M-w1+1):M,(M-w2+1):M) = A_R;
+    % A_L
+    % A_R
+    A_L = double(A_L); A_R = double(A_R);
+    %matr((M-w1+1):M,(M-w2+1):M) = A_R;
     %x1+matr
     %(x1+matr)'*(x1+matr)
     %x1
@@ -259,6 +262,9 @@ function [A_L,A_R]=find_AL_AR(WL, WR, wav_props)
     
     [w1, w2] = size(WL); A_L = WL - x1(1:w1,1:w2);
     [w1, w2] = size(WR); A_R = WR - x1((M-w1+1):M,(M-w2+1):M);
+    % A_L
+    % A_R
+    A_L = double(A_L); A_R = double(A_R);
 end
 
 

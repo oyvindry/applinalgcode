@@ -37,6 +37,8 @@ function [W,A_pre_inv]=bw_compute_left_ortho(g0,g1,N,K)
     Z_e = Z_e*P;
     
     A_pre_inv = A_pre_inv*P;
+    % A_pre_inv
+    A_pre_inv = double(A_pre_inv);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%                            Psi-functions                            %%%

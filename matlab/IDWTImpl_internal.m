@@ -17,7 +17,7 @@ function [y, resstart, resend]=reorganize_coeffs_reverse(x, m, wav_props, data_l
     resend(1) = inds(end);
     if strcmpi(data_layout, 'time')
         for res=1:m
-            inds = inds((wav_props.offset_L+1):2:(end-wav_props.offset_R)); 
+            inds = inds((wav_props.offset_L+1):2:(end-wav_props.offset_R));
             resstart(res+1) = inds(1);
             resend(res+1) = inds(end);
         end
