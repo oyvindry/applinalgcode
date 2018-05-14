@@ -1,4 +1,4 @@
-function [wav_props, f, prefilter]=find_kernel(wav_props, dual_wav_props, forward, dual, transpose, prefilter_mode)
+function [f, prefilter]=find_kernel(wav_props, dual_wav_props, forward, dual, transpose, prefilter_mode)
     prefilter = @(x, forward) x;
     if transpose
         forward = ~forward;

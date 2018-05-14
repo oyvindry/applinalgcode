@@ -200,8 +200,8 @@ function [A_L,A_R]=find_AL_AR_lifting(WL, WR, wav_props)
     end
     
     x1 = eye(M);
-    [wavpr, f, prefilter]=find_kernel(wav_props, 0, 0, 0, 0, 'none');
-    x1 = IDWTImpl_internal(x1, 1, f, 'none', prefilter, wavpr, 'time');
+    [f, prefilter]=find_kernel(wav_props, 0, 0, 0, 0, 'none');
+    x1 = idwt1_impl_internal(x1, 1, f, 'none', prefilter, [wav_props.offset_L wav_props.offset_R], 'time');
     [w1, w2] = size(WL); A_L = WL - x1(1:w1,1:w2);
     %matr = zeros(size(x1)); 
     %matr(1:w1,1:w2) = A_L;
