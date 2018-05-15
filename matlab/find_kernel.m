@@ -1,4 +1,14 @@
 function [f, prefilter]=find_kernel(wav_props, dual_wav_props, forward, dual, transpose, prefilter_mode)
+    % wav_props:
+    % dual_wav_props:
+    % forward:
+    % dual: (optional). Default is 0
+    % transpose: (optional). Default is 0
+    % prefilter_mode: (optional). Default is 'none'
+    
+    if (~exist('dual','var')) dual = 0; end
+    if (~exist('transpose','var')) transpose = 0; end
+    if (~exist('prefilter_mode','var')) prefilter_mode = 'none'; end
     prefilter = @(x, forward) x;
     if transpose
         forward = ~forward;

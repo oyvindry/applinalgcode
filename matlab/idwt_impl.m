@@ -1,6 +1,5 @@
-function x=idwt_impl(x, m, wave_name, bd_mode, prefilter_mode, dims, dual, transpose, data_layout)
+function x=idwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, transpose, data_layout)
     % x:         Matrix whose DWT will be computed along the first dimension(s).      
-    % m:         Number of resolutions.
     % wave_name: Name of the wavelet. Possible names are:
     %            'cdf97' - CDF 9/7 wavelet
     %            'cdf53' - Spline 5/3 wavelet
@@ -12,6 +11,7 @@ function x=idwt_impl(x, m, wave_name, bd_mode, prefilter_mode, dims, dual, trans
     %                      moments
     %            'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
     %                      with X vanishing moments
+    % m:         Number of resolutions.
     % bd_mode:   Boundary extension mode. Possible modes are. 
     %            'per'    - Periodic extension
     %            'symm'   - Symmetric extension (default)
@@ -41,34 +41,34 @@ function x=idwt_impl(x, m, wave_name, bd_mode, prefilter_mode, dims, dual, trans
     if (~exist('transpose','var')) transpose = 0; end
     if (~exist('data_layout','var')) data_layout = 'resolution'; end
 
-    [wav_propsx, dual_wav_propsx] = find_wav_props(m, wave_name, bd_mode, size(x,1));
+    [wav_propsx, dual_wav_propsx] = find_wav_props(wave_name, m, bd_mode, size(x,1));
     [fx, prefilterx] = find_kernel(wav_propsx, dual_wav_propsx, 0, dual, transpose, prefilter_mode);
     offsets = [wav_propsx.offset_L wav_propsx.offset_R];
     if dims == 1
         if transpose % if transpose, then f will we a dwt_kernel, 
-            x =  dwt1_impl_internal(x, m, fx, bd_mode, prefilterx, offsets, data_layout);     
+            x =  dwt1_impl_internal(x, fx, m, bd_mode, prefilterx, offsets, data_layout);     
         else
-            x = idwt1_impl_internal(x, m, fx, bd_mode, prefilterx, offsets, data_layout);
+            x = idwt1_impl_internal(x, fx, m, bd_mode, prefilterx, offsets, data_layout);
         end
     else
-        [wav_propsy, dual_wav_propsy] = find_wav_props(m, wave_name, bd_mode, size(x,2));
+        [wav_propsy, dual_wav_propsy] = find_wav_props(wave_name, m, bd_mode, size(x,2));
         [fy, prefiltery] = find_kernel(wav_propsy, dual_wav_propsy, 0, dual, transpose, prefilter_mode);
         offsets = [offsets; wav_propsy.offset_L wav_propsy.offset_R];
         if dims == 2
             if transpose % if transpose, then f will we a dwt_kernel, 
-                x =  dwt2_impl_internal(x, m, fx, fy, bd_mode, prefilterx, prefiltery, offsets, data_layout);     
+                x =  dwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, offsets, data_layout);     
             else
-                x = idwt2_impl_internal(x, m, fx, fy, bd_mode, prefilterx, prefiltery, offsets, data_layout);
+                x = idwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, offsets, data_layout);
             end
         else
-            [wav_propsz, dual_wav_propsz] = find_wav_props(m, wave_name, bd_mode, size(x,3));
+            [wav_propsz, dual_wav_propsz] = find_wav_props(wave_name, m, bd_mode, size(x,3));
             [fz, prefilterz] = find_kernel(wav_propsz, dual_wav_propsz, 0, dual, transpose, prefilter_mode);
             offsets = [offsets; wav_propsz.offset_L wav_propsz.offset_R];
             if dims == 3 % if not give error message
                 if transpose % if transpose, then f will we a dwt_kernel, 
-                    x =  dwt3_impl_internal(x, m, fx, fy, fz, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout);     
+                    x =  dwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout);     
                 else
-                    x = idwt3_impl_internal(x, m, fx, fy, fz, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout);
+                    x = idwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout);
                 end
             end
         end

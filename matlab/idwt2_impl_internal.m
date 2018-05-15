@@ -1,4 +1,4 @@
-function x=idwt2_impl_internal(x, m, fx, fy, bd_mode, prefilterx, prefiltery, offsets, data_layout)
+function x=idwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, offsets, data_layout)
     % x:         Matrix whose DWT will be computed along the first dimension(s).      
     % m:         Number of resolutions.
     % f:         kernel function
@@ -13,6 +13,7 @@ function x=idwt2_impl_internal(x, m, fx, fy, bd_mode, prefilterx, prefiltery, of
     %            'resolution': Lowest resolution first (default)
     %            'time': Sort according to time
     
+    if (~exist('m','var')) m = 1; end
     if (~exist('bd_mode','var')) bd_mode = 'symm'; end
     if (~exist('prefilter','var')) prefilter = @(x, forward) x; ; end
     if (~exist('offsets','var')) offsets = zeros(2,2); end

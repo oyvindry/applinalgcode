@@ -1,7 +1,7 @@
-function x=dwt1_impl_internal(x, m, f, bd_mode, prefilter, offsets, data_layout)
-    % x:         Matrix whose DWT will be computed along the first dimension(s).      
-    % m:         Number of resolutions.
-    % f:         kernel function
+function x=dwt1_impl_internal(x, f, m, bd_mode, prefilter, offsets, data_layout)
+    % x:         Matrix whose DWT will be computed along the first dimension(s). 
+    % f:         kernel function     
+    % m:         Number of resolutions. Default is 1
     % bd_mode:   Boundary extension mode. Possible modes are. 
     %            'per'    - Periodic extension
     %            'symm'   - Symmetric extension (default)
@@ -13,6 +13,7 @@ function x=dwt1_impl_internal(x, m, f, bd_mode, prefilter, offsets, data_layout)
     %            'resolution': Lowest resolution first (default)
     %            'time': Sort according to time
     
+    if (~exist('m','var')) m = 1; end
     if (~exist('bd_mode','var')) bd_mode = 'symm'; end
     if (~exist('prefilter','var')) prefilter = @(x, forward) x; ; end
     if (~exist('offsets','var')) offsets = zeros(1,2); end

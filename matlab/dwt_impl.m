@@ -1,17 +1,31 @@
-function x=dwt_impl(x, m, wave_name, bd_mode, prefilter_mode, dims, dual, transpose, data_layout)
+function x=dwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, transpose, data_layout)
+    % Main function for computing the DWT of a given signal. Can be used for all signals up to dimension 3, 
+    % The last dimension in the input signal may be used for parallel computation of many signals.
+    % Note that this function computes all quantities needed from scratch in order to compute the DWT for the wavelet in question. 
+    % This can be time-consuming. In order to avoid this you can use the functions find_wav_props, find_kernel,  
+    % the internal DWT functions dwt1_impl_internal, dwt2_impl_internal, dwt3_impl_internal, as well as Matlabs persistence functions. 
+    % An example with minimum set of parameters is as follows:
+    % 
+    % [wav_props, dual_wav_props] = find_wav_props(wave_name);
+    % save('wav_props.mat', 'wav_props', 'dual_wav_props');
+    % ...
+    % load('wav_props.mat');
+    % [f, prefilter] = find_kernel(wav_props, dual_wav_props, 1);
+    % x = dwt1_impl_internal(x, f);
+    %     
     % x:         Matrix whose DWT will be computed along the first dimension(s).      
-    % m:         Number of resolutions.
     % wave_name: Name of the wavelet. Possible names are:
     %            'cdf97' - CDF 9/7 wavelet
     %            'cdf53' - Spline 5/3 wavelet
     %            'splinex.x' - Spline wavelet with given number of vanishing moments for each filter
-    %            'pwl0'  - Piecewise linear wavelets with 0 vanishing moments
-    %            'pwl2'  - Piecewise linear wavelets with 2 vanishing moments
+    %            'pwl0'  - Piecewise linear wavelet with 0 vanishing moments
+    %            'pwl2'  - Piecewise linear wavelet with 2 vanishing moments
     %            'Haar'  - The Haar wavelet
     %            'dbX'   - Daubechies orthnormal wavelet with X vanishing
     %                      moments
     %            'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
     %                      with X vanishing moments
+    % m:         Number of resolutions.
     % bd_mode:   Boundary extension mode. Possible modes are. 
     %            'per'    - Periodic extension
     %            'symm'   - Symmetric extension (default)
@@ -41,34 +55,34 @@ function x=dwt_impl(x, m, wave_name, bd_mode, prefilter_mode, dims, dual, transp
     if (~exist('transpose','var')) transpose = 0; end
     if (~exist('data_layout','var')) data_layout = 'resolution'; end
 
-    [wav_propsx, dual_wav_propsx] = find_wav_props(m, wave_name, bd_mode, size(x,1));
+    [wav_propsx, dual_wav_propsx] = find_wav_props(wave_name, m, bd_mode, size(x,1));
     [fx, prefilterx] = find_kernel(wav_propsx, dual_wav_propsx, 1, dual, transpose, prefilter_mode);
     offsets = [wav_propsx.offset_L wav_propsx.offset_R];
     if dims == 1
         if transpose % if transpose, then f will we an idwt_kernel, 
-            x = idwt1_impl_internal(x, m, fx, bd_mode, prefilterx, offsets, data_layout);     
+            x = idwt1_impl_internal(x, fx, m, bd_mode, prefilterx, offsets, data_layout);     
         else
-            x = dwt1_impl_internal(x, m, fx, bd_mode, prefilterx, offsets, data_layout);
+            x = dwt1_impl_internal(x, fx, m, bd_mode, prefilterx, offsets, data_layout);
         end
     else
-        [wav_propsy, dual_wav_propsy] = find_wav_props(m, wave_name, bd_mode, size(x,2));
+        [wav_propsy, dual_wav_propsy] = find_wav_props(wave_name, m, bd_mode, size(x,2));
         [fy, prefiltery] = find_kernel(wav_propsy, dual_wav_propsy, 1, dual, transpose, prefilter_mode);
         offsets = [offsets; wav_propsy.offset_L wav_propsy.offset_R];
         if dims == 2
             if transpose % if transpose, then f will we an idwt_kernel, 
-                x = idwt2_impl_internal(x, m, fx, fy, bd_mode, prefilterx, prefiltery, offsets, data_layout);     
+                x = idwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, offsets, data_layout);     
             else
-                x =  dwt2_impl_internal(x, m, fx, fy, bd_mode, prefilterx, prefiltery, offsets, data_layout);
+                x =  dwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, offsets, data_layout);
             end
         else
-            [wav_propsz, dual_wav_propsz] = find_wav_props(m, wave_name, bd_mode, size(x,3));
+            [wav_propsz, dual_wav_propsz] = find_wav_props(wave_name, m, bd_mode, size(x,3));
             [fz, prefilterz] = find_kernel(wav_propsz, dual_wav_propsz, 1, dual, transpose, prefilter_mode);
             offsets = [offsets; wav_propsz.offset_L wav_propsz.offset_R];
             if dims == 3 % if not give error message
                 if transpose % if transpose, then f will we an idwt_kernel, 
-                    x = idwt3_impl_internal(x, m, fx, fy, fz, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout);     
+                    x = idwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout);     
                 else
-                    x =  dwt3_impl_internal(x, m, fx, fy, fz, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout);
+                    x =  dwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout);
                 end
             end
         end

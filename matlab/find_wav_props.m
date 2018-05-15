@@ -1,4 +1,8 @@
-function [wav_props, dual_wav_props]=find_wav_props(m, wave_name, bd_mode, lengthsignal)
+function [wav_props, dual_wav_props]=find_wav_props(wave_name, m, bd_mode, lengthsignal)
+    % Computes
+    if (~exist('bd_mode','var')) bd_mode = 'symm'; end
+    if (~exist('lengthsignal','var')) lengthsignal = 0; end
+    
     wav_props.wave_name = wave_name; dual_wav_props.wave_name = wave_name;
     wav_props.m = m; dual_wav_props.m = m;
     wav_props.lengthsignal = lengthsignal; dual_wav_props.lengthsignal = lengthsignal;
@@ -201,7 +205,7 @@ function [A_L,A_R]=find_AL_AR_lifting(WL, WR, wav_props)
     
     x1 = eye(M);
     [f, prefilter]=find_kernel(wav_props, 0, 0, 0, 0, 'none');
-    x1 = idwt1_impl_internal(x1, 1, f, 'none', prefilter, [wav_props.offset_L wav_props.offset_R], 'time');
+    x1 = idwt1_impl_internal(x1, f, 1, 'none', prefilter, [wav_props.offset_L wav_props.offset_R], 'time');
     [w1, w2] = size(WL); A_L = WL - x1(1:w1,1:w2);
     %matr = zeros(size(x1)); 
     %matr(1:w1,1:w2) = A_L;
