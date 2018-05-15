@@ -1,5 +1,26 @@
 function [wav_props, dual_wav_props]=find_wav_props(wave_name, m, bd_mode, lengthsignal)
-    % Computes
+    % Computes the properties of a wavelet with the given name. What properties are computed depend on the bd_mode parameter, m, and lengthsignal.
+    %
+    % wave_name: Name of the wavelet. Possible names are:
+    %            'cdf97' - CDF 9/7 wavelet
+    %            'cdf53' - Spline 5/3 wavelet
+    %            'splinex.x' - Spline wavelet with given number of vanishing moments for each filter
+    %            'pwl0'  - Piecewise linear wavelet with 0 vanishing moments
+    %            'pwl2'  - Piecewise linear wavelet with 2 vanishing moments
+    %            'Haar'  - The Haar wavelet
+    %            'dbX'   - Daubechies orthnormal wavelet with X vanishing
+    %                      moments
+    %            'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
+    %                      with X vanishing moments
+    % m:         Number of resolutions. Default: 1
+    % bd_mode:   Boundary extension mode. Possible modes are. 
+    %            'per'    - Periodic extension
+    %            'symm'   - Symmetric extension (default)
+    %            'none'   - Take no extra action at the boundaries
+    %            'bd'     - Boundary wavelets
+    % lengthsignal: Length of the input signal. Default: 0.
+    
+    if (~exist('m','var')) m = 1; end
     if (~exist('bd_mode','var')) bd_mode = 'symm'; end
     if (~exist('lengthsignal','var')) lengthsignal = 0; end
     

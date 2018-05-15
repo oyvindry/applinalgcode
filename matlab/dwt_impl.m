@@ -1,8 +1,9 @@
 function x=dwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, transpose, data_layout)
-    % Main function for computing the DWT of a given signal. Can be used for all signals up to dimension 3, 
-    % The last dimension in the input signal may be used for parallel computation of many signals.
+    % Main function for computing the DWT of a given signal. Can be used for all signals up to dimension 3.
+    % The dimension of the data may be one higher than the dimension of the transform, in which case the last dimension is used for 
+    % parallel computation.
     % Note that this function computes all quantities needed from scratch in order to compute the DWT for the wavelet in question. 
-    % This can be time-consuming. In order to avoid this you can use the functions find_wav_props, find_kernel,  
+    % This can be time-consuming, and can be avoided by using the functions find_wav_props, find_kernel,  
     % the internal DWT functions dwt1_impl_internal, dwt2_impl_internal, dwt3_impl_internal, as well as Matlabs persistence functions. 
     % An example with minimum set of parameters is as follows:
     % 
@@ -25,7 +26,7 @@ function x=dwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, transp
     %                      moments
     %            'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
     %                      with X vanishing moments
-    % m:         Number of resolutions.
+    % m:         Number of resolutions. Default: 1.
     % bd_mode:   Boundary extension mode. Possible modes are. 
     %            'per'    - Periodic extension
     %            'symm'   - Symmetric extension (default)
@@ -43,6 +44,7 @@ function x=dwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, transp
     %            'resolution': Lowest resolution first (default)
     %            'time': Sort according to time
     
+    if (~exist('m','var')) m = 1; end
     if (~exist('bd_mode','var')) bd_mode = 'symm'; end
     if (~exist('prefilter_mode','var')) prefilter_mode = 'none'; end
     if (~exist('dims','var')) 

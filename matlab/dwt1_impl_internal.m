@@ -1,4 +1,7 @@
 function x=dwt1_impl_internal(x, f, m, bd_mode, prefilter, offsets, data_layout)
+    % Compute a 1D DWT using a precomputed kernel. The kernel may be the default library kernel obtained by calling find_kernel, 
+    % or may be used-defined.
+    %
     % x:         Matrix whose DWT will be computed along the first dimension(s). 
     % f:         kernel function     
     % m:         Number of resolutions. Default is 1

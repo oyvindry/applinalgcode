@@ -1,13 +1,16 @@
 function x = dwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout)
-    % x:         Matrix whose DWT will be computed along the first dimension(s).      
-    % m:         Number of resolutions.
-    % f:         kernel function
+    % Compute a 3D DWT using precomputed kernels. The kernels may be the default library kernels obtained by calling find_kernel, 
+    % or may be used-defined.
+    %
+    % x:         Matrix whose DWT3 will be computed along the first dimensions. 
+    % fx, fy, fz: kernel functions     
+    % m:         Number of resolutions. Default is 1
     % bd_mode:   Boundary extension mode. Possible modes are. 
     %            'per'    - Periodic extension
     %            'symm'   - Symmetric extension (default)
     %            'none'   - Take no extra action at the boundaries
     %            'bd'     - Boundary wavelets
-    % prefilter: function which computes prefiltering
+    % prefilterx, prefiltery, prefilterz: functions which compute prefiltering
     % offsets:   offsets at the beginning and the end as used by boundary wavelets. Default: zeros.
     % data_layout: How data should be assembled. Possible modes are:
     %            'resolution': Lowest resolution first (default)
@@ -15,7 +18,9 @@ function x = dwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefilter
     
     if (~exist('m','var')) m = 1; end
     if (~exist('bd_mode','var')) bd_mode = 'symm'; end
-    if (~exist('prefilter','var')) prefilter = @(x, forward) x; ; end
+    if (~exist('prefilterx','var')) prefilterx = @(x, forward) x; ; end
+    if (~exist('prefiltery','var')) prefiltery = @(x, forward) x; ; end
+    if (~exist('prefilterz','var')) prefilterz = @(x, forward) x; ; end
     if (~exist('offsets','var')) offsets = zeros(3,2); end
     if (~exist('data_layout','var')) data_layout = 'resolution'; end
     

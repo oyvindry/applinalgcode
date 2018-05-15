@@ -1,14 +1,20 @@
 function [f, prefilter]=find_kernel(wav_props, dual_wav_props, forward, dual, transpose, prefilter_mode)
-    % wav_props:
-    % dual_wav_props:
-    % forward:
-    % dual: (optional). Default is 0
+    % Function which returns the default kernel of the library for use with the wavelet with properties encapsulated by the given parameters.
+    % The kernel can be passed to the the internal functions (i)dwt1_impl_internal, (i)dwt2_impl_internal, (i)dwt3_impl_internal. 
+    % User-defined kernels can also be passed to these internal functions: They simply have to take the x and bd_mode parameters, and return the 
+    % transformed vectors.
+    %
+    % wav_props: Object which encapsulates the wavelet
+    % dual_wav_props: Object which encapsulates the dual wavelet
+    % forward: Whether the forward transform should be used
+    % dual: (optional). Whether the dual wavelet should be applied. Default is 0
     % transpose: (optional). Default is 0
     % prefilter_mode: (optional). Default is 'none'
     
     if (~exist('dual','var')) dual = 0; end
     if (~exist('transpose','var')) transpose = 0; end
     if (~exist('prefilter_mode','var')) prefilter_mode = 'none'; end
+    
     prefilter = @(x, forward) x;
     if transpose
         forward = ~forward;
