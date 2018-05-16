@@ -1,4 +1,4 @@
-function x = IDCTImpl(y)
+function x = idct_impl(y)
     N = size(y, 1);
     if N == 1 
         x = y;

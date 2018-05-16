@@ -1,4 +1,4 @@
-function y = FFTKernelNonrec(x, forward)
+function y = fft_kernel_nonrec(x, forward)
     N = size(x, 1);
     sign = -1;
     if ~forward

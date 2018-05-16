@@ -1,4 +1,4 @@
-function y = FFTKernelSplitradix(x, forward)
+function y = fft_kernel_splitradix(x, forward)
     N = size(x, 1);
     sign = -1;
     if ~forward
@@ -9,9 +9,9 @@ function y = FFTKernelSplitradix(x, forward)
     elseif N == 2
         y = [x(1) + x(2); x(1) - x(2)];
     else
-        xe  = FFTKernelSplitradix(x(1:(N/2)), forward);
-        xo1 = FFTKernelSplitradix(x((N/2 + 1):(3*N/4)), forward);
-        xo2 = FFTKernelSplitradix(x((3*N/4 + 1):N), forward);
+        xe  = fft_kernel_splitradix(x(1:(N/2)), forward);
+        xo1 = fft_kernel_splitradix(x((N/2 + 1):(3*N/4)), forward);
+        xo2 = fft_kernel_splitradix(x((3*N/4 + 1):N), forward);
         G = exp(sign*2*pi*1j*(0:(N/4-1))'/N);
         H = G.*exp(sign*2*pi*1j*(0:(N/4-1))'/(N/2));
         xo1 = G.*xo1;
