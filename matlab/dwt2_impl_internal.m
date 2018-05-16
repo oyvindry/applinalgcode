@@ -23,23 +23,19 @@ function x = dwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, o
     if (~exist('offsets','var')) offsets = zeros(2,2); end
     if (~exist('data_layout','var')) data_layout = 'resolution'; end
     
-    lastdim = 1;
-    if length(size(x)) == 3
-        lastdim = size(x, 3);
-    end 
     indsx = 1:size(x,1); indsy = 1:size(x,2);
 
     % preconditioning   
-    x=tensor2_kernel(x, indsx, indsy, @(x,bd_mode) prefilterx(x, 1), @(x,bd_mode) prefiltery(x, 1), lastdim, bd_mode);
+    x=tensor2_kernel(x, indsx, indsy, @(x,bd_mode) prefilterx(x, 1), @(x,bd_mode) prefiltery(x, 1), bd_mode);
          
     for res = 0:(m - 1)
-        x=tensor2_kernel(x, indsx, indsy, fx, fy, lastdim, bd_mode);  
+        x=tensor2_kernel(x, indsx, indsy, fx, fy, bd_mode);  
         indsx = indsx((offsets(1,1)+1):2:(end-offsets(1,2)));
         indsy = indsy((offsets(2,1)+1):2:(end-offsets(2,2)));
     end
     
     % postconditioning
-    x=tensor2_kernel(x, indsx, indsy, @(x,bd_mode) prefilterx(x, 0), @(x,bd_mode) prefiltery(x, 0), lastdim, bd_mode);  
+    x=tensor2_kernel(x, indsx, indsy, @(x,bd_mode) prefilterx(x, 0), @(x,bd_mode) prefiltery(x, 0), bd_mode);  
     
     x = reorganize_coeffs2_forward(x, m, offsets, data_layout);   
 end     

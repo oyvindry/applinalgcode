@@ -25,24 +25,19 @@ function x=idwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, of
     
     [x, resstart, resend] = reorganize_coeffs2_reverse(x, m, offsets, data_layout);
     
-    lastdim = 1;
-    if length(size(x)) == 3
-        lastdim = size(x, 3);
-    end 
-    
     % postconditioning
     indsx = resstart(1,m+1):2^m:resend(1,m+1); indsy = resstart(2,m+1):2^m:resend(2,m+1);
-    x=tensor2_kernel(x, indsx, indsy, @(x,bd_mode) prefilterx(x, 1), @(x,bd_mode) prefiltery(x, 1), lastdim, bd_mode);
+    x=tensor2_kernel(x, indsx, indsy, @(x,bd_mode) prefilterx(x, 1), @(x,bd_mode) prefiltery(x, 1), bd_mode);
 
     for res = (m - 1):(-1):0
         indsx = resstart(1,res+1):2^res:resend(1,res+1); 
         indsy = resstart(2,res+1):2^res:resend(2,res+1);
-        x = tensor2_kernel(x, indsx, indsy, fx, fy, lastdim, bd_mode);
+        x = tensor2_kernel(x, indsx, indsy, fx, fy, bd_mode);
     end
     
     % preconditioning
     indsx = resstart(1,1):resend(1,1); indsy = resstart(2,1):resend(2,1);
-    x = tensor2_kernel(x, indsx, indsy, @(x,bd_mode) prefilterx(x, 0), @(x,bd_mode) prefiltery(x, 0), lastdim, bd_mode);
+    x = tensor2_kernel(x, indsx, indsy, @(x,bd_mode) prefilterx(x, 0), @(x,bd_mode) prefiltery(x, 0), bd_mode);
 end
 
 function [sig_out, resstart, resend]=reorganize_coeffs2_reverse(sig_in, m, offsets, data_layout)

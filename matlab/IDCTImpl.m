@@ -10,7 +10,7 @@ function x = IDCTImpl(y)
         for s2 = 1:size(y, 2)
             y1(2:N, s2) = (y(2:N, s2)-1i*y(N:(-1):2, s2))./Q(2:N);
         end
-        y1 = FFTImpl(y1, @FFTKernelStandard, 0);
+        y1 = fft_impl(y1, @FFTKernelStandard, 0);
         x = zeros(size(y));
         x(1:2:N, :) = real(y1(1:(N/2), :));
         x(2:2:N, :) = real(y1(N:(-1):(N/2+1), :));

@@ -4,7 +4,7 @@ function y = DCTImpl(x)
         y = x;
     else
         x1 = [x(1:2:N, :); x(N:(-2):1, :)];
-        y = FFTImpl(x1, @FFTKernelStandard);
+        y = fft_impl(x1, @FFTKernelStandard);
         cosvec = cos(pi*((0:(N-1))')/(2*N));
         sinvec = sin(pi*((0:(N-1))')/(2*N));
         for s2 = 1:size(x, 2)

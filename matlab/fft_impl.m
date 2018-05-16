@@ -1,4 +1,4 @@
-function y = FFTImpl(x, FFTKernel, forward)
+function y = fft_impl(x, f, forward)
     fwd = 1;
     if nargin >= 3
         fwd = forward;
@@ -7,7 +7,7 @@ function y = FFTImpl(x, FFTKernel, forward)
     [N, n] = size(x);
     y = zeros(N, n);
     for s2 = 1:size(x, 2)
-        y(:, s2) = FFTKernel(x(:,s2), fwd);
+        y(:, s2) = f(x(:,s2), fwd);
     end
     if ~fwd
         y = y/N;

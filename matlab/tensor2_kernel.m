@@ -1,13 +1,7 @@
-function x=tensor2_kernel(x, indsx, indsy, fx, fy, lastdim, bd_mode)
-    for col = indsy
-        Y2 = zeros(length(indsx), lastdim);
-        Y2(:, :) = x(indsx, col, :);
-        x(indsx, col, :) = fx(Y2, bd_mode);
-    end
-        
-    for row = indsx
-        Y1=zeros(length(indsy), lastdim); 
-        Y1(:, :) = x(row, indsy, :);
-        x(row, indsy, :) = fy(Y1, bd_mode);
-    end
+function x=tensor2_kernel(x, indsx, indsy, fx, fy, bd_mode)
+    sz = 1:(length(size(x)));
+    x(indsx, :) = fx(x(indsx, :), bd_mode);
+    x = permute(x,[2 1 sz(3:end)]);
+    x(indsy, :) = fy(x(indsy, :), bd_mode);
+    x = permute(x,[2 1 sz(3:end)]);
 end
