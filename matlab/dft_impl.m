@@ -1,4 +1,4 @@
-function y = DFTImpl(x, forward)
+function y = dft_impl(x, forward)
     sign = -1;
     if nargin >= 2 & forward == 0 
         sign = 1;
