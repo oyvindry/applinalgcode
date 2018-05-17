@@ -1,4 +1,4 @@
-function data=tensor3_kernel(data, indsx, indsy, indz, fx, fy, fz, lastdim, bd_mode)
+function data=tensor3_impl(data, indsx, indsy, indz, fx, fy, fz, lastdim, bd_mode)
     for y = indsy
         for z = indsz
             data_temp = zeros(length(indsx), lastdim);
