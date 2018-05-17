@@ -1,5 +1,5 @@
 function X=forw_comp_rev_DCT2(f, invf, threshold)
-    X = CreateExcerpt();
+    X = create_excerpt();
     X = tensor_impl(X, f, f);
     tot = prod(size(X));
   

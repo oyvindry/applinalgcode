@@ -76,6 +76,6 @@ def combineimages(imgs):
             newimg[(m*(sz[0]+ind)):((m+1)*sz[0]+m*ind), (n*(sz[1]+ind)):((n+1)*sz[1]+n*ind)] = imgs[m][n][:]
     return newimg
 
-def CreateExcerpt():
+def create_excerpt():
     img = double(imread('images/lena.png','png'))
     return img[128:384,128:384,:]

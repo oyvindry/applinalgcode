@@ -34,7 +34,7 @@ def forw_comp_rev_DFT(L=0, lower=-1, threshold=0, n=0, N=0):
     
 def forw_comp_rev_DFT2(f, invf, threshold):
     # TODO: f, invf
-    X = CreateExcerpt()
+    X = create_excerpt()
     X = X.astype(complex)
     M, N = shape(X)[0:2]
     
@@ -52,7 +52,7 @@ def forw_comp_rev_DFT2(f, invf, threshold):
     return X
     
 def forw_comp_rev_DCT2(f, invf, threshold):
-    X = CreateExcerpt()
+    X = create_excerpt()
     tensor_impl(X, f, f)
     tot = prod(shape(X))
   
@@ -97,7 +97,7 @@ def forw_comp_rev_DWT2(m, wave_name, lowres = 1):
     lowres: If true, set the detail to 0 and show the lowres part. 
             If false, set the lowres part to 0 and show the detail.  
     """
-    img = CreateExcerpt()
+    img = create_excerpt()
     M, N = shape(img)[0:2]
     DWT2Impl(img, m, wave_name)
     if lowres==1:

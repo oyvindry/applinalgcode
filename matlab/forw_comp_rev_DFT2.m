@@ -1,5 +1,5 @@
 function X=forw_comp_rev_DFT2(f, invf, threshold)
-    X = CreateExcerpt();
+    X = create_excerpt();
     M = size(X, 1);
     N = size(X, 2);
     

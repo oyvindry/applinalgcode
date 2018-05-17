@@ -921,7 +921,7 @@ def _test_kernel(wave_name):
     assert diff < 1E-13, 'bug, diff=%s' % diff
 
 def mmsubbands(m):
-    img = CreateExcerpt()
+    img = create_excerpt()
     l1, l2, l3 = shape(img)
     X = zeros((3,l1,l2,l3))
     
