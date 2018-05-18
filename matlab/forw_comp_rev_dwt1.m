@@ -1,4 +1,4 @@
-function [x,fs]=forw_comp_rev_DWT(m, wave_name, lr)
+function [x,fs]=forw_comp_rev_dwt1(m, wave_name, lr)
     lowres = 1;
     if nargin >= 3
         lowres = lr;
