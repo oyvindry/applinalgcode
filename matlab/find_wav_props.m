@@ -392,3 +392,149 @@ function [h0,h1,g0,g1]=h0h1compute97()
   h1=g0.*(-1).^((-(length(g0)-1)/2):((length(g0)-1)/2));
   g1=h0.*(-1).^((-(length(h0)-1)/2):((length(h0)-1)/2));
 end
+
+function vals=computeQN(N)
+  % Compute the coefficients in Q^(N)((1-cos(w))/2)
+  k=0:(N-1);
+  QN = 2*factorial(N+k-1)./(factorial(k).*factorial(N-1));
+  vals=zeros(1,2*N-1);
+  vals=QN(1);
+  start=1;
+  for k=2:N
+    start=conv(start,[-1/4 1/2 -1/4]);
+    vals=[0 vals 0]+QN(k)*start;
+  end
+end
+
+function [h0, h1, g0, g1]=h0h1computeortho(N)
+    % Comptues the wavelet coefficients of the orthonormal Daubechies wavelet
+    % N vanishing moments and with minimum phase   
+    vals=computeQN(N);
+    rts=roots(vals)';
+    rts1=rts(find(abs(rts)>1));
+
+    g0=1;
+    for rt=rts1
+        g0=conv(g0,[-rt 1]);
+    end
+    g0 = real(g0);
+    K=sqrt(vals(1)*(-1)^(length(rts1))/abs(prod(rts1)));
+    g0=K*g0;
+    for k=1:N
+        g0=conv(g0,[1/2 1/2]);
+    end
+    
+    % Ensuring integral is positive - This part of the code requiere some more
+    % testing
+    if (sum(g0) < 0)
+        g0 = -g0;
+    end
+    h0=fliplr(g0);
+    g1=h0.*(-1).^(0:(length(g0)-1)); % It seems to me that this should be 
+                                     % multiplied by -1 
+    h1=fliplr(g1);
+end
+
+function [h0, h1, g0, g1]=h0h1computesym(N)
+    % Comptues the wavelet coefficients of the orthonormal wavelet with N
+    % vanishing moments and close to linear phase. This makes the wavelet
+    % almost symmetric. These wavelets are called 'symlets'
+    %
+    % This function relies on matlabs wavelet coefficients. In the next version
+    % this will be changed 
+    
+    currDWTmode = dwtmode('status', 'nodisp');
+    dwtmode('per','nodisp');
+    nu = 7;
+    n = 2^nu;
+    x = zeros([1,n]);
+    x(ceil(N/2)) = 1;
+    
+    S = [2^(nu-1); 2^(nu-1); n]; % compute the S given by wavedec
+    wave_name = sprintf('sym%d', N);
+    
+    y = waverec(x, S, wave_name);
+    if (mod(N,2) == 1) % is odd
+        g0 = y(1:2*N);
+    else % is even 
+        g0 = [y(end), y(1:2*N-1)];
+    end
+    
+    h0=fliplr(g0);
+    g1=h0.*(-1).^(0:(length(g0)-1)); 
+    h1=fliplr(g1);
+    
+    dwtmode(currDWTmode, 'nodisp');
+end
+
+function [lambdas, alpha, beta, last_even] = liftingstepscomputeortho(h0, h1)
+    % Compute a lifting factorization so that
+    % [alpha 0; beta 0] = \Lambda_n \cdots \Lambda_1 H
+    % lambdas: [\Lambda_1; \Lambda_2; \cdots \Lambda_n]
+    % last_even: If \Lambda_n is even
+    stepnr=1;
+    len1=length(h0)/2; len2=len1;
+    lambdas=zeros(len1+1,2);
+    if mod(len1,2)==0
+        h00=h0(1:2:length(h0));
+        h01=h0(2:2:length(h0));
+        h10=h1(1:2:length(h1));
+        h11=h1(2:2:length(h1));
+  
+        lambda1=-h00(1)/h10(1);
+        h00=h00+lambda1*h10; 
+        h01=h01+lambda1*h11;
+        start1=2; end1=len1; len1=len1-1; start2=1; end2=len2;
+        lambdas(stepnr,:)=[lambda1 0];
+    else
+        h00=h0(2:2:length(h0));
+        h01=h0(1:2:length(h0));
+        h10=h1(2:2:length(h1));
+        h11=h1(1:2:length(h1));
+    
+        lambda1=-h10(len1)/h00(len1); 
+        h10=h10+lambda1*h00; 
+        h11=h11+lambda1*h01;
+        start2=1; end2=len2-1; len2=len2-1; start1=1; end1=len1;
+        lambdas(stepnr,:)=[0 lambda1];
+    end
+  
+    %[h00 h01; h10 h11]
+    %conv(h00,h11)-conv(h10,h01)
+    stepnr=stepnr+1;
+
+    %[h00 h01; h10 h11]
+    %conv(h00,h11)-conv(h10,h01)
+    while len2>0 % Stop when the second element in the first column is zero
+        if len1>len2 % Reduce the degree in the first row. 
+            lambda1=-h00(start1)/h10(start2);
+            lambda2=-h00(end1)/h10(end2);
+            h00(start1:end1)=h00(start1:end1)+conv(h10(start2:end2),[lambda1 lambda2]);
+            h01(start1:end1)=h01(start1:end1)+conv(h11(start2:end2),[lambda1 lambda2]);
+            start1=start1+1; end1=end1-1; len1=len1-2;
+        else % reduce the degree in the second row. 
+            lambda1=-h10(start2)/h00(start1);
+            lambda2=-h10(end2)/h00(end1);
+            h10(start2:end2)=h10(start2:end2)+conv(h00(start1:end1),[lambda1 lambda2]);
+            h11(start2:end2)=h11(start2:end2)+conv(h01(start1:end1),[lambda1 lambda2]);
+            start2=start2+1; end2=end2-1; len2=len2-2;
+        end
+        lambdas(stepnr,:)=[lambda1 lambda2];
+        stepnr=stepnr+1;
+    
+        %[h00 h01; h10 h11]
+        %conv(h00,h11)-conv(h10,h01)
+    end
+  
+    % Add the final lifting, and alpha,beta
+    alpha=sum(h00);
+    beta=sum(h11);
+    lastlift=-sum(h01)/beta;
+    if mod(length(h0)/2,2)==0
+        lambdas(stepnr,:)=[0 lastlift];
+    else
+        lambdas(stepnr,:)=[lastlift 0];
+    end
+    last_even = 1;
+    %[h00 h01; h10 h11]
+end
