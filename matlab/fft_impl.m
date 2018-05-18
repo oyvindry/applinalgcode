@@ -12,6 +12,7 @@ function y = fft_impl(x, f, forward)
     if ~fwd
         y = y/N;
     end
+end
     
 function x=bitreverse(x)
     % bitreverse(x) returns x in bit-reversed order
@@ -30,3 +31,4 @@ function x=bitreverse(x)
         end
         j = j + m;
     end
+end

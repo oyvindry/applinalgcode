@@ -19,3 +19,4 @@ function y = fft_kernel_splitradix(x, forward)
         xo = [xo1 + xo2; -sign*1i*(xo2 - xo1)];
         y = [xe + xo; xe - xo];
     end
+end

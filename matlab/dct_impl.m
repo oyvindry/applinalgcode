@@ -13,3 +13,4 @@ function y = dct_impl(x)
         y(1, :) = sqrt(1/N)*y(1, :);
         y(2:N, :) = sqrt(2/N)*y(2:N, :);
     end
+end

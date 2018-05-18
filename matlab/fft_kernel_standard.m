@@ -14,3 +14,4 @@ function y = fft_kernel_standard(x, forward)
         xo = xo.*D;
         y = [ xe + xo; xe - xo];
     end
+end

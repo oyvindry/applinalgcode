@@ -5,3 +5,4 @@ function [ank,bnk] = find_fourier_coeffs(n, k, T)
         ank = -k*T*bnkprev/(2*pi*n);
         bnk = -T^k/(pi*n) + k*T*ankprev/(2*pi*n);
     end
+end

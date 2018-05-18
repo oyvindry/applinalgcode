@@ -15,3 +15,4 @@ function x = idct_impl(y)
         x(1:2:N, :) = real(y1(1:(N/2), :));
         x(2:2:N, :) = real(y1(N:(-1):(N/2+1), :));
     end
+end

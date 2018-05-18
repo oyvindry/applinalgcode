@@ -15,3 +15,4 @@ function y=filter_impl(t, x, bd_mode)
         x(:,k) = z((2*N0+1):(length(z)-2*N0));
     end
     y = x;
+end

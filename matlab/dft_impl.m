@@ -14,3 +14,4 @@ function y = dft_impl(x, forward)
     if sign == 1
         y = y/N;
     end
+end
