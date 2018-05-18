@@ -382,8 +382,8 @@ def dwt_kernel_filters(H0, H1, G0, G1, x, bd_mode):
     f0, f1 = H0, H1
     x0 = x.copy()
     x1 = x.copy()
-    filterS(f0, x0, symm)
-    filterS(f1, x1, symm)
+    filter_impl(f0, x0, symm)
+    filter_impl(f1, x1, symm)
     x[::2] = x0[::2]
     x[1::2] = x1[1::2]
     
@@ -392,8 +392,8 @@ def dwt_kernel_filters_dual(H0, H1, G0, G1, x, bd_mode):
     f0, f1 = G0, G1
     x0 = x.copy()
     x1 = x.copy()
-    filterS(f0, x0, symm)
-    filterS(f1, x1, symm)
+    filter_impl(f0, x0, symm)
+    filter_impl(f1, x1, symm)
     x[::2] = x0[::2]
     x[1::2] = x1[1::2]
 
@@ -402,8 +402,8 @@ def idwt_kernel_filters(H0, H1, G0, G1, x, bd_mode):
     f0, f1 = G0, G1
     x0 = x.copy(); x0[1::2] = 0
     x1 = x.copy(); x1[::2] = 0
-    filterS(f0, x0, symm)
-    filterS(f1, x1, symm)
+    filter_impl(f0, x0, symm)
+    filter_impl(f1, x1, symm)
     x[:] = x0 + x1
     
 def idwt_kernel_filters_dual(H0, H1, G0, G1, x, bd_mode):
@@ -411,8 +411,8 @@ def idwt_kernel_filters_dual(H0, H1, G0, G1, x, bd_mode):
     f0, f1 = H0, H1
     x0 = x.copy(); x0[1::2] = 0
     x1 = x.copy(); x1[::2] = 0
-    filterS(f0, x0, symm)
-    filterS(f1, x1, symm)
+    filter_impl(f0, x0, symm)
+    filter_impl(f1, x1, symm)
     x[:] = x0 + x1
     
     

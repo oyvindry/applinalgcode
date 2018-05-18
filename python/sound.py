@@ -3,7 +3,7 @@ from numpy import *
 
 max_amplitude = 2**15-1 # iinfo('int16').max if numpy >= 1.0.3
 
-def filterS(t, x, symm):
+def filter_impl(t, x, symm):
     tlen = len(t) 
     N0 = (tlen - 1)/2
     N = shape(x)[0]

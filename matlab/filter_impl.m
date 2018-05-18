@@ -1,4 +1,4 @@
-function y=filterS(t, x, bd_mode)
+function y=filter_impl(t, x, bd_mode)
     tlen = length(t); N0 = (tlen - 1)/2;
     N = size(x, 1);
     n = size(x, 2);
