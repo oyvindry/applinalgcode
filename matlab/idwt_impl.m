@@ -1,11 +1,15 @@
 function x=idwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, transpose, data_layout)
-    % Main function for computing the IDWT of a given signal. Can be used for all signals up to dimension 3.
-    % The dimension of the data may be one higher than the dimension of the transform, in which case the last dimension is used for 
-    % parallel computation.
-    % Note that this function computes all quantities needed from scratch in order to compute the IDWT for the wavelet in question. 
-    % This can be time-consuming, and can be avoided by using the functions find_wav_props, find_kernel,  
-    % the internal IDWT functions idwt1_impl_internal, idwt2_impl_internal, idwt3_impl_internal, as well as Matlabs persistence functions. 
-    % An example with minimum set of parameters is as follows:
+    % Main function for computing the IDWT of a given signal. Can be used for
+    % all signals up to dimension 3.  The dimension of the data may be one
+    % higher than the dimension of the transform, in which case the last
+    % dimension is used for parallel computation.
+    %
+    % Note that this function computes all quantities needed from scratch in
+    % order to compute the IDWT for the wavelet in question.  This can be
+    % time-consuming, and can be avoided by using the functions find_wav_props,
+    % find_kernel,  the internal IDWT functions idwt1_impl_internal,
+    % idwt2_impl_internal, idwt3_impl_internal, as well as Matlabs persistence
+    % functions.  An example with minimum set of parameters is as follows:
     % 
     % [wav_props, dual_wav_props] = find_wav_props(wave_name);
     % save('wav_props.mat', 'wav_props', 'dual_wav_props');
@@ -18,7 +22,8 @@ function x=idwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, trans
     % wave_name: Name of the wavelet. Possible names are:
     %            'cdf97' - CDF 9/7 wavelet
     %            'cdf53' - Spline 5/3 wavelet
-    %            'splinex.x' - Spline wavelet with given number of vanishing moments for each filter
+    %            'splinex.x' - Spline wavelet with given number of vanishing 
+    %                          moments for each filter
     %            'pwl0'  - Piecewise linear wavelet with 0 vanishing moments
     %            'pwl2'  - Piecewise linear wavelet with 2 vanishing moments
     %            'Haar'  - The Haar wavelet
@@ -36,9 +41,13 @@ function x=idwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, trans
     %            'none' (default)
     %            'filter'
     %            'bd_pre' - Boundary wavelets with preconditioning
-    % dims:      the number of dimensions to apply the IDWT to. Always applied to the first dimensions. Default: max(dim(x)-1,1).
-    %            This means that sound with many channels, and images with many colour components default to a one- and two-dimensional IDWT, respectively
-    % dual:      Whether to apply the dual wavelet rather than the wavelet itself. Default: 0
+    % dims:      the number of dimensions to apply the IDWT to. Always applied 
+    %            to the first dimensions. Default: max(dim(x)-1,1).
+    %            This means that sound with many channels, and images with 
+    %            many colour components default to a one- and two-dimensional 
+    %            IDWT, respectively
+    % dual:      Whether to apply the dual wavelet rather than the wavelet 
+    %            itself. Default: 0
     % transpose: Whether the transpose is to be taken. Default: 0
     % data_layout: How data should be assembled. Possible modes are:
     %            'resolution': Lowest resolution first (default)
