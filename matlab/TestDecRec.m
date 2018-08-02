@@ -33,7 +33,7 @@ classdef TestDecRec < matlab.unittest.TestCase
             testWaveletDecRec(testCase, 'pwl2');
         end
         function testHaar(testCase)
-            testWaveletDecRec(testCase, 'pwl2');
+            testWaveletDecRec(testCase, 'haar');
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -142,72 +142,63 @@ classdef TestDecRec < matlab.unittest.TestCase
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         function test_BD_precond_vm2(testCase)
-            testPrecondBoundary(testCase, 2);
+            testPrecondBoundary_daubechies(testCase, 2);
         end
         function test_BD_precond_vm3(testCase)
-            testPrecondBoundary(testCase, 3);
+            testPrecondBoundary_daubechies(testCase, 3);
         end
         function test_BD_precond_vm4(testCase)
-            testPrecondBoundary(testCase, 4);
+            testPrecondBoundary_daubechies(testCase, 4);
         end
         function test_BD_precond_vm5(testCase)
-            testPrecondBoundary(testCase, 5);
+            testPrecondBoundary_daubechies(testCase, 5);
         end
         function test_BD_precond_vm6(testCase)
-            testPrecondBoundary(testCase, 6);
+            testPrecondBoundary_daubechies(testCase, 6);
         end
-        
+
         function test_2d_input(testCase)
             eps = testCase.eps;
             N = 32;
             nres = 2;
             wname = 'pwl0';
             bd_mode = 'per';
-            
+
             X = rand(N,N);
-            Z = DWTImpl(X, nres, wname, bd_mode);
-            Y = IDWTImpl(Z, nres, wname, bd_mode);
+            Z = dwt_impl(X, nres, wname, bd_mode);
+            Y = idwt_impl(Z, nres, wname, bd_mode);
             err = norm(X-Y,'fro');
             testCase.verifyTrue(err < eps);
         end
 
-
-
-
     end
     methods (Access=private)
+
         function testWaveletDecRec(testCase, wave_name)
             x = testCase.x;
             eps = testCase.eps;
             nres = testCase.nres;
-            z = IDWTImpl(DWTImpl(x, nres, wave_name, 'per', 0), nres, wave_name, 'per', 0);
+
+            z = idwt_impl(dwt_impl(x, wave_name, nres, 'per'), wave_name, nres, 'per');
             testCase.verifyTrue(norm(z-x,2) < eps);
-            z = IDWTImpl(DWTImpl(x, nres, wave_name, 'symm', 0), nres, wave_name, 'symm', 0);
+            z = idwt_impl(dwt_impl(x, wave_name, nres, 'symm'), wave_name, nres, 'symm');
             testCase.verifyTrue(norm(z-x,2) < eps);
-            z = IDWTImpl(DWTImpl(x, nres, wave_name, 'per', 1), nres, wave_name, 'per', 1);
-            testCase.verifyTrue(norm(z-x,2) < eps);
-            z = IDWTImpl(DWTImpl(x, nres, wave_name, 'symm', 1), nres, wave_name, 'symm', 1);
-            testCase.verifyTrue(norm(z-x,2) < eps);
+
         end
+
         function testWaveletDecRecBoundary(testCase, wave_name)
             x = testCase.x;
             eps = testCase.eps;
             nres = testCase.nres;
 
-            z = IDWTImpl(DWTImpl(x, nres, wave_name, 'bd', 0), nres, wave_name, 'bd', 0);
+            z = idwt_impl(dwt_impl(x, wave_name, nres, 'bd'), wave_name, nres, 'bd');
             testCase.verifyTrue(norm(z-x,2) < eps);
-            if(or(strcmp(wave_name, 'db6'),strcmp(wave_name, 'db7')) )
-                norm(z-x,2);
-            end
 
-            z = IDWTImpl(DWTImpl(x, nres, wave_name, 'bd_pre', 0), nres, wave_name, 'bd_pre', 0);
+            z = idwt_impl(dwt_impl(x, wave_name, nres, 'bd', 'bd_pre'), wave_name, nres, 'bd', 'bd_pre');
             testCase.verifyTrue(norm(z-x,2) < eps);
-            if(or(strcmp(wave_name, 'db6'),strcmp(wave_name, 'db7')) )
-                norm(z-x,2); 
-            end
         end
         
-        function testPrecondBoundary(testCase, vm)
+        function testPrecondBoundary_daubechies(testCase, vm)
             
             wave_name = sprintf('db%d', vm);
             
@@ -219,13 +210,34 @@ classdef TestDecRec < matlab.unittest.TestCase
             success = 1;
             for i = 1:vm
                 y = x.^(i-1);
-                z = DWTImpl(x, nres, wave_name, 'bd_pre');
+                z = dwt_impl(x, wave_name, nres, 'bd', 'bd_pre');
                 a = z(N/2^nres+1:N);
 
                 success = success & norm(a,2) < eps;
             end
             testCase.verifyTrue(success);
             
+        end
+        
+        function testPrecondBoundary_symlet(testCase, vm)
+            
+            wave_name = sprintf('sym%d', vm);
+            
+            eps = testCase.eps;
+            nres = testCase.nres;
+            N = testCase.N;
+
+            x = linspace(0,1,N)';
+            success = 1;
+            for i = 1:vm
+                y = x.^(i-1);
+                z = dwt_impl(x, wave_name, nres, 'bd', 'bd_pre');
+                a = z(N/2^nres+1:N);
+
+                success = success & norm(a,2) < eps;
+            end
+            testCase.verifyTrue(success);
+
         end
     end
 end 

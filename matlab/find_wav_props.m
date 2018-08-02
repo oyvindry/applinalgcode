@@ -1,10 +1,12 @@
 function [wav_props, dual_wav_props]=find_wav_props(wave_name, m, bd_mode, length_signal)
-    % Computes the properties of a wavelet with the given name. What properties are computed depend on the bd_mode parameter, m, and length_signal.
+    % Computes the properties of a wavelet with the given name. What properties 
+    % are computed depend on the bd_mode parameter, m, and length_signal.
     %
     % wave_name: Name of the wavelet. Possible names are:
     %            'cdf97' - CDF 9/7 wavelet
     %            'cdf53' - Spline 5/3 wavelet
-    %            'splinex.x' - Spline wavelet with given number of vanishing moments for each filter
+    %            'splinex.x' - Spline wavelet with given number of vanishing 
+    %                          moments for each filter
     %            'pwl0'  - Piecewise linear wavelet with 0 vanishing moments
     %            'pwl2'  - Piecewise linear wavelet with 2 vanishing moments
     %            'Haar'  - The Haar wavelet
@@ -19,17 +21,16 @@ function [wav_props, dual_wav_props]=find_wav_props(wave_name, m, bd_mode, lengt
     %            'none'   - Take no extra action at the boundaries
     %            'bd'     - Boundary wavelets
     % length_signal: Length of the input signal. Default: 0.
-    
+
     if (~exist('m','var')) m = 1; end
     if (~exist('bd_mode','var')) bd_mode = 'symm'; end
     if (~exist('length_signal','var')) length_signal = 0; end
-    
     wav_props.wave_name = wave_name; dual_wav_props.wave_name = wave_name;
     wav_props.m = m; dual_wav_props.m = m;
     wav_props.length_signal = length_signal; dual_wav_props.length_signal = length_signal;
     wav_props.offset_L = 0; dual_wav_props.offset_L = 0;
     wav_props.offset_R = 0; dual_wav_props.offset_R = 0;
-    
+
     if (strcmpi(wave_name(1:2), 'db'))
         N = str2double(wave_name(3:end));
         if N > 1 
@@ -168,7 +169,7 @@ function [wav_props, dual_wav_props]=wav_props_ortho(N, wav_props, dual_wav_prop
     if strcmpi(bd_mode, 'bd')
         [wav_props, WL, WR] = wav_props_ortho_bd(N, wav_props);
         
-        if mod(wav_props.offset_L,2) == 1
+        if mod(wav_props.offset_L, 2) == 1
             wav_props.last_even = ~wav_props.last_even;
             betaval = wav_props.alpha; wav_props.alpha = wav_props.beta; wav_props.beta = betaval;
         end
@@ -180,7 +181,7 @@ function [wav_props, dual_wav_props]=wav_props_ortho(N, wav_props, dual_wav_prop
     dual_wav_props.last_even = ~wav_props.last_even;
     
     if strcmpi(bd_mode, 'bd')            
-        [wav_props.A_L,wav_props.A_R]=find_AL_AR_lifting(WL, WR, wav_props);
+        [wav_props.A_L, wav_props.A_R]=find_AL_AR_lifting(WL, WR, wav_props);
         [dual_wav_props.A_L,dual_wav_props.A_R]=find_AL_AR_lifting(WL, WR, dual_wav_props);
         dual_wav_props.offset_L = wav_props.offset_L; 
         dual_wav_props.offset_R = wav_props.offset_R; 
@@ -205,17 +206,25 @@ function [wav_props, WL, WR]=wav_props_ortho_bd(N, wav_props)
     % First the right edge
     wav_props.g0 = flip(wav_props.g0); wav_props.g1 = flip(wav_props.g1);
     [W, A_pre_inv] = bw_compute_left_ortho(wav_props.g0, wav_props.g1, N, K_R);
-    
+
     % Mirror right hand side variables
     wav_props.A_R_pre_inv = fliplr(flipud(A_pre_inv));
+    %A_R_pre_inv = wav_props.A_R_pre_inv;
     WR = fliplr(flipud(W));
     for k = (size(W,2)-(K_R-N)):(-2):1
         WR(:, [k-1 k]) = WR(:, [k k-1]); 
     end
-    
+
+
+
     % Then the left edge
     wav_props.g0 = flip(wav_props.g0); wav_props.g1 = flip(wav_props.g1);
     [WL, wav_props.A_L_pre_inv] = bw_compute_left_ortho(wav_props.g0, wav_props.g1, N, K_L);
+
+    %A_L_pre_inv = wav_props.A_L_pre_inv;
+    %h0=wav_props.g0;
+    %save(sprintf('DBFilter/h0_db%d.mat', N), 'h0');
+
 end
 
 function [A_L,A_R]=find_AL_AR_lifting(WL, WR, wav_props)
