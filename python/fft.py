@@ -42,11 +42,7 @@ def bitreversearr(x):
 # DCT code
 
 def dct_impl(x):
-    """ 
-    Compute the DCT of the vector x
-    
-    x: a vector
-    """ 
+    # Compute the DCT of the vector x
     N = len(x)
     if N > 1:
         x1 = concatenate([x[0::2], x[-1:0:-2]]).astype(complex)
@@ -63,11 +59,7 @@ def dct_impl(x):
         x[1:] *= sqrt(2/float(N))
         
 def idct_impl(y):
-    """ 
-    Compute the IDCT of the vector y
-    
-    y: a vector
-    """
+    # Compute the IDCT of the vector y
     N = len(y)
     if N > 1:
         y[0] /= sqrt(1/float(N))
@@ -83,6 +75,7 @@ def idct_impl(y):
         FFTImpl(y1, FFTKernelStandard, 0)
         y[0::2] = real(y1[0:(N/2)])
         y[1::2] = real(y1[-1:(N/2-1):-1])
+# End idct_impl
 
 def dft_impl(x, forward=True):
     """

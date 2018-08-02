@@ -192,7 +192,7 @@ def dwt2_impl_internal(x, fx, fy, m = 1, bd_mode = 'symm', prefilterx = 0, prefi
     # postconditioning
     tensor2_impl(x, indsx, indsy, lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), bd_mode)
     
-    reorganize_coeffs2_forward(x, m, offsets, data_layout)   
+    reorganize_coeffs2_forward(x, m, offsets, data_layout)
     
 def idwt2_impl_internal(x, fx, fy, m = 1, bd_mode = 'symm', prefilterx = 0, prefiltery = 0, offsets = 0, data_layout = 'resolution'):
     """
@@ -776,6 +776,7 @@ def dwt_kernel_filters(x, bd_mode, dual_wav_props):
     x[::2] = x0[::2]
     x[1::2] = x1[1::2]
     # TODO: Add boundary handling
+# End dwt_kernel_filters
 
 def idwt_kernel_filters(x, bd_mode, wav_props):
     # TODO: Add boundary handling
@@ -785,6 +786,7 @@ def idwt_kernel_filters(x, bd_mode, wav_props):
     filter_impl(wav_props.g1, x1, bd_mode)
     x[:] = x0 + x1
     # TODO: Add boundary handling
+# End idwt_kernel_filters
     
 # The Haar wavelet
 
@@ -1001,6 +1003,15 @@ function [sig_out, resstart, resend]=reorganize_coeffs2_reverse(sig_in, m, offse
     return resstart, resend
 end
 
+def tensor2_impl(x, indsx, indsy, fx, fy, bd_mode)
+    sz = :len(shape(x))
+    fx(x[indsx], bd_mode)
+    y = transpose(x, [2, 1, sz[2:]])
+    fy(y[indsy], bd_mode)
+    y = transpose(y, [2, 1, sz[2:]])
+    x[:] = y[:]
+# End tensor2_impl
+
 # OK to here
 
 # testcode
@@ -1014,14 +1025,13 @@ def cascade_alg(m, a, b, wave_name, scaling, dual):
         coords[b - a] = 1
     
     t = linspace(a, b, (b-a)*2**m)
-    IDWTImpl(coords, m, wave_name, 'per', dual)
+    idwt_impl(coords, wave_name, m, 'per', 'none', 1, dual)
     coords = concatenate([coords[(b*2**m):((b-a)*2**m)], \
                           coords[0:(b*2**m)]])
     plt.figure()
     plt.plot(t, 2**(m/2.)*coords, 'k-')
 
 def freqresp_alg(wave_name, lowpass, dual):
-    idwt_kernel = find_kernel(wave_name, 0, dual, False)
     N = 128
     n = arange(0,N)
     omega = 2*pi*n/float(N)
@@ -1032,7 +1042,7 @@ def freqresp_alg(wave_name, lowpass, dual):
     else:
         g[1] = 1
     
-    idwt_kernel(g, 'per')
+    idwt_impl(g, wave_name, 1, 'per', 'none', 1, dual, False, 'time')
     plt.figure()
     plt.plot(omega, abs(fft.fft(g)), 'k-')
 

@@ -36,22 +36,20 @@ def mapto01(X):
     minval, maxval = X.min(), X.max()
     X -= minval
     X /= (maxval-minval)
+# End mapto01
     
 def contrastadjust(X,epsilon):
-    """
-    Assumes that the values are in [0,255]
-    """
+    # Assumes that the values are in [0,255]
     X /= 255.
     X += epsilon
     log(X, X) 
     X -= log(epsilon)
     X /= (log(1+epsilon)-log(epsilon))
     X *= 255
+# End contrastadjust
   
 def contrastadjust0(X,n):
-    """
-    Assumes that the values are in [0,255]
-    """
+    # Assumes that the values are in [0,255]
     X /= 255.
     X -= 1/2.
     X *= n
@@ -59,6 +57,7 @@ def contrastadjust0(X,n):
     X /= (2*arctan(n/2.)) 
     X += 1/2.0
     X *= 255 # Maps the values back to [0,255]
+# End contrastadjust0
     
 def combineimages(imgs):
     N = len(imgs[0])

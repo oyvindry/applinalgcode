@@ -127,6 +127,7 @@ function x=dwt_kernel_filters(x, bd_mode, dual_wav_props)
         x((end-size(dual_wav_props.A_R,2)+1):end, :) = x((end-size(dual_wav_props.A_R,2)+1):end, :) + y2;
     end
 end
+% End dwt_kernel_filters
     
 function x=idwt_kernel_filters(x, bd_mode, wav_props)
     if strcmpi(bd_mode, 'bd')
@@ -143,6 +144,7 @@ function x=idwt_kernel_filters(x, bd_mode, wav_props)
         x((end-size(wav_props.A_R,1)+1):end, :) = x((end-size(wav_props.A_R,1)+1):end, :) + y2;
     end
 end
+% End idwt_kernel_filters
     
 function x=dwt_kernel_haar(x, bd_mode)
     x = x/sqrt(2);
