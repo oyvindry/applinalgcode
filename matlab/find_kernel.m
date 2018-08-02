@@ -44,7 +44,7 @@ function [f, prefilter] = find_kernel_dwt_general(wav_props, dual_wav_props, pre
     if strcmpi(wav_props.wave_name, 'cdf53') || strcmpi(wav_props.wave_name, 'cdf97') || strcmpi(wav_props.wave_name, 'pwl0') || strcmpi(wav_props.wave_name, 'pwl2')
         f = @(x, bd_mode) dwt_kernel_biortho(x, bd_mode, dual_wav_props);
         if strcmpi(prefilter_mode,'bd_pre')
-            prefilter = @(x, forward) precond_biortho(x, forward, wav_props);
+            prefilter = @(x, forward) precond_impl(x, forward, wav_props);
         end
     elseif (strcmpi(wav_props.wave_name(1:2), 'db'))
         N = str2double(wav_props.wave_name(3:end));
@@ -53,7 +53,7 @@ function [f, prefilter] = find_kernel_dwt_general(wav_props, dual_wav_props, pre
         else
             f = @(x, bd_mode) dwt_kernel_ortho(x, bd_mode, dual_wav_props);
             if strcmpi(prefilter_mode,'bd_pre')
-                prefilter = @(x, forward) precond_ortho(x, forward, wav_props);
+                prefilter = @(x, forward) precond_impl(x, forward, wav_props);
             end
         end
     elseif strcmpi(wav_props.wave_name(1:3), 'sym')
@@ -63,7 +63,7 @@ function [f, prefilter] = find_kernel_dwt_general(wav_props, dual_wav_props, pre
         else
             f = @(x, bd_mode) dwt_kernel_ortho(x, bd_mode, dual_wav_props);
             if strcmpi(prefilter_mode,'bd_pre')
-                prefilter = @(x, forward) precond_ortho(x, forward, wav_props);
+                prefilter = @(x, forward) precond_impl(x, forward, wav_props);
             end
         end
     elseif strcmpi(wav_props.wave_name(1:6), 'spline')
@@ -71,7 +71,7 @@ function [f, prefilter] = find_kernel_dwt_general(wav_props, dual_wav_props, pre
         Ntilde = str2double(wav_props.wave_name(9));
         f = @(x, bd_mode) dwt_kernel_filters(x, bd_mode, dual_wav_props);
         if strcmpi(prefilter_mode,'bd_pre')
-            prefilter = @(x, forward) precond_biortho(x, forward, wav_props);
+            prefilter = @(x, forward) precond_impl(x, forward, wav_props);
         end
     end
 end
@@ -81,7 +81,7 @@ function [f, prefilter] = find_kernel_idwt_general(wav_props, dual_wav_props, pr
     if strcmpi(wav_props.wave_name, 'cdf53') || strcmpi(wav_props.wave_name, 'cdf97') || strcmpi(wav_props.wave_name, 'pwl0') || strcmpi(wav_props.wave_name, 'pwl2')
         f = @(x, bd_mode) idwt_kernel_biortho(x, bd_mode, wav_props);
         if strcmpi(prefilter_mode,'bd_pre')
-            prefilter = @(x, forward) precond_biortho(x, forward, wav_props);
+            prefilter = @(x, forward) precond_impl(x, forward, wav_props);
         end
     elseif strcmpi(wav_props.wave_name(1:2), 'db')
         N = str2double(wav_props.wave_name(3:end));
@@ -90,7 +90,7 @@ function [f, prefilter] = find_kernel_idwt_general(wav_props, dual_wav_props, pr
         else
             f = @(x, bd_mode) idwt_kernel_ortho(x, bd_mode, wav_props);
             if strcmpi(prefilter_mode,'bd_pre')
-                prefilter = @(x, forward) precond_ortho(x, forward, wav_props);
+                prefilter = @(x, forward) precond_impl(x, forward, wav_props);
             end
         end
     elseif strcmpi(wav_props.wave_name(1:3), 'sym')
@@ -100,7 +100,7 @@ function [f, prefilter] = find_kernel_idwt_general(wav_props, dual_wav_props, pr
         else
             f = @(x, bd_mode) idwt_kernel_ortho(x, bd_mode, wav_props);
             if strcmpi(prefilter_mode,'bd_pre')
-                prefilter = @(x, forward) precond_ortho(x, forward, wav_props);
+                prefilter = @(x, forward) precond_impl(x, forward, wav_props);
             end
         end
     elseif strcmpi(wav_props.wave_name(1:6), 'spline')
@@ -108,7 +108,7 @@ function [f, prefilter] = find_kernel_idwt_general(wav_props, dual_wav_props, pr
         Ntilde = str2double(wav_props.wave_name(9));
         f = @(x, bd_mode) idwt_kernel_filters(x, bd_mode, wav_props);
         if strcmpi(prefilter_mode,'bd_pre')
-            prefilter = @(x, forward) precond_biortho(x, forward, wav_props);
+            prefilter = @(x, forward) precond_impl(x, forward, wav_props);
         end
     end
 end
@@ -261,18 +261,7 @@ function x=idwt_kernel_ortho(x, bd_mode, wav_props)
     end
 end
 
-function x=precond_ortho(x, forward, wav_props)
-    n = size(wav_props.A_L_pre_inv,1);
-    if forward == 1
-        x(1:n,:)           = wav_props.A_L_pre_inv\x(1:n,:);
-        x((end-n+1):end,:) = wav_props.A_R_pre_inv\x((end-n+1):end,:);
-    else
-        x(1:n,:)           = wav_props.A_L_pre_inv*x(1:n,:);
-        x((end-n+1):end,:) = wav_props.A_R_pre_inv*x((end-n+1):end,:);
-    end
-end
-
-function x=precond_biortho(x,forward, wav_props)
+function x=precond_impl(x, forward, wav_props)
     n = size(wav_props.A_L_pre_inv,1);
     if forward == 1
         x(1:n,:)           = wav_props.A_L_pre_inv\x(1:n,:);

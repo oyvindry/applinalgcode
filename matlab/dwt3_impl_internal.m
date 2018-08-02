@@ -10,7 +10,7 @@ function x = dwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefilter
     %            'symm'   - Symmetric extension (default)
     %            'none'   - Take no extra action at the boundaries
     %            'bd'     - Boundary wavelets
-    % prefilterx, prefiltery, prefilterz: functions which compute prefiltering
+    % prefilterx, prefiltery, prefilterz: functions which compute prefiltering. The default is no prefiltering.
     % offsets:   offsets at the beginning and the end as used by boundary wavelets. Default: zeros.
     % data_layout: How data should be assembled. Possible modes are:
     %            'resolution': Lowest resolution first (default)

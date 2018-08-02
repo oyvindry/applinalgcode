@@ -1,5 +1,5 @@
-function [wav_props, dual_wav_props]=find_wav_props(wave_name, m, bd_mode, lengthsignal)
-    % Computes the properties of a wavelet with the given name. What properties are computed depend on the bd_mode parameter, m, and lengthsignal.
+function [wav_props, dual_wav_props]=find_wav_props(wave_name, m, bd_mode, length_signal)
+    % Computes the properties of a wavelet with the given name. What properties are computed depend on the bd_mode parameter, m, and length_signal.
     %
     % wave_name: Name of the wavelet. Possible names are:
     %            'cdf97' - CDF 9/7 wavelet
@@ -18,36 +18,36 @@ function [wav_props, dual_wav_props]=find_wav_props(wave_name, m, bd_mode, lengt
     %            'symm'   - Symmetric extension (default)
     %            'none'   - Take no extra action at the boundaries
     %            'bd'     - Boundary wavelets
-    % lengthsignal: Length of the input signal. Default: 0.
+    % length_signal: Length of the input signal. Default: 0.
     
     if (~exist('m','var')) m = 1; end
     if (~exist('bd_mode','var')) bd_mode = 'symm'; end
-    if (~exist('lengthsignal','var')) lengthsignal = 0; end
+    if (~exist('length_signal','var')) length_signal = 0; end
     
     wav_props.wave_name = wave_name; dual_wav_props.wave_name = wave_name;
     wav_props.m = m; dual_wav_props.m = m;
-    wav_props.lengthsignal = lengthsignal; dual_wav_props.lengthsignal = lengthsignal;
+    wav_props.length_signal = length_signal; dual_wav_props.length_signal = length_signal;
     wav_props.offset_L = 0; dual_wav_props.offset_L = 0;
     wav_props.offset_R = 0; dual_wav_props.offset_R = 0;
     
     if (strcmpi(wave_name(1:2), 'db'))
         N = str2double(wave_name(3:end));
         if N > 1 
-            [wav_props,dual_wav_props] = wav_props_ortho(N, wav_props,dual_wav_props, bd_mode);
+            [wav_props,dual_wav_props] = wav_props_ortho(N, wav_props, dual_wav_props, bd_mode);
         end
     elseif (strcmpi(wave_name(1:3), 'sym'))
         N = str2double(wave_name(4:end));
         if N > 1
-            [wav_props,dual_wav_props] = wav_props_ortho(N, wav_props,dual_wav_props, bd_mode, 1);
+            [wav_props,dual_wav_props] = wav_props_ortho(N, wav_props, dual_wav_props, bd_mode, 1);
         end
     elseif strcmpi(wave_name, 'pwl0')
-        [wav_props, dual_wav_props]=wav_props_pwl0(wav_props, dual_wav_props, bd_mode);
+        [wav_props, dual_wav_props] = wav_props_pwl0(wav_props, dual_wav_props, bd_mode);
     elseif strcmpi(wave_name, 'pwl2')
-        [wav_props, dual_wav_props]=wav_props_pwl2(wav_props, dual_wav_props, bd_mode);
+        [wav_props, dual_wav_props] = wav_props_pwl2(wav_props, dual_wav_props, bd_mode);
     elseif strcmpi(wave_name, 'cdf53')
-        [wav_props, dual_wav_props]=wav_props_53(wav_props, dual_wav_props, bd_mode);
+        [wav_props, dual_wav_props] = wav_props_53(wav_props, dual_wav_props, bd_mode);
     elseif strcmpi(wave_name, 'cdf97')
-        [wav_props, dual_wav_props]=wav_props_97(wav_props, dual_wav_props, bd_mode);
+        [wav_props, dual_wav_props] = wav_props_97(wav_props, dual_wav_props, bd_mode);
     elseif strcmpi(wave_name(1:6), 'spline')
         N = str2double(wave_name(7));
         Ntilde = str2double(wave_name(9));
@@ -163,7 +163,7 @@ function [wav_props, dual_wav_props]=wav_props_ortho(N, wav_props, dual_wav_prop
     elseif (type == 1)
         [h0, h1, wav_props.g0, wav_props.g1] = h0h1computesym(N);
     end
-    [wav_props.lambdas, wav_props.alpha, wav_props.beta, wav_props.last_even] = liftingstepscomputeortho(h0, h1);
+    [wav_props.lambdas, wav_props.alpha, wav_props.beta, wav_props.last_even] = lifting_fact_ortho(h0, h1);
     
     if strcmpi(bd_mode, 'bd')
         [wav_props, WL, WR] = wav_props_ortho_bd(N, wav_props);
@@ -174,8 +174,8 @@ function [wav_props, dual_wav_props]=wav_props_ortho(N, wav_props, dual_wav_prop
         end
     end
         
-    dual_wav_props.lambdas = -fliplr(wav_props.lambdas); 
-    dual_wav_props.alpha = 1/wav_props.alpha; 
+    dual_wav_props.lambdas = -fliplr(wav_props.lambdas);
+    dual_wav_props.alpha = 1/wav_props.alpha;
     dual_wav_props.beta = 1/wav_props.beta;
     dual_wav_props.last_even = ~wav_props.last_even;
     
@@ -192,14 +192,14 @@ end
 function [wav_props, WL, WR]=wav_props_ortho_bd(N, wav_props)
     % Compute K_L and K_R
     K_L = N; K_R = N;
-    s = mod(wav_props.lengthsignal, 2^wav_props.m);
+    s = mod(wav_props.length_signal, 2^wav_props.m);
     if s > 0
         toadd = 2^wav_props.m - s;
         K_L = K_L + floor(toadd/2);
         K_R = K_R + ceil(toadd/2);
     end
     wav_props.offset_L = K_L - N; wav_props.offset_R = K_R - N;
-    Mint = (wav_props.lengthsignal -2*N + K_L + K_R)/2^wav_props.m;
+    Mint = (wav_props.length_signal -2*N + K_L + K_R)/2^wav_props.m;
     assert(K_L+K_R+1 <= Mint)
         
     % First the right edge
@@ -220,7 +220,7 @@ end
 
 function [A_L,A_R]=find_AL_AR_lifting(WL, WR, wav_props)
     M = max(size(WL)+size(WR));
-    if mod(M-wav_props.lengthsignal,2) == 1
+    if mod(M-wav_props.length_signal,2) == 1
         M = M + 1;
     end
     
@@ -253,14 +253,14 @@ function [wav_props, dual_wav_props, WL, WLtilde, WR, WRtilde]=wav_props_biortho
     end
     K_R = K_L; K_R_tilde = K_L_tilde;
         
-    s = wav_props.lengthsignal + R + L - 2*Nprime + K_L + K_R - 1;
+    s = wav_props.length_signal + R + L - 2*Nprime + K_L + K_R - 1;
     if mod(s,2^wav_props.m) > 0
         toadd = 2^wav_props.m - mod(s,2^wav_props.m);
         K_L = K_L + floor(toadd/2); K_L_tilde = K_L_tilde + floor(toadd/2);
         K_R = K_R + ceil(toadd/2);  K_R_tilde = K_R_tilde + ceil(toadd/2);
     end
     wav_props.offset_L = K_L - N; wav_props.offset_R = K_R - N; dual_wav_props.offset_L = wav_props.offset_L; dual_wav_props.offset_R = wav_props.offset_R;
-    Mint = (wav_props.lengthsignal -2*Nprime + K_L + K_R-1)/2^wav_props.m;
+    Mint = (wav_props.length_signal -2*Nprime + K_L + K_R-1)/2^wav_props.m;
     assert(K_L+K_R <= Mint)
         
         
@@ -278,7 +278,7 @@ function [A_L,A_R]=find_AL_AR(WL, WR, wav_props)
     R = (length(wav_props.g0)-1)/2; Rtilde = (length(wav_props.g1)-1)/2;
     L  = -R; Ltilde = -Rtilde;
     M = max(size(WL)+size(WR));
-    if mod(M-wav_props.lengthsignal,2) == 1
+    if mod(M-wav_props.length_signal,2) == 1
         M = M + 1;
     end
     x1 = zeros(M);
@@ -394,16 +394,16 @@ function [h0,h1,g0,g1]=h0h1compute97()
 end
 
 function vals=computeQN(N)
-  % Compute the coefficients in Q^(N)((1-cos(w))/2)
-  k=0:(N-1);
-  QN = 2*factorial(N+k-1)./(factorial(k).*factorial(N-1));
-  vals=zeros(1,2*N-1);
-  vals=QN(1);
-  start=1;
-  for k=2:N
-    start=conv(start,[-1/4 1/2 -1/4]);
-    vals=[0 vals 0]+QN(k)*start;
-  end
+    % Compute the coefficients in Q^(N)((1-cos(w))/2)
+    k=0:(N-1);
+    QN = 2*factorial(N+k-1)./(factorial(k).*factorial(N-1));
+    vals=zeros(1,2*N-1);
+    vals=QN(1);
+    start=1;
+    for k=2:N
+        start=conv(start,[-1/4 1/2 -1/4]);
+        vals=[0 vals 0]+QN(k)*start;
+    end
 end
 
 function [h0, h1, g0, g1]=h0h1computeortho(N)
@@ -467,7 +467,7 @@ function [h0, h1, g0, g1]=h0h1computesym(N)
     dwtmode(currDWTmode, 'nodisp');
 end
 
-function [lambdas, alpha, beta, last_even] = liftingstepscomputeortho(h0, h1)
+function [lambdas, alpha, beta, last_even] = lifting_fact_ortho(h0, h1)
     % Compute a lifting factorization so that
     % [alpha 0; beta 0] = \Lambda_n \cdots \Lambda_1 H
     % lambdas: [\Lambda_1; \Lambda_2; \cdots \Lambda_n]

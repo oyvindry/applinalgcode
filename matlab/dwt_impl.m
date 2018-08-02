@@ -4,7 +4,7 @@ function x=dwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, transp
     % parallel computation.
     % Note that this function computes all quantities needed from scratch in order to compute the DWT for the wavelet in question. 
     % This can be time-consuming, and can be avoided by using the functions find_wav_props, find_kernel,  
-    % the internal DWT functions dwt1_impl_internal, dwt2_impl_internal, dwt3_impl_internal, as well as Matlabs persistence functions. 
+    % the internal DWT functions dwt1_impl_internal, dwt2_impl_internal, dwt3_impl_internal, as well as built-in persistence functions. 
     % An example with minimum set of parameters is as follows:
     % 
     % [wav_props, dual_wav_props] = find_wav_props(wave_name);
@@ -62,9 +62,9 @@ function x=dwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, transp
     offsets = [wav_propsx.offset_L wav_propsx.offset_R];
     if dims == 1
         if transpose % if transpose, then f will we an idwt_kernel, 
-            x = idwt1_impl_internal(x, fx, m, bd_mode, prefilterx, offsets, data_layout);     
+            x = idwt1_impl_internal(x, fx, m, bd_mode, prefilterx, offsets, data_layout);
         else
-            x = dwt1_impl_internal(x, fx, m, bd_mode, prefilterx, offsets, data_layout);
+            x =  dwt1_impl_internal(x, fx, m, bd_mode, prefilterx, offsets, data_layout);
         end
     else
         [wav_propsy, dual_wav_propsy] = find_wav_props(wave_name, m, bd_mode, size(x,2));
@@ -72,7 +72,7 @@ function x=dwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, transp
         offsets = [offsets; wav_propsy.offset_L wav_propsy.offset_R];
         if dims == 2
             if transpose % if transpose, then f will we an idwt_kernel, 
-                x = idwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, offsets, data_layout);     
+                x = idwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, offsets, data_layout);
             else
                 x =  dwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, offsets, data_layout);
             end
@@ -82,7 +82,7 @@ function x=dwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, transp
             offsets = [offsets; wav_propsz.offset_L wav_propsz.offset_R];
             if dims == 3 % if not give error message
                 if transpose % if transpose, then f will we an idwt_kernel, 
-                    x = idwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout);     
+                    x = idwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout);
                 else
                     x =  dwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout);
                 end

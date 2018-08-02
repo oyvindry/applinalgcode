@@ -41,7 +41,7 @@ def bitreversearr(x):
 
 # DCT code
 
-def DCTImpl(x):
+def dct_impl(x):
     """ 
     Compute the DCT of the vector x
     
@@ -62,7 +62,7 @@ def DCTImpl(x):
         x[0] *= sqrt(1/float(N))
         x[1:] *= sqrt(2/float(N))
         
-def IDCTImpl(y):
+def idct_impl(y):
     """ 
     Compute the IDCT of the vector y
     
@@ -84,7 +84,7 @@ def IDCTImpl(y):
         y[0::2] = real(y1[0:(N/2)])
         y[1::2] = real(y1[-1:(N/2-1):-1])
 
-def DFTImpl(x, forward=True):
+def dft_impl(x, forward=True):
     """
     Compute the DFT of the vector x using standard matrix 
     multiplication. To avoid out of memory situations, we do not 
@@ -114,7 +114,7 @@ def DFTImpl(x, forward=True):
         y /= float(N)
     return y
 
-def FFTImpl(x, FFTKernel, forward = True):
+def fft_impl(x, f, forward = True):
     """
     Compute the FFT or IFFT of the vector x. Note that this function 
     differs from the DFT in that the normalizing factor 1/sqrt(N) is 
@@ -133,15 +133,15 @@ def FFTImpl(x, FFTKernel, forward = True):
     """
     if ndim(x) == 1:
         bitreverse(x)
-        FFTKernel(x, forward)
+        f(x, forward)
     else:
         bitreversearr(x)
         for s2 in xrange(shape(x)[1]):
-            FFTKernel(x[:, s2], forward)
+            f(x[:, s2], forward)
     if not forward:
         x /= len(x)
 
-def FFTKernelStandard(x, forward):
+def fft_kernel_standard(x, forward):
     """
     Compute the FFT of x, using a standard FFT algorithm.
     
@@ -154,13 +154,13 @@ def FFTKernelStandard(x, forward):
         sign = 1
     if N > 1:
         xe, xo = x[0:(N/2)], x[(N/2):]
-        FFTKernelStandard(xe, forward)
-        FFTKernelStandard(xo, forward)
+        fft_kernel_standard(xe, forward)
+        fft_kernel_standard(xo, forward)
         D = exp(sign*2*pi*1j*arange(float(N/2))/N) 
         xo *= D 
         x[:] = concatenate([xe + xo, xe - xo]) 
                 
-def FFTKernelNonrec(x, forward):
+def fft_kernel_nonrec(x, forward):
     """
     Compute the FFT of x, using a non-recursive FFT algorithm. 
     
@@ -182,7 +182,7 @@ def FFTKernelNonrec(x, forward):
             k += 2*nextN
         nextN *= 2     
     
-def FFTKernelSplitradix(x, forward):
+def fft_kernel_splitradix(x, forward):
     """
     Compute the FFT of x, using the split-radix FFT algorithm. 
     
@@ -197,9 +197,9 @@ def FFTKernelSplitradix(x, forward):
         x[:] = [x[0] + x[1], x[0] - x[1]]
     elif N > 2:
         xe, xo1, xo2 = x[0:(N/2)], x[(N/2):(3*N/4)], x[(3*N/4):N]
-        FFTKernelSplitradix(xe, forward)
-        FFTKernelSplitradix(xo1, forward)
-        FFTKernelSplitradix(xo2, forward)
+        fft_kernel_splitradix(xe, forward)
+        fft_kernel_splitradix(xo1, forward)
+        fft_kernel_splitradix(xo2, forward)
         G = exp(sign*2*pi*1j*arange(float(N/4))/N)
         H = G*exp(sign*2*pi*1j*arange(float(N/4))/(N/2))
         xo1 *= G
@@ -216,22 +216,22 @@ def tensor_impl(X, S1, S2):
     
 # We can use classes to make a more efficient FFT implementation
 
-def DFTImpl8(x):
+def dft_impl8(x):
     N = shape(x)[0]
     for n in range(0,N,8):
         x[n:(n+8), :] = fft.fft(x[n:(n+8), :], axis=0)
 
-def IDFTImpl8(x):
+def idft_impl8(x):
     N = shape(x)[0]
     for n in range(0, N, 8):
         x[n:(n+8), :] = fft.ifft(x[n:(n+8), :], axis=0)
 
-def DCTImpl8(x):
+def dct_impl8(x):
     N = shape(x)[0]
     for n in range(0,N,8):
         x[n:(n+8), :] = dct(x[n:(n+8), :], norm='ortho', axis=0)
         
-def IDCTImpl8(x):
+def idct_impl8(x):
     N = shape(x)[0]
     for n in range(0, N, 8):
         x[n:(n+8), :] = idct(x[n:(n+8), :], norm='ortho', axis=0)
