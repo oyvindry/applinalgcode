@@ -31,12 +31,14 @@ function [wav_props, dual_wav_props]=find_wav_props(wave_name, m, bd_mode, lengt
     wav_props.offset_L = 0; dual_wav_props.offset_L = 0;
     wav_props.offset_R = 0; dual_wav_props.offset_R = 0;
 
-    if (strcmpi(wave_name(1:2), 'db'))
+    if strcmpi(wave_name,'Haar')
+        % do nothing
+    elseif strcmpi(wave_name(1:2), 'db')
         N = str2double(wave_name(3:end));
         if N > 1 
             [wav_props,dual_wav_props] = wav_props_ortho(N, wav_props, dual_wav_props, bd_mode);
         end
-    elseif (strcmpi(wave_name(1:3), 'sym'))
+    elseif strcmpi(wave_name(1:3), 'sym')
         N = str2double(wave_name(4:end));
         if N > 1
             [wav_props,dual_wav_props] = wav_props_ortho(N, wav_props, dual_wav_props, bd_mode, 1);
@@ -76,6 +78,7 @@ function [wav_props, dual_wav_props]=wav_props_pwl0(wav_props, dual_wav_props, b
     wav_props.g0 = [1/2 1 1/2]/sqrt(2);
     wav_props.g1 = 1/sqrt(2);
     
+    WL = 0; WLtilde = 0; WR = 0; WRtilde = 0;
     if strcmpi(bd_mode, 'bd')
         [wav_props, dual_wav_props, WL, WLtilde, WR, WRtilde] = wav_props_biortho_bd(2, 0, wav_props, dual_wav_props); % TODO: test. how many vanishing moments here?
     end 
@@ -93,6 +96,7 @@ function [wav_props, dual_wav_props]=wav_props_pwl2(wav_props, dual_wav_props, b
     wav_props.g0 = [1/2 1 1/2]/sqrt(2);
     wav_props.g1 = [-1/8 -1/4 3/4 -1/4 -1/8]/sqrt(2);
     
+    WL = 0; WLtilde = 0; WR = 0; WRtilde = 0;
     if strcmpi(bd_mode, 'bd')
         [wav_props, dual_wav_props, WL, WLtilde, WR, WRtilde] = wav_props_biortho_bd(2, 2, wav_props, dual_wav_props);
     end 
@@ -111,6 +115,7 @@ function [wav_props, dual_wav_props]=wav_props_53(wav_props, dual_wav_props, bd_
     wav_props.g0 = [1/4 1/2 1/4];
     wav_props.g1 = [-1/4 -1/2 3/2 -1/2 -1/4];
     
+    WL = 0; WLtilde = 0; WR = 0; WRtilde = 0;
     if strcmpi(bd_mode, 'bd')
         [wav_props, dual_wav_props, WL, WLtilde, WR, WRtilde] = wav_props_biortho_bd(2, 2, wav_props, dual_wav_props);
     end 
@@ -122,6 +127,7 @@ function [wav_props, dual_wav_props]=wav_props_97(wav_props, dual_wav_props, bd_
     wav_props.last_even = 0;
     [wav_props.lambdas, wav_props.alpha, wav_props.beta, dual_wav_props.g0, dual_wav_props.g1, wav_props.g0, wav_props.g1]=liftingfact97();
 
+    WL = 0; WLtilde = 0; WR = 0; WRtilde = 0;
     if strcmpi(bd_mode, 'bd')
         [wav_props, dual_wav_props, WL, WLtilde, WR, WRtilde] = wav_props_biortho_bd(4, 4, wav_props, dual_wav_props);
     end 

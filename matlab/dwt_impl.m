@@ -56,7 +56,7 @@ function x=dwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, transp
     if (~exist('m','var')) m = 1; end
     if (~exist('bd_mode','var')) bd_mode = 'symm'; end
     if (~exist('prefilter_mode','var')) prefilter_mode = 'none'; end
-    if (~exist('dims','var')) 
+    if (~exist('dims','var')  || dims == 0) 
         dims = 1;
         if length(size(x)) > 1
             dims = length(size(x)) - 1; 

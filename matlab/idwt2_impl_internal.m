@@ -24,7 +24,6 @@ function x=idwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, of
     if (~exist('data_layout','var')) data_layout = 'resolution'; end
     
     [x, resstart, resend] = reorganize_coeffs2_reverse(x, m, offsets, data_layout);
-    
     % postconditioning
     indsx = resstart(1,m+1):2^m:resend(1,m+1); indsy = resstart(2,m+1):2^m:resend(2,m+1);
     x=tensor2_impl(x, indsx, indsy, @(x,bd_mode) prefilterx(x, 1), @(x,bd_mode) prefiltery(x, 1), bd_mode);
@@ -60,12 +59,15 @@ function [sig_out, resstart, resend]=reorganize_coeffs2_reverse(sig_in, m, offse
             psiinds_x = [indsx(1:offsets(1,1)) indsx((offsets(1,1) + 2):2:(end-offsets(1,2))) indsx((end-offsets(1,2)+1):end)]; % psi-indices
             psiinds_y = [indsy(1:offsets(2,1)) indsy((offsets(2,1) + 2):2:(end-offsets(2,2))) indsy((end-offsets(2,2)+1):end)];
             phiinds_x = indsx((offsets(1,1) + 1):2:(end-offsets(1,2)));
+            phiinds_y = indsy((offsets(2,1) + 1):2:(end-offsets(2,2)));
             
             resstart(1,res+1) = indsx(offsets(1,1)+1); resend(1,res+1)   = indsx(end-offsets(1,2));
             resstart(2,res+1) = indsy(offsets(2,1)+1); resend(2,res+1)   = indsy(end-offsets(2,2));
             
-            sig_out(psiinds_x, indsy, :) = sig_in((endx-length(psiinds_x)+1):endx, 1:endy, :);
-            sig_out(phiinds_x,psiinds_y, :) = sig_in(1:(endx-length(psiinds_x)), (endy-length(psiinds_y)+1):endy, :);
+            sig_out(psiinds_x, phiinds_y,:) = sig_in( (endx-length(psiinds_x)+1):endx, 1:(endy-length(psiinds_y)), :);
+            sig_out(phiinds_x, psiinds_y, :) = sig_in( 1:(endx-length(psiinds_x)), (endy-length(psiinds_y)+1):endy, :);
+            sig_out(psiinds_x, psiinds_y, :) = sig_in( (endx-length(psiinds_x)+1):endx, (endy-length(psiinds_y)+1):endy, :);
+            
             
             endx = endx - length(psiinds_x); endy = endy - length(psiinds_y);
             indsx = indsx((offsets(1,1)+1):2:(end-offsets(1,2))); 

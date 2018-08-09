@@ -49,12 +49,14 @@ function sig_out=reorganize_coeffs2_forward(sig_in, m, offsets, data_layout)
             psiinds_x = [indsx(1:offsets(1,1)) indsx((offsets(1,1) + 2):2:(end-offsets(1,2))) indsx((end-offsets(1,2)+1):end)]; % psi-indices
             psiinds_y = [indsy(1:offsets(2,1)) indsy((offsets(2,1) + 2):2:(end-offsets(2,2))) indsy((end-offsets(2,2)+1):end)];
             phiinds_x = indsx((offsets(1,1) + 1):2:(end-offsets(1,2)));
+            phiinds_y = indsy((offsets(2,1) + 1):2:(end-offsets(2,2)));
             
-            sig_out( (endx-length(psiinds_x)+1):endx, 1:endy, :) = sig_in(psiinds_x,indsy,:);
-            sig_out( 1:(endx-length(psiinds_x)), (endy-length(psiinds_y)+1):endy, :) = sig_in(phiinds_x,psiinds_y,:);
+            sig_out( (endx-length(psiinds_x)+1):endx, 1:(endy-length(psiinds_y)), :) = sig_in(psiinds_x, phiinds_y,:);
+            sig_out( 1:(endx-length(psiinds_x)), (endy-length(psiinds_y)+1):endy, :) = sig_in(phiinds_x, psiinds_y,:);
+            sig_out( (endx-length(psiinds_x)+1):endx, (endy-length(psiinds_y)+1):endy, :) = sig_in(psiinds_x, psiinds_y, :);
             
             endx = endx - length(psiinds_x); endy = endy - length(psiinds_y);
-            indsx = indsx((offsets(1,1)+1):2:(end-offsets(1,2))); 
+            indsx = indsx((offsets(1,1)+1):2:(end-offsets(1,2)));
             indsy = indsy((offsets(2,1)+1):2:(end-offsets(2,2)));
         end
         sig_out(1:endx, 1:endy, :) = sig_in(indsx, indsy, :);
