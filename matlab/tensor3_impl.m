@@ -1,25 +1,26 @@
-function data=tensor3_impl(data, indsx, indsy, indz, fx, fy, fz, lastdim, bd_mode)
-    for y = indsy
-        for z = indsz
-            data_temp = zeros(length(indsx), lastdim);
-            data_temp(:, :) = data(indsx, y, z, :);
-            data(indsx, y, z, :) = fx(data_temp, bd_mode);
+function data=tensor3_impl(data, fx, fy, fz, lastdim, bd_mode)
+    [xlen, ylen, zlen]=size(data);
+    for y = 1:ylen
+        for z = 1:zlen
+            data_temp = zeros(xlen, lastdim);
+            data_temp(:, :) = data(:, y, z, :);
+            data(:, y, z, :) = fx(data_temp, bd_mode);
         end
     end
         
-    for z = indsz
-        for x = indsx
-            data_temp = zeros(length(indsy), lastdim);
-            data_temp(:, :) = data(x, indsy, z, :);
-            data(x, indsy, z, :) = fy(data_temp, bd_mode);
+    for z = 1:zlen
+        for x = 1:xlen
+            data_temp = zeros(ylen, lastdim);
+            data_temp(:, :) = data(x, :, z, :);
+            data(x, :, z, :) = fy(data_temp, bd_mode);
         end
     end
     
-    for x = indsx
-        for y = indsy
-            data_temp = zeros(length(indsz), lastdim);
-            data_temp(:, :) = data(x, y, indsz, :);
-            data(x, y, indsz, :) = fz(data_temp, bd_mode);
+    for x = 1:xlen
+        for y = 1:ylen
+            data_temp = zeros(zlen, lastdim);
+            data_temp(:, :) = data(x, y, :, :);
+            data(x, y, :, :) = fz(data_temp, bd_mode);
         end
     end
 end
