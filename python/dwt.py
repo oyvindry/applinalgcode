@@ -55,14 +55,15 @@ def dwt_impl(x, wave_name, m = 1, bd_mode = 'symm', prefilter_mode = 'none', dim
                'time': Sort according to time
     """
     
-    if dims == 0
+    if dims == 0:
         dims = 1
         if len(shape(x)) > 1:
             dims = len(shape(x)) - 1
 
     wav_propsx, dual_wav_propsx = find_wav_props(wave_name, m, bd_mode, shape(x)[0])
     fx, prefilterx = find_kernel(wav_propsx, dual_wav_propsx, True, dual, transpose, prefilter_mode)
-    offsets = [[wav_propsx.offset_L, wav_propsx.offset_R]];
+    offsets = array([[wav_propsx.offset_L, wav_propsx.offset_R]])
+ 
     if dims == 1:
         if transpose: # if transpose, then f will we an idwt_kernel
             idwt1_impl_internal(x, fx, m, bd_mode, prefilterx, offsets, data_layout)
@@ -71,7 +72,7 @@ def dwt_impl(x, wave_name, m = 1, bd_mode = 'symm', prefilter_mode = 'none', dim
     else:
         wav_propsy, dual_wav_propsy = find_wav_props(wave_name, m, bd_mode, shape(x)[1])
         fy, prefiltery = find_kernel(wav_propsy, dual_wav_propsy, True, dual, transpose, prefilter_mode)
-        offsets = [offsets[0], [wav_propsy.offset_L, wav_propsy.offset_R]]
+        offsets = concatenate( ( offsets, [[wav_propsy.offset_L, wav_propsy.offset_R]] ))
         if dims == 2:
             if transpose: # if transpose, then f will we an idwt_kernel
                 idwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, offsets, data_layout)
@@ -80,12 +81,104 @@ def dwt_impl(x, wave_name, m = 1, bd_mode = 'symm', prefilter_mode = 'none', dim
         else:
             wav_propsz, dual_wav_propsz = find_wav_props(wave_name, m, bd_mode, shape(x)[2])
             fz, prefilterz = find_kernel(wav_propsz, dual_wav_propsz, True, dual, transpose, prefilter_mode)
-            offsets = [offsets[0:2], [wav_propsz.offset_L, wav_propsz.offset_R]]
+            offsets = concatenate( ( offsets, [[wav_propsz.offset_L, wav_propsz.offset_R]] ))
             if dims == 3: # if not give error message
                 if transpose: # if transpose, then f will we an idwt_kernel
                     idwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout)
                 else:
                     dwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout)
+
+def idwt_impl(x, wave_name, m=1, bd_mode = 'symm', prefilter_mode = 'none', dims = 0, dual = False, transpose = False, data_layout = 'resolution'):
+    """
+    Main function for computing the IDWT of a given signal. Can be used for
+    all signals up to dimension 3.  The dimension of the data may be one
+    higher than the dimension of the transform, in which case the last
+    dimension is used for parallel computation.
+    
+    Note that this function computes all quantities needed from scratch in
+    order to compute the IDWT for the wavelet in question.  This can be
+    time-consuming, and can be avoided by using the functions find_wav_props,
+    find_kernel,  the internal IDWT functions idwt1_impl_internal,
+    idwt2_impl_internal, idwt3_impl_internal, as well as Matlabs persistence
+    functions.  An example with minimum set of parameters is as follows:
+    
+    [wav_props, dual_wav_props] = find_wav_props(wave_name);
+    save('wav_props.mat', 'wav_props', 'dual_wav_props');
+    ...
+    load('wav_props.mat');
+    [f, prefilter] = find_kernel(wav_props, dual_wav_props, 0);
+    x = idwt1_impl_internal(x, f);
+       
+    x:         Matrix whose IDWT will be computed along the first dimension(s).      
+    wave_name: Name of the wavelet. Possible names are:
+               'cdf97' - CDF 9/7 wavelet
+               'cdf53' - Spline 5/3 wavelet
+               'splinex.x' - Spline wavelet with given number of vanishing 
+                             moments for each filter
+               'pwl0'  - Piecewise linear wavelet with 0 vanishing moments
+               'pwl2'  - Piecewise linear wavelet with 2 vanishing moments
+               'Haar'  - The Haar wavelet
+               'dbX'   - Daubechies orthnormal wavelet with X vanishing
+                         moments
+               'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
+                         with X vanishing moments
+    m:         Number of resolutions. Default: 1.
+    bd_mode:   Boundary extension mode. Possible modes are. 
+               'per'    - Periodic extension
+               'symm'   - Symmetric extension (default)
+               'none'   - Take no extra action at the boundaries
+               'bd'     - Boundary wavelets
+    prefilter_mode: Possible modes are:
+               'none' (default)
+               'filter'
+               'bd_pre' - Boundary wavelets with preconditioning
+    dims:      the number of dimensions to apply the IDWT to. Always applied 
+               to the first dimensions. Default: max(dim(x)-1,1).
+               This means that sound with many channels, and images with 
+               many colour components default to a one- and two-dimensional 
+               IDWT, respectively
+    dual:      Whether to apply the dual wavelet rather than the wavelet 
+               itself. Default: 0
+    transpose: Whether the transpose is to be taken. Default: 0
+    data_layout: How data should be assembled. Possible modes are:
+               'resolution': Lowest resolution first (default)
+               'time': Sort according to time
+    """
+    
+    if dims == 0:
+        dims = 1
+        if len(shape(x)) > 1:
+            dims = len(shape(x)) - 1
+
+    wav_propsx, dual_wav_propsx = find_wav_props(wave_name, m, bd_mode, shape(x)[0])
+    fx, prefilterx = find_kernel(wav_propsx, dual_wav_propsx, False, dual, transpose, prefilter_mode)
+    offsets = array([[wav_propsx.offset_L, wav_propsx.offset_R]])
+    if dims == 1:
+        if transpose: # if transpose, then f will we a dwt_kernel, 
+            dwt1_impl_internal(x, fx, m, bd_mode, prefilterx, offsets, data_layout)  
+        else:
+            idwt1_impl_internal(x, fx, m, bd_mode, prefilterx, offsets, data_layout)
+    else:
+        wav_propsy, dual_wav_propsy = find_wav_props(wave_name, m, bd_mode, shape(x)[1])
+        fy, prefiltery = find_kernel(wav_propsy, dual_wav_propsy, 0, dual, transpose, prefilter_mode)
+        offsets = concatenate( ( offsets, [[wav_propsy.offset_L, wav_propsy.offset_R]] ))
+        if dims == 2:
+            if transpose: # if transpose, then f will we a dwt_kernel, 
+                dwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, offsets, data_layout)  
+            else:
+                idwt2_impl_internal(x, fx, fy, m, bd_mode, prefilterx, prefiltery, offsets, data_layout)
+        else:
+            wav_propsz, dual_wav_propsz = find_wav_props(wave_name, m, bd_mode, shape(x)[2])
+            fz, prefilterz = find_kernel(wav_propsz, dual_wav_propsz, 0, dual, transpose, prefilter_mode)
+            offsets = concatenate( ( offsets, [[wav_propsz.offset_L, wav_propsz.offset_R]] ))
+            if dims == 3: # if not give error message
+                if transpose: # if transpose, then f will we a dwt_kernel, 
+                    dwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout)    
+                else:
+                    idwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefiltery, prefilterz, offsets, data_layout)
+              
+
+
         
 def dwt1_impl_internal(x, f, m = 1, bd_mode = 'symm', prefilter = 0, offsets = 0, data_layout = 'resolution'):
     """
@@ -109,15 +202,19 @@ def dwt1_impl_internal(x, f, m = 1, bd_mode = 'symm', prefilter = 0, offsets = 0
     
     if prefilter == 0:
         prefilter = lambda x, forward: x
-    if offsets == 0:
-        offsets = zeros(1,2)
+    if len(offsets) == 0:
+        offsets = array([[0,0]])
     
-    inds = 0:shape(x)[0]
-    x = prefilter(x, True)
+    prefilter(x, True)
+    inds = arange(shape(x)[0])
     for res in range(m):
-        f(x[inds, :], bd_mode)
-        inds = inds[offsets[0, 0]:(-offsets[0,1]):2]
-    prefilter(x[inds, :], False)
+        xcopy = x[inds].copy()
+        f(xcopy, bd_mode)
+        x[inds] = xcopy
+        inds = inds[offsets[0, 0]:(len(inds) - offsets[0,1]):2]
+    xcopy = x[inds].copy()
+    prefilter(xcopy, False)
+    x[inds] = xcopy
     reorganize_coeffs_forward(x, m, offsets, data_layout)  
     
 def idwt1_impl_internal(x, f, m = 1, bd_mode = 'symm', prefilter = 0, offsets = 0, data_layout = 'resolution'):
@@ -142,13 +239,19 @@ def idwt1_impl_internal(x, f, m = 1, bd_mode = 'symm', prefilter = 0, offsets = 
     
     if prefilter == 0:
         prefilter = lambda x, forward: x
-    if offsets == 0:
-        offsets = zeros(1,2)
+    if len(offsets) == 0:
+        offsets = array([[0,0]])
     
-    x, resstart, resend = reorganize_coeffs_reverse(x, m, offsets, data_layout)
-    prefilter(x[resstart[m]:resend[m]:2**m], True)
+    resstart, resend = reorganize_coeffs_reverse(x, m, offsets, data_layout)
+    inds = arange(resstart[0,m], resend[0,m] + 1, 2**m)
+    xcopy = x[inds].copy()
+    prefilter(xcopy, True)
+    x[inds] = xcopy
     for res in range(m-1,-1,-1):
-        f(x[resstart[res]:resend[res]:2**res, :], bd_mode)
+        inds = arange(resstart[0,res], resend[0,res] + 1, 2**res)
+        xcopy = x[inds].copy()
+        f(xcopy, bd_mode)
+        x[inds] = xcopy
     prefilter(x, False)
     
 def dwt2_impl_internal(x, fx, fy, m = 1, bd_mode = 'symm', prefilterx = 0, prefiltery = 0, offsets = 0, data_layout = 'resolution'):
@@ -175,22 +278,25 @@ def dwt2_impl_internal(x, fx, fy, m = 1, bd_mode = 'symm', prefilterx = 0, prefi
         prefilterx = lambda x, forward: x
     if prefiltery == 0:
         prefiltery = lambda x, forward: x
-    if offsets == 0:
-        offsets = zeros(2,2)
+    if len(offsets) == 0:
+        offsets = array([[0,0],[0,0]])
     
-    indsx = 0:shape(x)[0]
-    indsy = 0:shape(x)[1]
-
     # preconditioning   
-    tensor2_impl(x, indsx, indsy, lambda x, bd_mode: prefilterx(x, True), lambda x, bd_mode: prefiltery(x, True), bd_mode)
+    tensor2_impl(x, lambda x, bd_mode: prefilterx(x, True), lambda x, bd_mode: prefiltery(x, True), bd_mode)
          
+    indsx = arange(shape(x)[0])
+    indsy = arange(shape(x)[1])
     for res in range(m):
-        tensor2_impl(x, indsx, indsy, fx, fy, bd_mode)
-        indsx = indsx[offsets[0, 0]:(-offsets[0,1]):2]
-        indsy = indsy[offsets[1, 0]:(-offsets[1,1]):2]
+        xcopy = x[ix_(indsx, indsy)].copy()
+        tensor2_impl(xcopy, fx, fy, bd_mode)
+        x[ix_(indsx,indsy)] = xcopy
+        indsx = indsx[offsets[0, 0]:(len(indsx) - offsets[0,1]):2]
+        indsy = indsy[offsets[1, 0]:(len(indsy) - offsets[1,1]):2]
     
     # postconditioning
-    tensor2_impl(x, indsx, indsy, lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), bd_mode)
+    xcopy = x[ix_(indsx, indsy)].copy()
+    tensor2_impl(xcopy, lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), bd_mode)
+    x[ix_(indsx,indsy)] = xcopy
     
     reorganize_coeffs2_forward(x, m, offsets, data_layout)
     
@@ -218,19 +324,31 @@ def idwt2_impl_internal(x, fx, fy, m = 1, bd_mode = 'symm', prefilterx = 0, pref
         prefilterx = lambda x, forward: x
     if prefiltery == 0:
         prefiltery = lambda x, forward: x
-    if offsets == 0:
-        offsets = zeros(2,2)
+    if len(offsets) == 0:
+        offsets = array([[0,0],[0,0]])
     
-    x, resstart, resend = reorganize_coeffs2_reverse(x, m, offsets, data_layout)
+    resstart, resend = reorganize_coeffs2_reverse(x, m, offsets, data_layout)
         
     # postconditioning
-    tensor2_impl(x, resstart[0,m]:resend[0,m]:2**m, resstart[1,m]:resend[1,m]:2**m, lambda x, bd_mode: prefilterx(x, True), lambda x, bd_mode: prefiltery(x, True), bd_mode)
+    indsx = arange(resstart[0,m], resend[0,m] + 1, 2**m)
+    indsy = arange(resstart[1,m], resend[1,m] + 1, 2**m)
+    xcopy = x[ix_(indsx, indsy)].copy()
+    tensor2_impl(xcopy, lambda x, bd_mode: prefilterx(x, True), lambda x, bd_mode: prefiltery(x, True), bd_mode)
+    x[ix_(indsx, indsy)] = xcopy
 
     for res in range(m - 1, -1, -1):
-        tensor2_impl(x, resstart[0, res]:resend[0, res]:2**res, resstart[1, res]:resend[1, res]:2**res, fx, fy, bd_mode)
+        indsx = arange(resstart[0, res], resend[0, res] + 1, 2**res)
+        indsy = arange(resstart[1, res], resend[1, res] + 1, 2**res)
+        xcopy = x[ix_(indsx, indsy)].copy()
+        tensor2_impl(xcopy, fx, fy, bd_mode)
+        x[ix_(indsx, indsy)] = xcopy
     
     # preconditioning
-    tensor2_impl(x, resstart[0, 0]:resend[0, 0], resstart[1, 0]:resend[1, 0], lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), bd_mode)    
+    indsx = arange(resstart[0, 0], resend[0, 0] + 1)
+    indsy = arange(resstart[1, 0], resend[1, 0] + 1)
+    xcopy = x[ix_(indsx, indsy)].copy()
+    tensor2_impl(xcopy, lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), bd_mode)
+    x[ix_(indsx, indsy)] = xcopy
 
 def dwt3_impl_internal(x, fx, fy, fz, m = 1, bd_mode = 'symm', prefilterx = 0, prefiltery = 0, prefilterz = 0, offsets = 0, data_layout = 'resolution'):
     """
@@ -257,27 +375,32 @@ def dwt3_impl_internal(x, fx, fy, fz, m = 1, bd_mode = 'symm', prefilterx = 0, p
         prefiltery = lambda x, forward: x
     if prefilterz == 0:
         prefilterz = lambda x, forward: x
-    if offsets == 0:
-        offsets = zeros(3,2)
+    if len(offsets) == 0:
+        offsets = array([[0,0],[0,0],[0,0]])
     
     lastdim = 1
     if len(shape(x)) == 4:
         lastdim = shape(x)[3]
-    indsx = 0:shape(x)[0]
-    indsy = 0:shape(x)[1]
-    indsz = 0:shape(x)[2]
+    
 
     # preconditioning   
-    tensor3_impl(x, indsx, indsy, indsz, lambda x, bd_mode: prefilterx(x, True), lambda x, bd_mode: prefiltery(x, True), lambda x, bd_mode: prefilterz(x, True), lastdim, bd_mode)
-         
+    tensor3_impl(x, lambda x, bd_mode: prefilterx(x, True), lambda x, bd_mode: prefiltery(x, True), lambda x, bd_mode: prefilterz(x, True), lastdim, bd_mode)
+    
+    indsx = arange(shape(x)[0])
+    indsy = arange(shape(x)[1])
+    indsz = arange(shape(x)[2])
     for res in range(m):
-        tensor3_impl(x, indsx, indsy, indsz, fx, fy, fz, lastdim, bd_mode)
-        indsx = indsx[offsets[0, 0]:(-offsets[0,1]):2]
-        indsy = indsy[offsets[1, 0]:(-offsets[1,1]):2]
-        indsx = indsz[offsets[2, 0]:(-offsets[2,1]):2]
+        xcopy = x[ix_(indsx, indsy, indsz)].copy()
+        tensor3_impl(xcopy, fx, fy, fz, lastdim, bd_mode)
+        x[ix_(indsx, indsy, indsz)] = xcopy
+        indsx = indsx[offsets[0, 0]:(len(indsx) - offsets[0,1]):2]
+        indsy = indsy[offsets[1, 0]:(len(indsy) - offsets[1,1]):2]
+        indsz = indsz[offsets[2, 0]:(len(indsz) - offsets[2,1]):2]
     
     # postconditioning
-    tensor3_impl(x, indsx, indsy, indsz, lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), lambda x, bd_mode: prefilterz(x, False), lastdim, bd_mode)
+    xcopy = x[ix_(indsx, indsy, indsz)].copy()
+    tensor3_impl(x, lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), lambda x, bd_mode: prefilterz(x, False), lastdim, bd_mode)
+    x[ix_(indsx, indsy, indsz)] = xcopy
     
     reorganize_coeffs3_forward(x, m, offsets, data_layout)
         
@@ -307,25 +430,47 @@ def idwt3_impl_internal(x, fx, fy, fz, m = 1, bd_mode = 'symm', prefilterx = 0, 
         prefiltery = lambda x, forward: x
     if prefilterz == 0:
         prefilterz = lambda x, forward: x
-    if offsets == 0:
-        offsets = zeros(3,2)
+    if len(offsets) == 0:
+        offsets = array([[0,0],[0,0],[0,0]])
     
-    x, resstart, resend = reorganize_coeffs3_reverse(x, m, offsets, data_layout)
+    resstart, resend = reorganize_coeffs3_reverse(x, m, offsets, data_layout)
     
     lastdim = 1
     if len(shape(x)) == 4:
         lastdim = shape(x)[3]
     
     # postconditioning
-    tensor3_impl(x, resstart[0,m]:resend[0,m]:2**m, resstart[1,m]:resend[1,m]:2**m, resstart[2,m]:resend[2,m]:2**m, @(x,bd_mode) prefilterx(x, True), @(x,bd_mode) prefiltery(x, True), @(x,bd_mode) prefilterz(x, True), lastdim, bd_mode)
-
+    indsx = arange(resstart[0,m], resend[0,m] + 1, 2**m)
+    indsy = arange(resstart[1,m], resend[1,m] + 1, 2**m)
+    indsz = arange(resstart[2,m], resend[2,m] + 1, 2**m)
+    xcopy = x[ix_(indsx, indsy, indsz)].copy()
+    tensor3_impl(xcopy, lambda x, bd_mode: prefilterx(x, True), lambda x, bd_mode: prefiltery(x, True), lambda x, bd_mode: prefilterz(x, True), lastdim, bd_mode)
+    x[ix_(indsx, indsy, indsz)] = xcopy
+    
     for res in range(m - 1, -1, -1):
-        tensor3_impl(x, resstart[0, res]:resend[0, res]:2**res, resstart[1, res]:resend[1, res]:2**res, resstart[2, res]:resend[2, res]:2**res, fx, fy, fz, lastdim, bd_mode)
+        indsx = arange(resstart[0, res], resend[0, res] + 1, 2**res)
+        indsy = arange(resstart[1, res], resend[1, res] + 1, 2**res)
+        indsz = arange(resstart[2, res], resend[2, res] + 1, 2**res)
+        xcopy = x[ix_(indsx, indsy, indsz)].copy()
+        tensor3_impl(xcopy, fx, fy, fz, lastdim, bd_mode)
+        x[ix_(indsx, indsy, indsz)] = xcopy
     
     # preconditioning
-    tensor3_impl(x, resstart[0, 0]:resend[0, 0], resstart[1, 0]:resend[1, 0], resstart[2, 0]:resend[2, 0], lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), lambda x, bd_mode: prefilterz(x, False), lastdim, bd_mode)                      
-            
+    indsx = arange(resstart[0, 0], resend[0, 0] + 1)
+    indsy = arange(resstart[1, 0], resend[1, 0] + 1)
+    indsz = arange(resstart[2, 0], resend[2, 0] + 1)
+    xcopy = x[ix_(indsx, indsy, indsz)].copy()
+    tensor3_impl(xcopy, lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), lambda x, bd_mode: prefilterz(x, False), lastdim, bd_mode)                      
+    x[ix_(indsx, indsy, indsz)] = xcopy
+                
 
+class WaveletProps(object):
+    def __init__(self, wave_name, m, length_signal, offset_L, offset_R):
+        self.wave_name = wave_name
+        self.m = m
+        self.length_signal = length_signal
+        self.offset_L = 0
+        self.offset_R = 0
         
     
 def find_wav_props(wave_name, m = 1, bd_mode = 'symm', length_signal = 0):
@@ -339,7 +484,7 @@ def find_wav_props(wave_name, m = 1, bd_mode = 'symm', length_signal = 0):
                'pwl0'  - Piecewise linear wavelet with 0 vanishing moments
                'pwl2'  - Piecewise linear wavelet with 2 vanishing moments
                'Haar'  - The Haar wavelet
-               'dbX'   - Daubechies orthnormal wavelet with X vanishing
+               'dbX'   - Daubechies orthonormal wavelet with X vanishing
                          moments
                'symX'  - Symmlets: A close to symmetric, orthonormal wavelet 
                          with X vanishing moments
@@ -352,25 +497,14 @@ def find_wav_props(wave_name, m = 1, bd_mode = 'symm', length_signal = 0):
     length_signal: Length of the input signal. Default: 0.
     """
     
-    wav_props = Object()
-    wav_props.wave_name = wave_name
-    wav_props.m = m
-    wav_props.length_signal = length_signal
-    wav_props.offset_L = 0
-    wav_props.offset_R = 0
+    wav_props = WaveletProps(wave_name, m, length_signal, 0, 0)
+    dual_wav_props = WaveletProps(wave_name, m, length_signal, 0, 0)
     
-    dual_wav_props = Object()
-    dual_wav_props.wave_name = wave_name
-    dual_wav_props.m = m
-    dual_wav_props.length_signal = length_signal
-    dual_wav_props.offset_L = 0
-    dual_wav_props.offset_R = 0
-    
-    if wave_name[:2].lower() == 'db':
-        N = int(wave_name(3:end))
+    if wave_name.lower()[:2] == 'db':
+        N = int(wave_name[2:])
         if N > 1:
             wav_props_ortho(N, wav_props, dual_wav_props, bd_mode)
-    elif wave_name[:3].lower() == 'sym':
+    elif wave_name.lower()[:3] == 'sym':
         N = int(wave_name[3:]);
         if N > 1:
             wav_props_ortho(N, wav_props, dual_wav_props, bd_mode, 1)
@@ -382,7 +516,7 @@ def find_wav_props(wave_name, m = 1, bd_mode = 'symm', length_signal = 0):
         wav_props_53(wav_props, dual_wav_props, bd_mode)
     elif wave_name.lower() == 'cdf97':
         wav_props_97(wav_props, dual_wav_props, bd_mode)
-    elif strcmpi(wave_name[:6], 'spline'):
+    elif wave_name.lower()[:6] =='spline':
         N = int(wave_name[6])
         Ntilde = int(wave_name[8])
         dual_wav_props.g0, dual_wav_props.g1, wav_props.g0, wav_props.g1 = compute_spline_filters(N, Ntilde)
@@ -394,6 +528,7 @@ def find_wav_props(wave_name, m = 1, bd_mode = 'symm', length_signal = 0):
                 g0temp = dual_wav_props.g0; dual_wav_props.g0 = dual_wav_props.g1; dual_wav_props.g1 = g0temp
             find_AL_AR(WL, WR, wav_props)
             find_AL_AR(WLtilde, WRtilde, dual_wav_props)
+    return wav_props, dual_wav_props
 
 
             
@@ -433,17 +568,16 @@ def set_wav_props(wav_props, dual_wav_props, bd_mode): # TODO: Add WL, WLtilde, 
     dual_wav_props.last_even = not wav_props.last_even
     
     # TODO: add boundary handling
-end
 
             
 def wav_props_pwl0(wav_props, dual_wav_props, bd_mode):
     wav_props.last_even = False
-    wav_props.lambdas = [0.5]
+    wav_props.lambdas = array([0.5])
     wav_props.alpha = sqrt(2)
     wav_props.beta = sqrt(2)
     dual_wav_props.g0 = [sqrt(2)]
-    dual_wav_props.g1 = [-1/2 1 -1/2]*sqrt(2)
-    wav_props.g0 = [1/2 1 1/2]/sqrt(2)
+    dual_wav_props.g1 = array([-0.5, 1., -0.5])*sqrt(2)
+    wav_props.g0 = [1/2., 1, 1/2.]/sqrt(2)
     wav_props.g1 = [1/sqrt(2)]
     
     # TODO: add boundary handling
@@ -452,13 +586,13 @@ def wav_props_pwl0(wav_props, dual_wav_props, bd_mode):
 
 def wav_props_pwl2(wav_props, dual_wav_props, bd_mode):
     wav_props.last_even = False
-    wav_props.lambdas = [0.25, 0.5]
+    wav_props.lambdas = array([0.25, 0.5])
     wav_props.alpha = sqrt(2)
     wav_props.beta = sqrt(2)
-    dual_wav_props.g0 = [-1/8, 1/4, 3/4, 1/4, -1/8]*sqrt(2)
-    dual_wav_props.g1 = [-1/2, 1, -1/2]*sqrt(2)
-    wav_props.g0 = [1/2, 1, 1/2]/sqrt(2)
-    wav_props.g1 = [-1/8, -1/4, 3/4, -1/4, -1/8]/sqrt(2)
+    dual_wav_props.g0 = array([-1/8., 1/4., 3/4., 1/4., -1/8.])*sqrt(2)
+    dual_wav_props.g1 = array([-1/2., 1, -1/2.])*sqrt(2)
+    wav_props.g0 = array([1/2., 1, 1/2.])/sqrt(2)
+    wav_props.g1 = array([-1/8., -1/4., 3/4., -1/4., -1/8.])/sqrt(2)
     
     # TODO: add boundary handling
     
@@ -466,13 +600,13 @@ def wav_props_pwl2(wav_props, dual_wav_props, bd_mode):
 
 def wav_props_53(wav_props, dual_wav_props, bd_mode):
     wav_props.last_even = False;
-    wav_props.lambdas = [-1, 0.125]
+    wav_props.lambdas = array([-1, 0.125])
     wav_props.alpha = 2
     wav_props.beta = 0.5
-    dual_wav_props.g0 = [-1/4, 1/2, 3/2, 1/2, -1/4]
-    dual_wav_props.g1 = [-1/4, 1/2, -1/4]
-    wav_props.g0 = [1/4, 1/2, 1/4]
-    wav_props.g1 = [-1/4, -1/2, 3/2, -1/2, -1/4]
+    dual_wav_props.g0 = array([-1/4, 1/2, 3/2, 1/2, -1/4])
+    dual_wav_props.g1 = array([-1/4, 1/2, -1/4])
+    wav_props.g0 = array([1/4, 1/2, 1/4])
+    wav_props.g1 = array([-1/4, -1/2, 3/2, -1/2, -1/4])
     
     # TODO: add boundary handling
     
@@ -490,11 +624,11 @@ def wav_props_97(wav_props, dual_wav_props, bd_mode):
 
 
 def liftingfact97():
-    h0, h1 = h0h1compute97() # Should have 9 and 7 filter coefficients.
+    h0, h1, g0, g1 = h0h1compute97() # Should have 9 and 7 filter coefficients.
     h00, h01 = h0[0:9:2], h0[1:9:2]
     h10, h11 = h1[0:7:2], h1[1:7:2]
         
-    lambdas=zeros(4)
+    lambdas=array(zeros(4))
         
     lambdas[0] = -h00[0]/h10[0]
     h00[0:5] = h00[0:5]+convolve(h10[0:4],[lambdas[0],lambdas[0]])
@@ -538,11 +672,11 @@ def h0h1compute97():
     g0, h0 = real(g0), real(h0)
     x = sqrt(2)/abs(sum(h0))
     g0, h0 = g0/x, h0*x
-    N= g0.shape[0]
-    h1=g0*(-1)**(array(range(-(N-1)/2,(N+1)/2)))
-    N= h0.shape[0]
-    g1=h0*(-1)**(array(range(-(N-1)/2,(N+1)/2)))
-    #print h0, h1, g0, g1
+    N= shape(g0)[0]
+    h1=g0*(-1)**(arange(-(N-1)/2,(N+1)/2))
+    N= shape(h0)[0]
+    g1=h0*(-1)**(arange(-(N-1)/2,(N+1)/2))
+    #print(h0, h1, g0, g1)
     return h0, h1, g0, g1
 
 def computeQN(N):
@@ -614,7 +748,7 @@ def lifting_fact_ortho(h0, h1):
     """
         
     stepnr=0
-    start1, end1, len1, start2, end2, len2 = 0, len(h0)/2-1, len(h0)/2,  0, len(h1)/2-1, len(h1)/2
+    start1, end1, len1, start2, end2, len2 = 0, int(len(h0)/2)-1, int(len(h0)/2),  0, int(len(h1)/2)-1, int(len(h1)/2)
     lambdas=zeros((len1+1,2))
     if mod(len1,2)==0: # Start with an even step
         h00, h01 = h0[0:len(h0):2], h0[1:len(h0):2]
@@ -638,7 +772,7 @@ def lifting_fact_ortho(h0, h1):
      
     stepnr=stepnr+1
     
-    # print [h00 h01; h10 h11], convolve(h00,h11)-convolve(h10,h01)
+    # print([h00 h01; h10 h11], convolve(h00,h11)-convolve(h10,h01))
     while len2>0: # Stop when the second element in the first column is zero
         if len1>len2: # Reduce the degree in the first row. 
             lambda1=-h00[start1]/h10[start2]
@@ -655,7 +789,7 @@ def lifting_fact_ortho(h0, h1):
         lambdas[stepnr,:]=[lambda1,lambda2]
         stepnr=stepnr+1
         
-    # print [h00 h01; h10 h11], convolve(h00,h11)-convolve(h10,h01)
+    # print([h00 h01; h10 h11], convolve(h00,h11)-convolve(h10,h01))
       
     # Add the final lifting, and compute alpha,beta
     alpha=sum(h00)
@@ -675,7 +809,7 @@ def lifting_fact_ortho(h0, h1):
     
 # Kernel functions    
             
-def find_kernel(wav_props, dual_wav_props, forward, dual = False, transpose = False, prefilter_mode = 'none')
+def find_kernel(wav_props, dual_wav_props, forward, dual = False, transpose = False, prefilter_mode = 'none'):
     """ 
     Function which returns the default kernel of the library for use with the wavelet with properties encapsulated by the given parameters.
     The kernel can be passed to the the internal functions (i)dwt1_impl_internal, (i)dwt2_impl_internal, (i)dwt3_impl_internal. 
@@ -714,7 +848,7 @@ def find_kernel(wav_props, dual_wav_props, forward, dual = False, transpose = Fa
 def find_kernel_dwt_general(wav_props, dual_wav_props, prefilter_mode):
     prefilter = lambda x, forward: x
     
-    if wav_props.wave_name.lower() == 'cdf53' || wav_props.wave_name.lower() == 'cdf97' || wav_props.wave_name.lower() ==  'pwl0' || wav_props.wave_name.lower() ==  'pwl2':
+    if wav_props.wave_name.lower() == 'cdf53' or wav_props.wave_name.lower() == 'cdf97' or wav_props.wave_name.lower() ==  'pwl0' or wav_props.wave_name.lower() ==  'pwl2':
         f = lambda x, bd_mode: dwt_kernel_biortho(x, bd_mode, dual_wav_props)
         # TODO: Add boundary handling
     elif wav_props.wave_name.lower()[:2] == 'db':
@@ -728,7 +862,7 @@ def find_kernel_dwt_general(wav_props, dual_wav_props, prefilter_mode):
         N = int(wav_props.wave_name[3:])
         if N == 1:
             f = dwt_kernel_haar
-        else
+        else:
             f = lambda x, bd_mode: dwt_kernel_ortho(x, bd_mode, dual_wav_props)
             # TODO: Add boundary handling
     elif wav_props.wave_name.lower()[:6] == 'spline':
@@ -742,12 +876,12 @@ def find_kernel_dwt_general(wav_props, dual_wav_props, prefilter_mode):
 def find_kernel_idwt_general(wav_props, dual_wav_props, prefilter_mode):
     prefilter = lambda x, forward: x
     
-    if wav_props.wave_name.lower() == 'cdf53' || wav_props.wave_name.lower() == 'cdf97' || wav_props.wave_name.lower() ==  'pwl0' || wav_props.wave_name.lower() ==  'pwl2':
+    if wav_props.wave_name.lower() == 'cdf53' or wav_props.wave_name.lower() == 'cdf97' or wav_props.wave_name.lower() ==  'pwl0' or wav_props.wave_name.lower() ==  'pwl2':
         f = lambda x, bd_mode: idwt_kernel_biortho(x, bd_mode, wav_props)
         # TODO: Add boundary handling
     elif wav_props.wave_name.lower()[:2] == 'db':
-        N = str2double(wav_props.wave_name[2:])
-        if N == 1
+        N = int(wav_props.wave_name[2:])
+        if N == 1:
             f = idwt_kernel_haar;
         else:
             f = lambda x, bd_mode: idwt_kernel_ortho(x, bd_mode, wav_props)
@@ -784,7 +918,7 @@ def idwt_kernel_filters(x, bd_mode, wav_props):
     x1 = x.copy(); x1[::2] = 0
     filter_impl(wav_props.g0, x0, bd_mode)
     filter_impl(wav_props.g1, x1, bd_mode)
-    x[:] = x0 + x1
+    x = x0 + x1
     # TODO: Add boundary handling
 # End idwt_kernel_filters
     
@@ -801,7 +935,7 @@ def dwt_kernel_haar(x, bd_mode):
         x[0], x[1] = a, b 
     for k in range(2,len(x) - 1,2):
         a, b = x[k] + x[k+1], x[k] - x[k+1]  
-        x[k], x[k+1] = a, b 
+        x[k], x[k+1] = a, b
          
 def idwt_kernel_haar(x, bd_mode):
     x /= sqrt(2)
@@ -824,7 +958,7 @@ def dwt_kernel_biortho(x, bd_mode, dual_wav_props):
     for stepnr in range(dual_wav_props.lambdas.shape[0] - 1, -1, -1):
         if iseven:
             lifting_even_symm(  dual_wav_props.lambdas[stepnr], x, bd_mode)
-        else:    
+        else:
             lifting_odd_symm(  dual_wav_props.lambdas[stepnr], x, bd_mode)
         iseven = not iseven
     # TODO: Add boundary handling
@@ -870,13 +1004,13 @@ def idwt_kernel_ortho(x, bd_mode, wav_props):
 
 # Lifting steps
                
-def lifting_even(lmbda1, lmbda2, x):
+def lifting_even(lmbda1, lmbda2, x, bd_mode):
     if mod(len(x), 2)!=0:
         raise AssertionError()
     x[0] += lmbda1*x[1] + lmbda2*x[-1]
     x[2:-1:2] += lmbda1*x[3::2] + lmbda2*x[1:-2:2]
                 
-def lifting_odd(lmbda1, lmbda2, x):
+def lifting_odd(lmbda1, lmbda2, x, bd_mode):
     if mod(len(x), 2)!=0:
         raise AssertionError()
     x[1:-2:2] += lmbda1*x[2:-1:2] + lmbda2*x[0:-3:2]
@@ -894,10 +1028,10 @@ def lifting_even_symm(lmbda, x, bd_mode):
         x[-1] += 2*lmbda*x[-2] # With symmetric extension
       
 def lifting_odd_symm(lmbda, x, bd_mode):
-    if (bd_mode.lower() == 'per') and mod(len(x), 2)!=0:
+    if (bd_mode.lower() == 'per') and mod(len(x), 2) != 0:
         raise AssertionError()
     x[1:-1:2] += lmbda*(x[0:-2:2] + x[2::2])
-    if mod(len(x), 2)==0:
+    if mod(len(x), 2) == 0:
         if bd_mode.lower() == 'symm':
             x[-1] += 2*lmbda*x[-2] # With symmetric extension
         else:
@@ -907,45 +1041,45 @@ def reorganize_coeffs_forward(x, m, offsets, data_layout):
     if data_layout.lower() == 'resolution':
         N = shape(x)[0]
         y = zeros_like(x)
-        inds = 0:N
+        inds = arange(N)
         endy = N
         for res in range(1, m + 1):
-            sz = shape(inds)[0]
-            xindices = concatenate( ( inds[:offsets[0,0]], inds[(offsets[0,0] + 1]:(sz-offsets[0,1])):2, inds[(sz-offsets[0,1]):)] ), axis=0) # psi-indices
+            xindices = concatenate( ( inds[:offsets[0,0]], inds[(offsets[0, 0] + 1):(len(inds) - offsets[0, 1]):2], inds[(len(inds) - offsets[0, 1]):] ) ) # psi-indices
             y[(endy-len(xindices)):endy] = x[xindices]
             endy = endy-len(xindices)
-            inds = inds[ offsets[0,0]:(sz-offsets[0,1]):2 ]
+            inds = inds[ offsets[0,0]:(len(inds) - offsets[0,1]):2 ]
         y[:endy] = x[inds]
         x[:] = y[:]
 
 def reorganize_coeffs2_forward(sig_in, m, offsets, data_layout):
     if data_layout.lower() == 'resolution':
         sig_out = zeros_like(sig_in)
-        indsx = 0:shape(sig_in)[0]
-        indsy = 0:shape(sig_in)[1]
+        indsx = arange(shape(sig_in)[0])
+        indsy = arange(shape(sig_in)[1])
         endx = shape(sig_in)[0]; endy = shape(sig_in)[1]
         for res in range(1, m + 1):
             szx = len(indsx); szy = len(indsy)
-            psiinds_x = concatenate( ( indsx[:offsets[0,0]], indsx[(offsets[0,0] + 1]:(sz-offsets[0,1])):2, indsx[(sz-offsets[0,1]):)] ), axis=0) # psi-indices
-            psiinds_y = concatenate( ( indsy[:offsets[1,0]], indsy[(offsets[1,0] + 1]:(sz-offsets[1,1])):2, indsy[(sz-offsets[1,1]):)] ), axis=0)
+            psiinds_x = concatenate( ( indsx[:offsets[0,0]], indsx[(offsets[0,0] + 1):(szx - offsets[0,1]):2], indsx[(szx - offsets[0,1]):] ) ) # psi-indices
+            psiinds_y = concatenate( ( indsy[:offsets[1,0]], indsy[(offsets[1,0] + 1):(szy - offsets[1,1]):2], indsy[(szy - offsets[1,1]):] ) )          
+            phiinds_x = indsx[offsets[0,0]:(szx - offsets[0,1]):2]
+            phiinds_y = indsy[offsets[1,0]:(szx - offsets[1,1]):2]
             
-            phiinds_x = indsx[offsets[0, 0]:(szx - offsets[0,1])]:2
-            
-            sig_out[ (endx-len(psiinds_x)):endx, :endy] = sig_in[psiinds_x,indsy]
-            sig_out[ :(endx-len(psiinds_x)), (endy-len(psiinds_y)):endy] = sig_in[phiinds_x,psiinds_y]
+            sig_out[ (endx-len(psiinds_x)):endx, :(endy-len(psiinds_y))] =     sig_in[ ix_(psiinds_x, phiinds_y) ]
+            sig_out[ :(endx-len(psiinds_x)), (endy-len(psiinds_y)):endy] =     sig_in[ ix_(phiinds_x, psiinds_y) ]
+            sig_out[ (endx-len(psiinds_x)):endx, (endy-len(psiinds_y)):endy] = sig_in[ ix_(psiinds_x, psiinds_y) ]
             
             endx -= len(psiinds_x); endy -= len(psiinds_y)
             indsx = indsx[ offsets[0,0]:(szx - offsets[0,1]):2 ] 
             indsy = indsy[ offsets[1,0]:(szy - offsets[1,1]):2 ]
-        sig_out[:endx, :endy] = sig_in[indsx, indsy]
-    sigin[:] = sigout[:]
+        sig_out[:endx, :endy] = sig_in[ ix_(indsx, indsy) ]
+    sig_in[:] = sig_out[:]
 
-def reorganize_coeffs_reverse(x, m, offsets, data_layout)
-    inds = 0:shape(x)[0]
+def reorganize_coeffs_reverse(x, m, offsets, data_layout):
+    inds = arange(shape(x)[0])
     y = zeros_like(x)
-    resstart = 1:(m+2); resend = 1:(m+2)
-    resstart[0] = inds[0]
-    resend[0] = inds[-1]
+    resstart = array(zeros((1,m + 1), int))
+    resend   = array(zeros((1,m + 1), int))
+    resstart[0,0] = inds[0]; resend[0,0] = inds[-1]
     if data_layout.lower() == 'time':
         for res in range(1, m + 1):
             sz = len(inds)
@@ -956,21 +1090,25 @@ def reorganize_coeffs_reverse(x, m, offsets, data_layout)
         endy = shape(x)[0]
         for res in range(1, m + 1):
             sz = len(inds)
-            xindices = concatenate( ( inds(:offsets[0,0]), inds[(offsets[0,0] + 1]:(sz-offsets[0,1])):2, inds[(sz-offsets[0,1]):] ), axis=0) # psi-indices
-            resstart[res] = inds[offsets[0,0]]
-            resend[res]   = inds[sz-offsets[0,1]]
-            y[xindices] = x[(endy-len(xindices)):endy,:]
+            xindices = concatenate( ( inds[:offsets[0,0]], inds[(offsets[0,0] + 1):(sz - offsets[0,1]):2], inds[(sz - offsets[0,1]):] ) ) # psi-indices
+            resstart[0,res] = inds[offsets[0,0]]; resend[0,res]   = inds[sz - offsets[0,1] - 1]
+            y[xindices] = x[(endy-len(xindices)):endy]
             endy = endy-len(xindices)
-            inds = inds(offsets[0,0]:(sz-offsets[0,1]):2)
+            inds = inds[offsets[0,0]:(sz - offsets[0,1]):2]
         y[inds]= x[:endy]
         x[:] = y[:]
-    
     return resstart, resend
-        
-function [sig_out, resstart, resend]=reorganize_coeffs2_reverse(sig_in, m, offsets, data_layout)
-    indsx = 0:shape(sig_in)[0]; indsy = 0:shape(sig_in)[1]
+
+
+
+
+     
+def reorganize_coeffs2_reverse(sig_in, m, offsets, data_layout):
+    indsx = arange(shape(sig_in)[0])
+    indsy = arange(shape(sig_in)[1])
     sig_out = zeros_like(sig_in)
-    resstart = [1:(m+2), 1:(m+2)]; resend = [1:(m+2), 1:(m+2)]
+    resstart = array(zeros((2,m + 1), int))
+    resend   = array(zeros((2,m + 1), int))
     resstart[0,0] = indsx[0]; resend[0,0] = indsx[-1]
     resstart[1,0] = indsy[0]; resend[1,0] = indsy[-1]
     if data_layout.lower() == 'time':
@@ -979,40 +1117,39 @@ function [sig_out, resstart, resend]=reorganize_coeffs2_reverse(sig_in, m, offse
             indsx = indsx[ offsets[0,0]:(szx - offsets[0,1]):2 ]
             indsy = indsy[ offsets[1,0]:(szy - offsets[1,1]):2 ]
             resstart[0,res] = indsx[0]; resend[0,res] = indsx[-1]
-            resstart[1,res] = indsy[0]; resend(1,res] = indsy[-1]
+            resstart[1,res] = indsy[0]; resend[1,res] = indsy[-1]
     if data_layout.lower() == 'resolution':
         endx = shape(sig_in)[0]; endy = shape(sig_in)[1]
         for res in range(1, m + 1):
             szx = len(indsx); szy = len(indsy)
-            psiinds_x = concatenate( (indsx[:offsets[0,0]], indsx[(offsets[0,0] + 1):(szx-offsets(1,2))):2, indsx[(szx-offsets[0,1]):] ), axis=0) # psi-indices
-            psiinds_y = concatenate( (indsy[:offsets[1,0]], indsy[(offsets[1,0] + 1):(szy-offsets(2,2))):2, indsy[(szy-offsets[1,1]):] ), axis=0)
-            phiinds_x = indsx[(offsets[0,0]:(szx-offsets[0,1])):2]
+            psiinds_x = concatenate( ( indsx[:offsets[0,0]], indsx[(offsets[0,0] + 1):(szx - offsets[0,1]):2], indsx[(szx - offsets[0,1]):] ) ) # psi-indices
+            psiinds_y = concatenate( ( indsy[:offsets[1,0]], indsy[(offsets[1,0] + 1):(szy - offsets[1,1]):2], indsy[(szy - offsets[1,1]):] ) )
+            phiinds_x = indsx[offsets[0,0]:(szx - offsets[0,1]):2]
+            phiinds_y = indsy[offsets[1,0]:(szx - offsets[1,1]):2]
             
-            resstart[0, res] = indsx[offsets[0,0]]; resend[0, res]   = indsx[szx - offsets[0,1]]
-            resstart[1, res] = indsy[offsets[1,0]]; resend[1, res]   = indsy[szy - offsets[1,1]]
+            resstart[0, res] = indsx[offsets[0,0]]; resend[0, res]   = indsx[szx - offsets[0,1] - 1]
+            resstart[1, res] = indsy[offsets[1,0]]; resend[1, res]   = indsy[szy - offsets[1,1] - 1]
             
-            sig_out[psiinds_x, indsy]    = sig_in[(endx-len(psiinds_x)):endx, :endy]
-            sig_out[phiinds_x,psiinds_y] = sig_in[:(endx-len(psiinds_x)), (endy-len(psiinds_y)):endy]
+            sig_out[ ix_(psiinds_x, phiinds_y) ] = sig_in[ (endx-len(psiinds_x)):endx, :(endy-len(psiinds_y))]     
+            sig_out[ ix_(phiinds_x, psiinds_y) ] = sig_in[ :(endx-len(psiinds_x)), (endy-len(psiinds_y)):endy]
+            sig_out[ ix_(psiinds_x, psiinds_y) ] = sig_in[ (endx-len(psiinds_x)):endx, (endy-len(psiinds_y)):endy]
             
-            endx = endx - len(psiinds_x); endy = endy - len(psiinds_y);
-            indsx = indsx[offsets[0,0]:(szx-offsets[0,1]):2]
-            indsy = indsy[offsets[1,0]:(szy-offsets[1,1]):2]
-        sig_out[indsx, indsy] = sig_in[:endx, :endy]
-        sigin[:] = sigout[:]
-        
+            endx = endx - len(psiinds_x); endy = endy - len(psiinds_y)
+            indsx = indsx[offsets[0,0]:(szx - offsets[0,1]):2]
+            indsy = indsy[offsets[1,0]:(szy - offsets[1,1]):2]
+        sig_out[ix_(indsx, indsy)] = sig_in[:endx, :endy]
+        sig_in[:] = sig_out[:]
     return resstart, resend
-end
-
-def tensor2_impl(x, indsx, indsy, fx, fy, bd_mode)
-    sz = :len(shape(x))
-    fx(x[indsx], bd_mode)
-    y = transpose(x, [2, 1, sz[2:]])
-    fy(y[indsy], bd_mode)
-    y = transpose(y, [2, 1, sz[2:]])
-    x[:] = y[:]
+            
+            
+            
+def tensor2_impl(x, fx, fy, bd_mode):
+    sz = arange(len(shape(x)))
+    fx(x, bd_mode)
+    y = transpose(x, concatenate( ([1, 0], sz[2:]) ))
+    fy(y, bd_mode)
+    x[:] = transpose(y, concatenate( ([1, 0], sz[2:]) ))
 # End tensor2_impl
-
-# OK to here
 
 # testcode
   
@@ -1033,7 +1170,7 @@ def cascade_alg(m, a, b, wave_name, scaling, dual):
 
 def freqresp_alg(wave_name, lowpass, dual):
     N = 128
-    n = arange(0,N)
+    n = arange(N)
     omega = 2*pi*n/float(N)
 
     g = zeros(N)
@@ -1048,21 +1185,21 @@ def freqresp_alg(wave_name, lowpass, dual):
 
 
 def _test_kernel(wave_name):
-    print 'Testing %s, 1D' % wave_name
+    print('Testing %s, 1D' % wave_name)
     res = random.random(16)
     x = zeros(16)
     x[:] = res[:]
-    DWTImpl(x,2,wave_name)
-    IDWTImpl(x,2,wave_name)
+    dwt_impl(x, wave_name, 2)
+    idwt_impl(x, wave_name, 2)
     diff = abs(x-res).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
-    print 'Testing %s, 2D' % wave_name
+    print('Testing %s, 2D' % wave_name)
     res = random.random((16,2))
     x = zeros((16,2))
     x[:] = res[:]
-    DWTImpl(x,2,wave_name)
-    IDWTImpl(x,2,wave_name)
+    dwt_impl(x, wave_name, 2)
+    idwt_impl(x, wave_name, 2)
     diff = abs(x-res).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
 
@@ -1072,19 +1209,19 @@ def mmsubbands(m):
     X = zeros((3,l1,l2,l3))
     
     X[0] = img.copy()
-    DWT2Impl(X[0],m,'cdf53')
+    dwt_impl(X[0], 'cdf53', m)
     X[0, (l1/2**(m-1)):, :, :] = 0
     X[0, :(l1/2**(m-1)), (l2/2**(m-1)):, :] = 0
     X[0, (l1/2**m):(l1/2**(m-1)), (l2/2**m):(l2/2**(m-1)), :] = 0
     X[1] = X[0]
-    IDWT2Impl(X[0], m, 'cdf53')
+    idwt_impl(X[0], 'cdf53', m)
     
     X[1, (l1/2**m):(l1/2**(m-1)), :(l2/2**m), :] = 0
     X[2] = X[1]
-    IDWT2Impl(X[1], m, 'cdf53')
+    idwt_impl(X[1], 'cdf53', m)
     
     X[2, :(l1/2**m), (l2/2**m):(l2/2**(m-1)), :] = 0
-    IDWT2Impl(X[2], m, 'cdf53')
+    idwt_impl(X[2], 'cdf53', m)
     
     for k in range(3):
         mapto01(X[k])
@@ -1095,90 +1232,88 @@ def mmsubbands(m):
     
         
 def _test_kernel_ortho():
-    print 'Testing orthonormal wavelets'
+    print('Testing orthonormal wavelets')
     res = random.random(16) # only this assumes that N is even
     x = zeros(16)
     
-    print 'Testing that the reverse inverts the forward transform'
+    print('Testing that the reverse inverts the forward transform')
     x[0:16] = res[0:16]
-    DWTImpl(x, 2, 'db4')
-    IDWTImpl(x, 2, 'db4')
+    dwt_impl(x, 'db4', 2)
+    idwt_impl(x, 'db4', 2)
     diff = max(abs(x-res))
-    assert diff < 1E-13, 'bug, diff=%s' % diff
+    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
-    print 'Testing that the transform is orthogonal, i.e. that the transform and its dual are equal'
+    print('Testing that the transform is orthogonal, i.e. that the transform and its dual are equal')
     x[0:16] = res[0:16]
-    DWTImpl(x, 2, 'db4', 'per')
-    DWTImpl(res, 2, 'db4', 'per', True)
+    dwt_impl(x, 'db4', 2, 'per')
+    dwt_impl(res, 'db4', 2, 'per', 'none', 0, True)
     diff = max(abs(x-res))
-    assert diff < 1E-13, 'bug, diff=%s' % diff
+    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
 def _test_dwt_different_sizes():
-    print 'Testing the DWT on different input sizes'
+    print('Testing the DWT on different input sizes')
     m = 4
 
-    print 'Testing the DWT for greyscale image'
+    print('Testing the DWT for greyscale image')
     img = random.random((32,32))
-    img2 = zeros_like(img)
-    img2[:] = img[:]
-    DWT2Impl(img2, m, 'cdf97')
-    IDWT2Impl(img2, m, 'cdf97')
+    img2 = img.copy()
+    dwt_impl(img2, 'cdf97', m, 'symm', 'none', 2)
+    idwt_impl(img2, 'cdf97', m, 'symm', 'none', 2)
+    # print(img2)
     diff = abs(img2-img).max()
-    assert diff < 1E-13, 'bug, diff=%s' % diff
+    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
-    print 'Testing the DWT for RGB image'
+    print('Testing the DWT for RGB image')
     img = random.random((32, 32, 3))
     img2 = zeros_like(img)
     img2[:] = img[:]
-    DWT2Impl(img2, m, 'cdf97')
-    IDWT2Impl(img2, m, 'cdf97')
+    dwt_impl(img2, 'cdf97', m)
+    idwt_impl(img2, 'cdf97', m)
     diff = abs(img2-img).max()
-    assert diff < 1E-13, 'bug, diff=%s' % diff
+    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
-    print 'Testing the DWT for sound with one channel'
+    print('Testing the DWT for sound with one channel')
     sd = random.random(32)
     sd2 = zeros_like(sd)
     sd2[:] = sd[:]
-    DWTImpl(sd2, m, 'cdf97')
-    IDWTImpl(sd2, m, 'cdf97')
+    dwt_impl(sd2, 'cdf97', m)
+    idwt_impl(sd2, 'cdf97', m)
     diff = abs(sd2-sd).max()
-    assert diff < 1E-13, 'bug, diff=%s' % diff
+    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
-    print 'Testing the DWT for sound with two channels'
+    print('Testing the DWT for sound with two channels')
     sd = random.random((32,2))
     sd2 = zeros_like(sd)
     sd2[:] = sd[:]
-    DWTImpl(sd2, m, 'cdf97')
-    IDWTImpl(sd2, m, 'cdf97')
+    dwt_impl(sd2, 'cdf97', m)
+    idwt_impl(sd2, 'cdf97', m)
     diff = abs(sd2-sd).max()
-    assert diff < 1E-13, 'bug, diff=%s' % diff
+    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
 def _test_orthogonality():
-    print 'Testing that the wavelet and the dual wavelet are equal for orthonormal wavelets'
+    print('Testing that the wavelet and the dual wavelet are equal for orthonormal wavelets')
     x0 = random.random(32)
     
-    print 'Testing that the IDWT inverts the DWT'
+    print('Testing that the IDWT inverts the DWT')
     x = x0.copy()
-    DWTImpl(x, 2, 'db4', 'per', False)
-    IDWTImpl(x, 2, 'db4', 'per', False)
+    dwt_impl(x, 'db4', 2, 'per')
+    idwt_impl(x, 'db4', 2, 'per')
     diff = abs(x-x0).max()
-    assert diff < 1E-13, 'bug, diff=%s' % diff
-    
-    print 'Apply the transpose, to see that the transpose equals the inverse'
+    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
+
+    print('See that the wavelet transform equals the dual wavelet transform')
     x = x0.copy()
-    DWTImpl(x, 2, 'db4', 'per', False)
-    IDWTImpl(x, 2, 'db4', 'per', True)
+    dwt_impl(x, 'db4', 2, 'per', 'none', 0, True)
+    dwt_impl(x0, 'db4', 2, 'per', 'none', 0, False)
     diff = abs(x-x0).max()
-    assert diff < 1E-13, 'bug, diff=%s' % diff
+    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
 
-    print 'See that the wavelet transform equals the dual wavelet transform'
+    print('Apply the transpose, to see that the transpose equals the inverse')
     x = x0.copy()
-    DWTImpl(x, 2, 'db4', 'per', True)
-    DWTImpl(x0, 2, 'db4', 'per', False)
+    dwt_impl(x, 'db4', 2, 'per', 'none', 0, False, True)
+    dwt_impl(x, 'db4', 2, 'per', 'none', 0, False, False)
     diff = abs(x-x0).max()
-    assert diff < 1E-13, 'bug, diff=%s' % diff
-
-
+    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
 
 if __name__=='__main__':
     _test_dwt_different_sizes()

@@ -1,4 +1,4 @@
-import math, wave, commands, sys, os
+import math, wave, sys, os, subprocess
 from numpy import *
 
 max_amplitude = 2**15-1 # iinfo('int16').max if numpy >= 1.0.3
@@ -62,6 +62,11 @@ def audioread(filename):
         soundx = x.reshape((len(x)/channels,channels))
     return soundx,fs
 
+def get_status_output(*args, **kwargs):
+    p = subprocess.Popen(*args, **kwargs)
+    stdout, stderr = p.communicate()
+    return p.returncode, stdout, stderr
+    
 def play(x, fs, player=None):
     """
     Play a file with array data.  (The array is first written to file
