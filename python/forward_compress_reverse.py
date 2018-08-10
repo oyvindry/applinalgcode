@@ -29,7 +29,7 @@ def forw_comp_rev_DFT(L=0, lower=-1, threshold=0, n=0, N=0):
     x = real(x)
     x /= abs(x).max()
     if threshold != 0:
-        print 100*numzeroed/float(prod(shape(x)))
+        print(100*numzeroed/float(prod(shape(x))))
     return x, fs
     
 def forw_comp_rev_DFT2(f, invf, threshold):
@@ -48,7 +48,7 @@ def forw_comp_rev_DFT2(f, invf, threshold):
     X[:,:,:] = abs(X[:,:,:])
     mapto01(X[:,:,:])
     X[:,:,:] *= 255
-    print '%f percent of samples zeroed out' % (100*zeroedout/float(tot))
+    print('%f percent of samples zeroed out' % (100*zeroedout/float(tot)))
     return X
     
 def forw_comp_rev_DCT2(f, invf, threshold):
@@ -62,7 +62,7 @@ def forw_comp_rev_DCT2(f, invf, threshold):
     tensor_impl(X[:,:,:], invf, invf);
     mapto01(X[:,:,:])
     X[:,:,:] *= 255
-    print '%f percent of samples zeroed out' % (100*zeroedout/float(tot))
+    print('%f percent of samples zeroed out' % (100*zeroedout/float(tot)))
     return X    
     
 def forw_comp_rev_DWT(m, wave_name, lowres = 1):

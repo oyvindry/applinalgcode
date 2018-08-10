@@ -59,7 +59,7 @@ def audioread(filename):
     x=x.astype(float)/max_amplitude
     soundx = x
     if channels > 1:
-        soundx = x.reshape((len(x)/channels,channels))
+        soundx = x.reshape( ( int(len(x)/channels), channels ) )
     return soundx,fs
 
 def get_status_output(*args, **kwargs):
@@ -84,7 +84,7 @@ def play(x, fs, player=None):
         if sys.platform[:3] == 'win':
             status = os.system('%s %s' %(player, tmpfile))
         else:
-            status, output = commands.getstatusoutput('%s %s' %(player, tmpfile))
+            status, output, err = get_status_output([player, tmpfile])
             msg += '\nError message:\n%s' %output
         if status != 0:
             raise OSError(msg)
@@ -93,7 +93,7 @@ def play(x, fs, player=None):
     if sys.platform[:5] == 'linux':
         open_commands = ['gnome-open', 'kmfclient exec', 'exo-open', 'xdg-open', 'open']
         for cmd in open_commands:
-            status, output = commands.getstatusoutput('%s %s' %(cmd, tmpfile))
+            status, output, err = get_status_output([cmd, tmpfile])
             if status == 0:
                 break
         if status != 0:
@@ -101,7 +101,7 @@ def play(x, fs, player=None):
                               ' keyword argument.')
 
     elif sys.platform == 'darwin':
-        commands.getstatusoutput('open %s' %tmpfile)
+        get_status_output(['open', tmpfile])
     else:
         # assume windows
         os.system('start %s' %tmpfile)
