@@ -696,24 +696,24 @@ def computeQN(N):
     return vals
         
 def compute_spline_filters(N1, N2):
-    N=(N1+N2)/2;
+    N=int((N1+N2)/2)
     QN = computeQN(N)
     
     h0=array([1])
-    for k in range(N1/2):
+    for k in range(int(N1/2)):
         h0 = convolve(h0,[1/4.,1/2.,1/4.])
     h0=h0*QN[0]
     
     g0=array([1])
-    for k in range(N2/2):
+    for k in range(int(N2/2)):
         g0 = convolve(g0,[1/4.,1/2.,1/4.])
     
     x = sqrt(2)/abs(sum(h0))
     g0, h0 = g0/x, h0*x
     N= g0.shape[0]
-    h1=g0*(-1)**(array(range(-(N-1)/2,(N+1)/2)))
+    h1=g0*(-1)**(array(range(-int((N-1)/2),int((N+1)/2))))
     N= h0.shape[0]
-    g1=h0*(-1)**(array(range(-(N-1)/2,(N+1)/2)))
+    g1=h0*(-1)**(array(range(-int((N-1)/2),int((N+1)/2))))
     return h0, h1, g0, g1
             
         
@@ -1084,8 +1084,8 @@ def reorganize_coeffs_reverse(x, m, offsets, data_layout):
         for res in range(1, m + 1):
             sz = len(inds)
             inds = inds[ offsets[0,0]:(sz - offsets[0,1]):2 ]
-            resstart[res] = inds[0]
-            resend[res] = inds[sz]
+            resstart[0, res] = inds[0]
+            resend[0, res] = inds[-1]
     if data_layout.lower() == 'resolution':
         endy = shape(x)[0]
         for res in range(1, m + 1):
@@ -1210,17 +1210,17 @@ def mmsubbands(m):
     
     X[0] = img.copy()
     dwt_impl(X[0], 'cdf53', m)
-    X[0, (l1/2**(m-1)):, :, :] = 0
-    X[0, :(l1/2**(m-1)), (l2/2**(m-1)):, :] = 0
-    X[0, (l1/2**m):(l1/2**(m-1)), (l2/2**m):(l2/2**(m-1)), :] = 0
+    X[0, (int(l1/2**(m-1))):, :, :] = 0
+    X[0, :(int(l1/2**(m-1))), (int(l2/2**(m-1))):, :] = 0
+    X[0, (int(l1/2**m)):(int(l1/2**(m-1))), (int(l2/2**m)):(int(l2/2**(m-1))), :] = 0
     X[1] = X[0]
     idwt_impl(X[0], 'cdf53', m)
     
-    X[1, (l1/2**m):(l1/2**(m-1)), :(l2/2**m), :] = 0
+    X[1, (int(l1/2**m)):(int(l1/2**(m-1))), :(int(l2/2**m)), :] = 0
     X[2] = X[1]
     idwt_impl(X[1], 'cdf53', m)
     
-    X[2, :(l1/2**m), (l2/2**m):(l2/2**(m-1)), :] = 0
+    X[2, :(int(l1/2**m)), (int(l2/2**m)):(int(l2/2**(m-1))), :] = 0
     idwt_impl(X[2], 'cdf53', m)
     
     for k in range(3):

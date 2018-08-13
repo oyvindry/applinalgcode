@@ -16,8 +16,8 @@ def forw_comp_rev_DFT(L=0, lower=-1, threshold=0, n=0, N=0):
         if lower == 1:
             y[(L+1):(N-L)] = 0
         elif lower == 0:
-            y[0:(N/2 - L)] = 0
-            y[(N/2 + L):] = 0
+            y[0:(int(N/2) - L)] = 0
+            y[(int(N/2) + L):] = 0
         if threshold != 0:
             numzeroed += sum((abs(y) < threshold))
             y *= (abs(y) >= threshold)
@@ -31,39 +31,23 @@ def forw_comp_rev_DFT(L=0, lower=-1, threshold=0, n=0, N=0):
     if threshold != 0:
         print(100*numzeroed/float(prod(shape(x))))
     return x, fs
-    
-def forw_comp_rev_DFT2(f, invf, threshold):
+
+def forw_comp_rev_2d(X, f, invf, threshold):
     # TODO: f, invf
-    X = create_excerpt()
-    X = X.astype(complex)
     M, N = shape(X)[0:2]
     
-    tensor_impl(X, f, f)
+    tensor2_impl(X, f, f, 'symm')
     tot = prod(shape(X))
 
     thresholdmatr = (abs(X[:,:,:]) >= threshold)
     zeroedout = tot - sum(thresholdmatr)
     X[:,:,:] *= thresholdmatr
-    tensor_impl(X[:,:,:], invf, invf);
+    tensor2_impl(X[:,:,:], invf, invf, 'symm');
     X[:,:,:] = abs(X[:,:,:])
     mapto01(X[:,:,:])
     X[:,:,:] *= 255
     print('%f percent of samples zeroed out' % (100*zeroedout/float(tot)))
-    return X
-    
-def forw_comp_rev_DCT2(f, invf, threshold):
-    X = create_excerpt()
-    tensor_impl(X, f, f)
-    tot = prod(shape(X))
-  
-    thresholdmatr = (abs(X[:,:,:]) >= threshold)
-    zeroedout = tot - sum(thresholdmatr)
-    X[:,:,:] *= thresholdmatr
-    tensor_impl(X[:,:,:], invf, invf);
-    mapto01(X[:,:,:])
-    X[:,:,:] *= 255
-    print('%f percent of samples zeroed out' % (100*zeroedout/float(tot)))
-    return X    
+    return X  
     
 def forw_comp_rev_DWT(m, wave_name, lowres = 1):
     """
@@ -80,9 +64,9 @@ def forw_comp_rev_DWT(m, wave_name, lowres = 1):
     x = x[0:N]
     dwt_impl(x, wave_name, m)
     if lowres==1:
-        x[(N/2**m):N] = 0
+        x[(int(N/2**m)):N] = 0
     else:
-        x[0:(N/2**m)] = 0
+        x[0:(int(N/2**m))] = 0
     idwt_impl(x, wave_name, m)
     x /= abs(x).max()
     return x, fs
@@ -101,11 +85,11 @@ def forw_comp_rev_DWT2(m, wave_name, lowres = 1):
     M, N = shape(img)[0:2]
     dwt_impl(img, wave_name, m)
     if lowres==1:
-        tokeep = img[0:(M/(2**m)), 0:(N/(2**m))]
+        tokeep = img[0:(int(M/(2**m))), 0:(int(N/(2**m)))]
         img=zeros_like(img)
-        img[0:(M/(2**m)),0:(N/(2**m))] = tokeep
+        img[0:(int(M/(2**m))),0:(int(N/(2**m)))] = tokeep
     else:
-        img[0:(M/2**m), 0:(N/2**m)] = 0
+        img[0:(int(M/2**m)), 0:(int(N/2**m))] = 0
     idwt_impl(img, wave_name, m) 
     mapto01(img)
     img *= 255

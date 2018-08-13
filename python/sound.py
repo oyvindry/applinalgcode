@@ -3,25 +3,25 @@ from numpy import *
 
 max_amplitude = 2**15-1 # iinfo('int16').max if numpy >= 1.0.3
 
-def filter_impl(t, x, symm):
-    tlen = len(t) 
-    N0 = (tlen - 1)/2
-    N = shape(x)[0]
+def filter_impl(t, x, bd_mode):
+    szx = shape(x)
+    N = szx[0]
+    n = prod(szx[1:])
+    y =  reshape(x, (N, n))
+    tlen = len(t); N0 = int((tlen - 1)/2)
+    w = 0
     
-    if symm:
-        y = concatenate([ x[N0:0:(-1)], x, x[(N-2):(N - N0 - 2):(-1)] ])
-    else:
-        y = concatenate([ x[(N - N0):], x, x[:N0]])
-    if ndim(x) == 1:
-        res = convolve(t, y)
-        x[:] = res[(2*N0):(len(res)-2*N0)]
-    else:
-        n = shape(x)[1]
-        for k in range(n):
-            res = convolve(t, y[:, k])
-            x[:, k] = res[(2*N0):(len(res)-2*N0)]
-            
-            
+    if bd_mode.lower() == 'symm':
+        w = concatenate([ y[N0:0:(-1)], y, y[(N-2):(N - N0 - 2):(-1)] ])
+    elif bd_mode.lower() == 'per':
+        w = concatenate([ y[(N - N0):], y, y[:N0]])
+    elif bd_mode.lower() == 'none' or bd_mode.lower() == 'bd':
+        w = concatenate( (zeros(N0, n), y, zeros(N0, n)) )
+    for k in range(n):
+        z = convolve(t, w[:, k])
+        y[:, k] = z[(2*N0):(len(z)-2*N0)]
+    x[:] = reshape(y, szx)
+
 def audiowrite(filename, x, fs):
     """
     Writes the array data to the specified filename.

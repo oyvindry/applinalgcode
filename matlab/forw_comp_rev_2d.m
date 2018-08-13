@@ -1,14 +1,13 @@
-function X=forw_comp_rev_2d(f, invf, threshold)
-    X = create_excerpt();
-    X = tensor_impl(X, f, f);
+function X=forw_comp_rev_2d(X, f, invf, threshold)
+    X = tensor2_impl(X, f, f, 'symm');
     tot = prod(size(X));
   
     thresholdmatr = (abs(X) >= threshold);
     zeroedout = tot - sum(sum(sum(thresholdmatr)));
     X = X.*thresholdmatr;
-    X = tensor_impl(X, invf, invf);
+    X = tensor2_impl(X, invf, invf, 'symm');
     X = real(X);
     X = mapto01(X);
     X = X*255;
-    print sprintf('%f percent of samples zeroed out', 100*zeroedout/tot);
+    disp(sprintf('%f percent of samples zeroed out', 100*zeroedout/tot));
 end

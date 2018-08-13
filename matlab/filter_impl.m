@@ -1,4 +1,8 @@
 function y=filter_impl(t, x, bd_mode)
+    szx = size(x);
+    seconddim = prod(szx(2:end));
+    x = reshape(x, szx(1), seconddim);
+    
     tlen = length(t); N0 = (tlen - 1)/2;
     N = size(x, 1);
     n = size(x, 2);
@@ -14,5 +18,5 @@ function y=filter_impl(t, x, bd_mode)
         z = conv(t, y(:,k));
         x(:,k) = z((2*N0+1):(length(z)-2*N0));
     end
-    y = x;
+    y = reshape(x,szx);
 end

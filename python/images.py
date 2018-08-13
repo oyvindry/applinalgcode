@@ -63,7 +63,7 @@ def combineimages(imgs):
     N = len(imgs[0])
     M = len(imgs)
     sz = shape(imgs[0][0])
-    ind = sz[0]/20 + 1
+    ind = int(sz[0]/20) + 1
     newsz = [i for i in sz]
     newsz[0] *= M
     newsz[0] += (M-1)*ind

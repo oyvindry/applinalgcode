@@ -15,7 +15,7 @@ def mp3forwardfbt(x):
     M = cos((2*yvec+1)*xvec*pi/64)
 
     start = len(x) - 512;
-    for n in range(1, N/32 + 1): 
+    for n in range(1, int(N/32) + 1): 
         X = x[start:(start + 512)]
         Z = C*X # Pointwise multiplication
         Y = zeros(64)
@@ -31,7 +31,7 @@ def mp3reversefbt(z):
     N = len(z)
     z = z. reshape((N,1))
     z = mat(z)
-    Ns = N/32
+    Ns = int(N/32)
     x = zeros(32*Ns)
     D = mp3dtable()          # The reconstruction window.
     V = mat(zeros((1024,1)))
