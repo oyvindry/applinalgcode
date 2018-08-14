@@ -1205,33 +1205,7 @@ def _test_kernel(wave_name):
     dwt_impl(x, wave_name, 2)
     idwt_impl(x, wave_name, 2)
     diff = abs(x-res).max()
-    assert diff < 1E-13, 'bug, diff=%s' % diff
-
-def mmsubbands(m):
-    img = create_excerpt()
-    l1, l2, l3 = shape(img)
-    X = zeros((3,l1,l2,l3))
-    
-    X[0] = img.copy()
-    dwt_impl(X[0], 'cdf53', m)
-    X[0, (int(l1/2**(m-1))):, :, :] = 0
-    X[0, :(int(l1/2**(m-1))), (int(l2/2**(m-1))):, :] = 0
-    X[0, (int(l1/2**m)):(int(l1/2**(m-1))), (int(l2/2**m)):(int(l2/2**(m-1))), :] = 0
-    X[1] = X[0]
-    idwt_impl(X[0], 'cdf53', m)
-    
-    X[1, (int(l1/2**m)):(int(l1/2**(m-1))), :(int(l2/2**m)), :] = 0
-    X[2] = X[1]
-    idwt_impl(X[1], 'cdf53', m)
-    
-    X[2, :(int(l1/2**m)), (int(l2/2**m)):(int(l2/2**(m-1))), :] = 0
-    idwt_impl(X[2], 'cdf53', m)
-    
-    for k in range(3):
-        mapto01(X[k])
-        X[k] *= 255
-    return X[0], X[1], X[2]
-    
+    assert diff < 1E-13, 'bug, diff=%s' % diff  
     
     
         
