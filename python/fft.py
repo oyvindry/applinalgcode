@@ -200,27 +200,7 @@ def fft_kernel_splitradix(x, forward):
         xo = concatenate( [xo1 + xo2, -sign*1j*(xo2 - xo1)] )
         x[:] = concatenate([xe + xo, xe - xo])   
     
-# We can use classes to make a more efficient FFT implementation
-
-def dft_impl8(x, bd_mode):
-    N = shape(x)[0]
-    for n in range(0,N,8):
-        x[n:(n+8), :] = fft.fft(x[n:(n+8), :], axis=0)
-
-def idft_impl8(x, bd_mode):
-    N = shape(x)[0]
-    for n in range(0, N, 8):
-        x[n:(n+8), :] = fft.ifft(x[n:(n+8), :], axis=0)
-
-def dct_impl8(x, bd_mode):
-    N = shape(x)[0]
-    for n in range(0,N,8):
-        x[n:(n+8), :] = dct(x[n:(n+8), :], norm='ortho', axis=0)
-        
-def idct_impl8(x, bd_mode):
-    N = shape(x)[0]
-    for n in range(0, N, 8):
-        x[n:(n+8), :] = idct(x[n:(n+8), :], norm='ortho', axis=0)
+# Test code
     
 def _testfft():   
     x1 = random.random(32).astype(complex)
