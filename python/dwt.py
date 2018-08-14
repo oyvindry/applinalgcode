@@ -1167,6 +1167,8 @@ def cascade_alg(m, a, b, wave_name, scaling, dual):
                           coords[0:(b*2**m)]])
     plt.figure()
     plt.plot(t, 2**(m/2.)*coords, 'k-')
+    plt.show()
+    plt.close()
 
 def freqresp_alg(wave_name, lowpass, dual):
     N = 128
@@ -1182,6 +1184,8 @@ def freqresp_alg(wave_name, lowpass, dual):
     idwt_impl(g, wave_name, 1, 'per', 'none', 1, dual, False, 'time')
     plt.figure()
     plt.plot(omega, abs(fft.fft(g)), 'k-')
+    plt.show()
+    plt.close()
 
 
 def _test_kernel(wave_name):
