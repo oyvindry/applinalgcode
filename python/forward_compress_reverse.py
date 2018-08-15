@@ -43,13 +43,12 @@ def forw_comp_rev_2d(X, f, invf, threshold):
     zeroedout = tot - sum(thresholdmatr)
     X[:,:,:] *= thresholdmatr
     tensor2_impl(X[:,:,:], invf, invf, 'symm');
-    X[:,:,:] = abs(X[:,:,:])
-    mapto01(X[:,:,:])
-    X[:,:,:] *= 255
+    X[:] = abs(X)
+    mapto01(X)
+    X *= 255
     print('%f percent of samples zeroed out' % (100*zeroedout/float(tot)))
-    return X  
     
-def forw_comp_rev_DWT(m, wave_name, lowres = 1):
+def forw_comp_rev_dwt(m, wave_name, lowres = 1):
     """
     Play a sound after removing either the detail or the lowres part.
     
@@ -71,7 +70,7 @@ def forw_comp_rev_DWT(m, wave_name, lowres = 1):
     x /= abs(x).max()
     return x, fs
     
-def forw_comp_rev_DWT2(m, wave_name, lowres = 1):
+def forw_comp_rev_dwt2(img, m, wave_name, lowres = 1):
     """
     Show an image after removing either the detail or the lowres part
     
@@ -81,16 +80,14 @@ def forw_comp_rev_DWT2(m, wave_name, lowres = 1):
     lowres: If true, set the detail to 0 and show the lowres part. 
             If false, set the lowres part to 0 and show the detail.  
     """
-    img = create_excerpt()
     M, N = shape(img)[0:2]
     dwt_impl(img, wave_name, m)
     if lowres==1:
-        tokeep = img[0:(int(M/(2**m))), 0:(int(N/(2**m)))]
-        img=zeros_like(img)
+        tokeep = img[0:(int(M/(2**m))), 0:(int(N/(2**m)))].copy()
+        img[:] = 0
         img[0:(int(M/(2**m))),0:(int(N/(2**m)))] = tokeep
     else:
         img[0:(int(M/2**m)), 0:(int(N/2**m))] = 0
     idwt_impl(img, wave_name, m) 
     mapto01(img)
     img *= 255
-    return img

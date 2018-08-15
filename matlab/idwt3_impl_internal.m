@@ -33,18 +33,18 @@ function x=idwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefiltery
     
     % postconditioning
     indsx = resstart(1,m+1):2^m:resend(1,m+1); indsy = resstart(2,m+1):2^m:resend(2,m+1); indsz = resstart(3,m+1):2^m:resend(3,m+1);
-    x(indsx, indsy, indsz) = tensor3_impl(x(indsx, indsy, indsz), @(x,bd_mode) prefilterx(x, 1), @(x,bd_mode) prefiltery(x, 1), @(x,bd_mode) prefilterz(x, 1), lastdim, bd_mode);
+    x(indsx, indsy, indsz, :) = tensor3_impl(x(indsx, indsy, indsz, :), @(x,bd_mode) prefilterx(x, 1), @(x,bd_mode) prefiltery(x, 1), @(x,bd_mode) prefilterz(x, 1), lastdim, bd_mode);
 
     for res = (m - 1):(-1):0
         indsx = resstart(1,res+1):2^res:resend(1,res+1); 
         indsy = resstart(2,res+1):2^res:resend(2,res+1);
         indsz = resstart(3,res+1):2^res:resend(3,res+1);
-        x(indsx, indsy, indsz) = tensor3_impl(x(indsx, indsy, indsz), fx, fy, fz, lastdim, bd_mode);
+        x(indsx, indsy, indsz, :) = tensor3_impl(x(indsx, indsy, indsz, :), fx, fy, fz, lastdim, bd_mode);
     end
     
     % preconditioning
     indsx = resstart(1,1):resend(1,1); indsy = resstart(2,1):resend(2,1); indsz = resstart(3,1):resend(3,1);
-    x(indsx, indsy, indsz) = tensor3_impl(x(indsx, indsy, indsz), @(x,bd_mode) prefilterx(x, 0), @(x,bd_mode) prefiltery(x, 0), @(x,bd_mode) prefilterz(x, 0), lastdim, bd_mode);
+    x(indsx, indsy, indsz, :) = tensor3_impl(x(indsx, indsy, indsz, :), @(x,bd_mode) prefilterx(x, 0), @(x,bd_mode) prefiltery(x, 0), @(x,bd_mode) prefilterz(x, 0), lastdim, bd_mode);
 end
 
 function [sig_out, resstart, resend]=reorganize_coeffs3_reverse(sig_in, m, offsets, data_layout)

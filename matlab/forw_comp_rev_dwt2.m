@@ -1,9 +1,8 @@
-function img=forw_comp_rev_dwt2(m, wave_name, lr)
+function img=forw_comp_rev_dwt2(img, m, wave_name, lr)
     lowres = 1;
-    if nargin >= 3
+    if nargin >= 4
         lowres = lr;
     end
-    img = create_excerpt();
     M = size(img, 1);
     N = size(img, 2);
     img = dwt_impl(img, wave_name, m);

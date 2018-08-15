@@ -58,23 +58,3 @@ def contrastadjust0(X,n):
     X += 1/2.0
     X *= 255 # Maps the values back to [0,255]
 # End contrastadjust0
-    
-def combineimages(imgs):
-    N = len(imgs[0])
-    M = len(imgs)
-    sz = shape(imgs[0][0])
-    ind = int(sz[0]/20) + 1
-    newsz = [i for i in sz]
-    newsz[0] *= M
-    newsz[0] += (M-1)*ind
-    newsz[1] *= N
-    newsz[1] += (N-1)*ind
-    newimg = 255*ones(newsz)
-    for m in range(M):
-        for n in range(N):
-            newimg[(m*(sz[0]+ind)):((m+1)*sz[0]+m*ind), (n*(sz[1]+ind)):((n+1)*sz[1]+n*ind)] = imgs[m][n][:]
-    return newimg
-
-def create_excerpt():
-    img = double(imread('images/lena.png','png'))
-    return img[128:384,128:384,:]
