@@ -24,24 +24,20 @@ function x = dwt3_impl_internal(x, fx, fy, fz, m, bd_mode, prefilterx, prefilter
     if (~exist('offsets','var')) offsets = zeros(3,2); end
     if (~exist('data_layout','var')) data_layout = 'resolution'; end
     
-    lastdim = 1;
-    if length(size(x)) == 4
-        lastdim = size(x, 4);
-    end 
     indsx = 1:size(x,1); indsy = 1:size(x,2); indsz = 1:size(x,3);
 
     % preconditioning   
-    x(indsx, indsy, indsz, :) = tensor3_impl(x(indsx, indsy, indsz, :), @(x,bd_mode) prefilterx(x, 1), @(x,bd_mode) prefiltery(x, 1), @(x,bd_mode) prefilterz(x, 1), lastdim, bd_mode);
+    x(indsx, indsy, indsz, :) = tensor3_impl(x(indsx, indsy, indsz, :), @(x,bd_mode) prefilterx(x, 1), @(x,bd_mode) prefiltery(x, 1), @(x,bd_mode) prefilterz(x, 1), bd_mode);
          
     for res = 0:(m - 1)
-        x(indsx, indsy, indsz, :) = tensor3_impl(x(indsx, indsy, indsz, :), fx, fy, fz, lastdim, bd_mode);  
-        indsx = indsx((offsets(1,1)+1):2:(end-offsets(1,2));   
+        x(indsx, indsy, indsz, :) = tensor3_impl(x(indsx, indsy, indsz, :), fx, fy, fz, bd_mode);  
+        indsx = indsx((offsets(1,1)+1):2:(end-offsets(1,2)));   
         indsy = indsy((offsets(2,1)+1):2:(end-offsets(2,2)));
         indsz = indsz((offsets(3,1)+1):2:(end-offsets(3,2)));
     end
     
     % postconditioning
-    x(indsx, indsy, indsz,:) = tensor3_impl(x(indsx, indsy, indsz, :), @(x,bd_mode) prefilterx(x, 0), @(x,bd_mode) prefiltery(x, 0), @(x,bd_mode) prefilterz(x, 0), lastdim, bd_mode);  
+    x(indsx, indsy, indsz,:) = tensor3_impl(x(indsx, indsy, indsz, :), @(x,bd_mode) prefilterx(x, 0), @(x,bd_mode) prefiltery(x, 0), @(x,bd_mode) prefilterz(x, 0), bd_mode);  
     
     x = reorganize_coeffs3_forward(x, m, offsets, data_layout);   
 end

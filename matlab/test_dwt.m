@@ -79,6 +79,22 @@ function test_dwt_different_sizes()
     sd2 = idwt_impl(sd2, 'cdf97', m);
     diff = max(max(abs(sd2-sd)));
     assert(diff ~= 0 && diff < 1E-13)
+    
+    disp('Testing 3D with one channel')
+    sd = rand(32,32,32);
+    sd2 = sd;
+    sd2 = dwt_impl(sd2, 'cdf97', m, 'symm', 'none', 3);
+    sd2 = idwt_impl(sd2, 'cdf97', m, 'symm', 'none', 3);
+    diff = max(max(max(abs(sd2-sd))));
+    assert(diff ~= 0 && diff < 1E-13)
+    
+    disp('Testing 3D with two channels')
+    sd = rand(32,32,32,3);
+    sd2 = sd;
+    sd2 = dwt_impl(sd2, 'cdf97', m);
+    sd2 = idwt_impl(sd2, 'cdf97', m);
+    diff = max(max(max(max(abs(sd2-sd)))));
+    assert(diff ~= 0 && diff < 1E-13)
 end
     
 function test_orthogonality()

@@ -376,22 +376,17 @@ def dwt3_impl_internal(x, fx, fy, fz, m = 1, bd_mode = 'symm', prefilterx = 0, p
     if prefilterz == 0:
         prefilterz = lambda x, forward: x
     if len(offsets) == 0:
-        offsets = array([[0,0],[0,0],[0,0]])
-    
-    lastdim = 1
-    if len(shape(x)) == 4:
-        lastdim = shape(x)[3]
-    
+        offsets = array([[0,0],[0,0],[0,0]]) 
 
     # preconditioning   
-    tensor3_impl(x, lambda x, bd_mode: prefilterx(x, True), lambda x, bd_mode: prefiltery(x, True), lambda x, bd_mode: prefilterz(x, True), lastdim, bd_mode)
+    tensor3_impl(x, lambda x, bd_mode: prefilterx(x, True), lambda x, bd_mode: prefiltery(x, True), lambda x, bd_mode: prefilterz(x, True), bd_mode)
     
     indsx = arange(shape(x)[0])
     indsy = arange(shape(x)[1])
     indsz = arange(shape(x)[2])
     for res in range(m):
         xcopy = x[ix_(indsx, indsy, indsz)].copy()
-        tensor3_impl(xcopy, fx, fy, fz, lastdim, bd_mode)
+        tensor3_impl(xcopy, fx, fy, fz, bd_mode)
         x[ix_(indsx, indsy, indsz)] = xcopy
         indsx = indsx[offsets[0, 0]:(len(indsx) - offsets[0,1]):2]
         indsy = indsy[offsets[1, 0]:(len(indsy) - offsets[1,1]):2]
@@ -399,11 +394,17 @@ def dwt3_impl_internal(x, fx, fy, fz, m = 1, bd_mode = 'symm', prefilterx = 0, p
     
     # postconditioning
     xcopy = x[ix_(indsx, indsy, indsz)].copy()
-    tensor3_impl(x, lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), lambda x, bd_mode: prefilterz(x, False), lastdim, bd_mode)
+    tensor3_impl(xcopy, lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), lambda x, bd_mode: prefilterz(x, False), bd_mode)
     x[ix_(indsx, indsy, indsz)] = xcopy
     
     reorganize_coeffs3_forward(x, m, offsets, data_layout)
         
+        
+    
+    
+    
+    
+    
 def idwt3_impl_internal(x, fx, fy, fz, m = 1, bd_mode = 'symm', prefilterx = 0, prefiltery = 0, prefilterz = 0, offsets = 0, data_layout = 'resolution'):
     """
     Compute a 3D IDWT using precomputed kernels. The kernels may be the default library kernels obtained by calling find_kernel, 
@@ -435,16 +436,12 @@ def idwt3_impl_internal(x, fx, fy, fz, m = 1, bd_mode = 'symm', prefilterx = 0, 
     
     resstart, resend = reorganize_coeffs3_reverse(x, m, offsets, data_layout)
     
-    lastdim = 1
-    if len(shape(x)) == 4:
-        lastdim = shape(x)[3]
-    
     # postconditioning
     indsx = arange(resstart[0,m], resend[0,m] + 1, 2**m)
     indsy = arange(resstart[1,m], resend[1,m] + 1, 2**m)
     indsz = arange(resstart[2,m], resend[2,m] + 1, 2**m)
     xcopy = x[ix_(indsx, indsy, indsz)].copy()
-    tensor3_impl(xcopy, lambda x, bd_mode: prefilterx(x, True), lambda x, bd_mode: prefiltery(x, True), lambda x, bd_mode: prefilterz(x, True), lastdim, bd_mode)
+    tensor3_impl(xcopy, lambda x, bd_mode: prefilterx(x, True), lambda x, bd_mode: prefiltery(x, True), lambda x, bd_mode: prefilterz(x, True), bd_mode)
     x[ix_(indsx, indsy, indsz)] = xcopy
     
     for res in range(m - 1, -1, -1):
@@ -452,7 +449,7 @@ def idwt3_impl_internal(x, fx, fy, fz, m = 1, bd_mode = 'symm', prefilterx = 0, 
         indsy = arange(resstart[1, res], resend[1, res] + 1, 2**res)
         indsz = arange(resstart[2, res], resend[2, res] + 1, 2**res)
         xcopy = x[ix_(indsx, indsy, indsz)].copy()
-        tensor3_impl(xcopy, fx, fy, fz, lastdim, bd_mode)
+        tensor3_impl(xcopy, fx, fy, fz, bd_mode)
         x[ix_(indsx, indsy, indsz)] = xcopy
     
     # preconditioning
@@ -460,10 +457,24 @@ def idwt3_impl_internal(x, fx, fy, fz, m = 1, bd_mode = 'symm', prefilterx = 0, 
     indsy = arange(resstart[1, 0], resend[1, 0] + 1)
     indsz = arange(resstart[2, 0], resend[2, 0] + 1)
     xcopy = x[ix_(indsx, indsy, indsz)].copy()
-    tensor3_impl(xcopy, lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), lambda x, bd_mode: prefilterz(x, False), lastdim, bd_mode)                      
+    tensor3_impl(xcopy, lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), lambda x, bd_mode: prefilterz(x, False), bd_mode)                      
     x[ix_(indsx, indsy, indsz)] = xcopy
-                
+    
+        
+    
+    
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 class WaveletProps(object):
     def __init__(self, wave_name, m, length_signal, offset_L, offset_R):
         self.wave_name = wave_name
@@ -1062,7 +1073,7 @@ def reorganize_coeffs2_forward(sig_in, m, offsets, data_layout):
             psiinds_x = concatenate( ( indsx[:offsets[0,0]], indsx[(offsets[0,0] + 1):(szx - offsets[0,1]):2], indsx[(szx - offsets[0,1]):] ) ) # psi-indices
             psiinds_y = concatenate( ( indsy[:offsets[1,0]], indsy[(offsets[1,0] + 1):(szy - offsets[1,1]):2], indsy[(szy - offsets[1,1]):] ) )          
             phiinds_x = indsx[offsets[0,0]:(szx - offsets[0,1]):2]
-            phiinds_y = indsy[offsets[1,0]:(szx - offsets[1,1]):2]
+            phiinds_y = indsy[offsets[1,0]:(szy - offsets[1,1]):2]
             
             sig_out[ (endx-len(psiinds_x)):endx, :(endy-len(psiinds_y))] =     sig_in[ ix_(psiinds_x, phiinds_y) ]
             sig_out[ :(endx-len(psiinds_x)), (endy-len(psiinds_y)):endy] =     sig_in[ ix_(phiinds_x, psiinds_y) ]
@@ -1072,6 +1083,39 @@ def reorganize_coeffs2_forward(sig_in, m, offsets, data_layout):
             indsx = indsx[ offsets[0,0]:(szx - offsets[0,1]):2 ] 
             indsy = indsy[ offsets[1,0]:(szy - offsets[1,1]):2 ]
         sig_out[:endx, :endy] = sig_in[ ix_(indsx, indsy) ]
+    sig_in[:] = sig_out[:]
+    
+def reorganize_coeffs3_forward(sig_in, m, offsets, data_layout):
+    if data_layout.lower() == 'resolution':
+        sig_out = zeros_like(sig_in)
+        indsx = arange(shape(sig_in)[0])
+        indsy = arange(shape(sig_in)[1])
+        indsz = arange(shape(sig_in)[2])
+        endx = shape(sig_in)[0]; endy = shape(sig_in)[1]; endz = shape(sig_in)[2]
+        for res in range(1, m + 1):
+            szx = len(indsx); szy = len(indsy); szz = len(indsz)
+            psiinds_x = concatenate( ( indsx[:offsets[0,0]], indsx[(offsets[0,0] + 1):(szx - offsets[0,1]):2], indsx[(szx - offsets[0,1]):] ) ) # psi-indices
+            psiinds_y = concatenate( ( indsy[:offsets[1,0]], indsy[(offsets[1,0] + 1):(szy - offsets[1,1]):2], indsy[(szy - offsets[1,1]):] ) )
+            psiinds_z = concatenate( ( indsz[:offsets[2,0]], indsz[(offsets[2,0] + 1):(szz - offsets[2,1]):2], indsz[(szz - offsets[2,1]):] ) )
+            phiinds_x = indsx[offsets[0,0]:(szx - offsets[0,1]):2]
+            phiinds_y = indsy[offsets[1,0]:(szy - offsets[1,1]):2]
+            phiinds_z = indsz[offsets[2,0]:(szz - offsets[2,1]):2]
+            
+            sig_out[ :(endx-len(psiinds_x)), :(endy-len(psiinds_y)), (endz-len(psiinds_z)):endz] =     sig_in[ ix_(phiinds_x, phiinds_y, psiinds_z) ]
+            sig_out[ :(endx-len(psiinds_x)), (endy-len(psiinds_y)):endy, :(endz-len(psiinds_z))] =     sig_in[ ix_(phiinds_x, psiinds_y, phiinds_z) ]
+            sig_out[ (endx-len(psiinds_x)):endx, :(endy-len(psiinds_y)), :(endz-len(psiinds_z))] =     sig_in[ ix_(psiinds_x, phiinds_y, phiinds_z) ]
+            
+            sig_out[ (endx-len(psiinds_x)):endx, (endy-len(psiinds_y)):endy, :(endz-len(psiinds_z))] =     sig_in[ ix_(psiinds_x, psiinds_y, phiinds_z) ]
+            sig_out[ (endx-len(psiinds_x)):endx, :(endy-len(psiinds_y)), (endz-len(psiinds_z)):endz] =     sig_in[ ix_(psiinds_x, phiinds_y, psiinds_z) ]
+            sig_out[ :(endx-len(psiinds_x)), (endy-len(psiinds_y)):endy, (endz-len(psiinds_z)):endz] =     sig_in[ ix_(phiinds_x, psiinds_y, psiinds_z) ]
+            
+            sig_out[ (endx-len(psiinds_x)):endx, (endy-len(psiinds_y)):endy, (endz-len(psiinds_z)):endz] = sig_in[ ix_(psiinds_x, psiinds_y, psiinds_z) ]
+            
+            endx -= len(psiinds_x); endy -= len(psiinds_y); endz -= len(psiinds_z)
+            indsx = indsx[ offsets[0,0]:(szx - offsets[0,1]):2 ] 
+            indsy = indsy[ offsets[1,0]:(szy - offsets[1,1]):2 ]
+            indsz = indsz[ offsets[2,0]:(szz - offsets[2,1]):2 ]
+        sig_out[:endx, :endy, :endz] = sig_in[ ix_(indsx, indsy, indsz) ]
     sig_in[:] = sig_out[:]
 
 def reorganize_coeffs_reverse(x, m, offsets, data_layout):
@@ -1125,7 +1169,7 @@ def reorganize_coeffs2_reverse(sig_in, m, offsets, data_layout):
             psiinds_x = concatenate( ( indsx[:offsets[0,0]], indsx[(offsets[0,0] + 1):(szx - offsets[0,1]):2], indsx[(szx - offsets[0,1]):] ) ) # psi-indices
             psiinds_y = concatenate( ( indsy[:offsets[1,0]], indsy[(offsets[1,0] + 1):(szy - offsets[1,1]):2], indsy[(szy - offsets[1,1]):] ) )
             phiinds_x = indsx[offsets[0,0]:(szx - offsets[0,1]):2]
-            phiinds_y = indsy[offsets[1,0]:(szx - offsets[1,1]):2]
+            phiinds_y = indsy[offsets[1,0]:(szy - offsets[1,1]):2]
             
             resstart[0, res] = indsx[offsets[0,0]]; resend[0, res]   = indsx[szx - offsets[0,1] - 1]
             resstart[1, res] = indsy[offsets[1,0]]; resend[1, res]   = indsy[szy - offsets[1,1] - 1]
@@ -1141,6 +1185,58 @@ def reorganize_coeffs2_reverse(sig_in, m, offsets, data_layout):
         sig_in[:] = sig_out[:]
     return resstart, resend
             
+def reorganize_coeffs3_reverse(sig_in, m, offsets, data_layout):
+    indsx = arange(shape(sig_in)[0])
+    indsy = arange(shape(sig_in)[1])
+    indsz = arange(shape(sig_in)[2])
+    sig_out = zeros_like(sig_in)
+    resstart = array(zeros((3,m + 1), int))
+    resend   = array(zeros((3,m + 1), int))
+    resstart[0,0] = indsx[0]; resend[0,0] = indsx[-1]
+    resstart[1,0] = indsy[0]; resend[1,0] = indsy[-1]
+    resstart[2,0] = indsz[0]; resend[2,0] = indsz[-1]
+    if data_layout.lower() == 'time':
+        for res in range(1, m + 1):
+            szx = len(indsx); szy = len(indsy); szz = len(indsz)
+            indsx = indsx[ offsets[0,0]:(szx - offsets[0,1]):2 ]
+            indsy = indsy[ offsets[1,0]:(szy - offsets[1,1]):2 ]
+            indsz = indsz[ offsets[2,0]:(szz - offsets[2,1]):2 ]
+            resstart[0,res] = indsx[0]; resend[0,res] = indsx[-1]
+            resstart[1,res] = indsy[0]; resend[1,res] = indsy[-1]
+            resstart[2,res] = indsz[0]; resend[2,res] = indsz[-1]
+    if data_layout.lower() == 'resolution':
+        endx = shape(sig_in)[0]; endy = shape(sig_in)[1]; endz = shape(sig_in)[2]
+        for res in range(1, m + 1):
+            szx = len(indsx); szy = len(indsy); szz = len(indsz)
+            psiinds_x = concatenate( ( indsx[:offsets[0,0]], indsx[(offsets[0,0] + 1):(szx - offsets[0,1]):2], indsx[(szx - offsets[0,1]):] ) ) # psi-indices
+            psiinds_y = concatenate( ( indsy[:offsets[1,0]], indsy[(offsets[1,0] + 1):(szy - offsets[1,1]):2], indsy[(szy - offsets[1,1]):] ) )
+            psiinds_z = concatenate( ( indsz[:offsets[2,0]], indsz[(offsets[2,0] + 1):(szz - offsets[2,1]):2], indsz[(szz - offsets[2,1]):] ) )
+            phiinds_x = indsx[offsets[0,0]:(szx - offsets[0,1]):2]
+            phiinds_y = indsy[offsets[1,0]:(szy - offsets[1,1]):2]
+            phiinds_z = indsz[offsets[2,0]:(szz - offsets[2,1]):2]
+            
+            resstart[0, res] = indsx[offsets[0,0]]; resend[0, res]   = indsx[szx - offsets[0,1] - 1]
+            resstart[1, res] = indsy[offsets[1,0]]; resend[1, res]   = indsy[szy - offsets[1,1] - 1]
+            resstart[2, res] = indsz[offsets[2,0]]; resend[2, res]   = indsz[szz - offsets[2,1] - 1]
+            
+            sig_out[ ix_(phiinds_x, phiinds_y, psiinds_z) ] = sig_in[ :(endx-len(psiinds_x)), :(endy-len(psiinds_y)), (endz-len(psiinds_z)):endz]
+            sig_out[ ix_(phiinds_x, psiinds_y, phiinds_z) ] = sig_in[ :(endx-len(psiinds_x)), (endy-len(psiinds_y)):endy, :(endz-len(psiinds_z))]
+            sig_out[ ix_(psiinds_x, phiinds_y, phiinds_z) ] = sig_in[ (endx-len(psiinds_x)):endx, :(endy-len(psiinds_y)), :(endz-len(psiinds_z))]
+            
+            sig_out[ ix_(psiinds_x, psiinds_y, phiinds_z) ] = sig_in[ (endx-len(psiinds_x)):endx, (endy-len(psiinds_y)):endy, :(endz-len(psiinds_z))]
+            sig_out[ ix_(psiinds_x, phiinds_y, psiinds_z) ] = sig_in[ (endx-len(psiinds_x)):endx, :(endy-len(psiinds_y)), (endz-len(psiinds_z)):endz]
+            sig_out[ ix_(phiinds_x, psiinds_y, psiinds_z) ] = sig_in[ :(endx-len(psiinds_x)), (endy-len(psiinds_y)):endy, (endz-len(psiinds_z)):endz]
+            
+            sig_out[ ix_(psiinds_x, psiinds_y, psiinds_z) ] = sig_in[ (endx-len(psiinds_x)):endx, (endy-len(psiinds_y)):endy, (endz-len(psiinds_z)):endz]
+            
+            endx = endx - len(psiinds_x); endy = endy - len(psiinds_y); endz = endz - len(psiinds_z)
+            indsx = indsx[offsets[0,0]:(szx - offsets[0,1]):2]
+            indsy = indsy[offsets[1,0]:(szy - offsets[1,1]):2]
+            indsz = indsz[offsets[2,0]:(szz - offsets[2,1]):2]
+        sig_out[ix_(indsx, indsy, indsz)] = sig_in[:endx, :endy, :endz]
+        sig_in[:] = sig_out[:]
+    return resstart, resend
+            
             
             
 def tensor2_impl(x, fx, fy, bd_mode):
@@ -1150,6 +1246,16 @@ def tensor2_impl(x, fx, fy, bd_mode):
     fy(y, bd_mode)
     x[:] = transpose(y, concatenate( ([1, 0], sz[2:]) ))
 # End tensor2_impl
+
+def tensor3_impl(x, fx, fy, fz, bd_mode):
+    sz = arange(len(shape(x)))
+    fx(x, bd_mode)
+    y =    transpose(x, concatenate( ([1, 2, 0], sz[3:]) ))
+    fy(y, bd_mode)
+    z =    transpose(y, concatenate( ([1, 2, 0], sz[3:]) ))
+    fz(z, bd_mode)
+    x[:] = transpose(z, concatenate( ([1, 2, 0], sz[3:]) ))
+# End tensor3_impl
 
 # testcode
   
@@ -1243,8 +1349,7 @@ def _test_dwt_different_sizes():
     
     print('Testing the DWT for RGB image')
     img = random.random((32, 32, 3))
-    img2 = zeros_like(img)
-    img2[:] = img[:]
+    img2 = img.copy()
     dwt_impl(img2, 'cdf97', m)
     idwt_impl(img2, 'cdf97', m)
     diff = abs(img2-img).max()
@@ -1252,8 +1357,7 @@ def _test_dwt_different_sizes():
     
     print('Testing the DWT for sound with one channel')
     sd = random.random(32)
-    sd2 = zeros_like(sd)
-    sd2[:] = sd[:]
+    sd2 = sd.copy()
     dwt_impl(sd2, 'cdf97', m)
     idwt_impl(sd2, 'cdf97', m)
     diff = abs(sd2-sd).max()
@@ -1261,12 +1365,29 @@ def _test_dwt_different_sizes():
     
     print('Testing the DWT for sound with two channels')
     sd = random.random((32,2))
-    sd2 = zeros_like(sd)
-    sd2[:] = sd[:]
+    sd2 = sd.copy()
     dwt_impl(sd2, 'cdf97', m)
     idwt_impl(sd2, 'cdf97', m)
     diff = abs(sd2-sd).max()
     assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
+    
+    print('Testing 3D with one channel')
+    sd = random.random((32,32,32))
+    sd2 = sd.copy()
+    dwt_impl(sd2, 'cdf97', m, 'symm', 'none', 3);
+    idwt_impl(sd2, 'cdf97', m, 'symm', 'none', 3);
+    diff = abs(sd2-sd).max()
+    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
+    
+    print('Testing 3D with two channels')
+    sd = random.random((32,32,32,3))
+    sd2 = sd.copy()
+    dwt_impl(sd2, 'cdf97', m);
+    idwt_impl(sd2, 'cdf97', m);
+    diff = abs(sd2-sd).max()
+    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
+    
+    
     
 def _test_orthogonality():
     print('Testing that the wavelet and the dual wavelet are equal for orthonormal wavelets')
