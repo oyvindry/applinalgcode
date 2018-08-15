@@ -6,7 +6,7 @@ max_amplitude = 2**15-1 # iinfo('int16').max if numpy >= 1.0.3
 def filter_impl(t, x, bd_mode):
     szx = shape(x)
     N = szx[0]
-    n = prod(szx[1:])
+    n = int(prod(szx[1:]))
     y =  reshape(x, (N, n))
     tlen = len(t); N0 = int((tlen - 1)/2)
     w = 0

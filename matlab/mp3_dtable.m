@@ -1,4 +1,4 @@
-function D=mp3dtable()
+function D=mp3_dtable()
 D=zeros(511,1);
                                                                                                                
                      D(  1)=-0.000015259; D(  2)=-0.000015259; D(  3)=-0.000015259;

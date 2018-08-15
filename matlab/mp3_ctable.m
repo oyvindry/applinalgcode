@@ -1,4 +1,4 @@
-function C= mp3ctable()
+function C= mp3_ctable()
 C=zeros(511,1);
 
                      C(  1)=-0.000000477; C(  2)=-0.000000477; C(  3)=-0.000000477 ;

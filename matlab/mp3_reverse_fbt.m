@@ -1,7 +1,7 @@
-function x = mp3reversefbt(z)
+function x = mp3_reverse_fbt(z)
     Ns = length(z)/32;
     x = zeros(32*Ns, 1);
-    D = mp3dtable();          % The synthesis window.
+    D = mp3_dtable();          % The synthesis window.
     V = zeros(1024,1);
     % The 64x32 matrix N
     N = cos((16+((0:63)'))*(2*(0:31)+1)*pi/64);

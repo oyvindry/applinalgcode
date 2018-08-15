@@ -1,7 +1,7 @@
-function z = mp3forwardfbt(x)
+function z = mp3_forward_fbt(x)
     N = length(x);
     z = zeros(N,1);
-    C = mp3ctable(); % The analysis window;
+    C = mp3_ctable(); % The analysis window;
     x = flipud(x);
     x = [x; zeros(512-32,1)];
     % The 32x64 matrix M

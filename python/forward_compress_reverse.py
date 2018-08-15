@@ -44,7 +44,7 @@ def forw_comp_rev_2d(X, f, invf, threshold):
     X[:,:,:] *= thresholdmatr
     tensor2_impl(X[:,:,:], invf, invf, 'symm');
     X[:] = abs(X)
-    mapto01(X)
+    map_to_01(X)
     X *= 255
     print('%f percent of samples zeroed out' % (100*zeroedout/float(tot)))
     
@@ -89,5 +89,5 @@ def forw_comp_rev_dwt2(img, m, wave_name, lowres = 1):
     else:
         img[0:(int(M/2**m)), 0:(int(N/2**m))] = 0
     idwt_impl(img, wave_name, m) 
-    mapto01(img)
+    map_to_01(img)
     img *= 255

@@ -14,6 +14,6 @@ function img=forw_comp_rev_dwt2(img, m, wave_name, lr)
         img(1:(M/(2^m)), 1:(N/(2^m)), :) = 0;
     end
     img = idwt_impl(img, wave_name, m);
-    img = mapto01(img);
+    img = map_to_01(img);
     img = img*255;
 end

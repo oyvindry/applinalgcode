@@ -918,7 +918,7 @@ def idwt_kernel_filters(x, bd_mode, wav_props):
     x1 = x.copy(); x1[::2] = 0
     filter_impl(wav_props.g0, x0, bd_mode)
     filter_impl(wav_props.g1, x1, bd_mode)
-    x = x0 + x1
+    x[:] = x0 + x1
     # TODO: Add boundary handling
 # End idwt_kernel_filters
     
