@@ -22,6 +22,7 @@ def filter_impl(t, x, bd_mode):
         y[:, k] = z[(2*N0):(len(z)-2*N0)]
     x[:] = reshape(y, szx)
 
+
 def audiowrite(filename, x, fs):
     """
     Writes the array data to the specified filename.

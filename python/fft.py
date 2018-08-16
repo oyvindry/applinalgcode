@@ -4,11 +4,11 @@ from sound import *
 from images import *
 from scipy.fftpack import dct, idct
 
-#bitreverse
+#bit-reverse
 
-def bitreverse(x):
+def bit_reversal(x):
     """
-    bitreverse(x) alters x in bit-reversed order.
+    bit_reversal(x) alters x in bit-reversed order.
     """
     N = len(x)
     j = 0
@@ -24,7 +24,7 @@ def bitreverse(x):
         j += m
     
     
-def bitreversearr(x):
+def bit_reversal_arr(x):
     N, n = shape(x)
     temp=zeros(n).astype(complex)
     j = 0
@@ -125,10 +125,10 @@ def fft_impl(x, f, forward = True):
     forward: Whether the FFT or the IFFT is applied
     """
     if ndim(x) == 1:
-        bitreverse(x)
+        bit_reversal(x)
         f(x, forward)
     else:
-        bitreversearr(x)
+        bit_reversal_arr(x)
         for s2 in range(shape(x)[1]):
             f(x[:, s2], forward)
     if not forward:

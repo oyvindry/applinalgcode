@@ -706,27 +706,23 @@ def computeQN(N):
         vals = vals + QN[k]*start
     return vals
         
-def compute_spline_filters(N1, N2):
-    N=int((N1+N2)/2)
-    QN = computeQN(N)
+def compute_spline_filters(N, Ntilde):
+    Navg=int((N+Ntilde)/2)
+    vals = computeQN(Navg)
     
     h0=array([1])
-    for k in range(int(N1/2)):
+    for k in range(int(N/2)):
         h0 = convolve(h0,[1/4.,1/2.,1/4.])
-    h0=h0*QN[0]
+    h0 = convolve(h0, vals)
     
     g0=array([1])
-    for k in range(int(N2/2)):
+    for k in range(int(Ntilde/2)):
         g0 = convolve(g0,[1/4.,1/2.,1/4.])
     
-    x = sqrt(2)/abs(sum(h0))
-    g0, h0 = g0/x, h0*x
-    N= g0.shape[0]
-    h1=g0*(-1)**(array(range(-int((N-1)/2),int((N+1)/2))))
-    N= h0.shape[0]
-    g1=h0*(-1)**(array(range(-int((N-1)/2),int((N+1)/2))))
+    h1=g0*(-1)**(array(range(-int((len(g0)-1)/2),int((len(g0)+1)/2))))
+    g1=h0*(-1)**(array(range(-int((len(h0)-1)/2),int((len(h0)+1)/2))))
     return h0, h1, g0, g1
-            
+
         
 def h0h1computeortho(N):
     vals = computeQN(N)
@@ -1296,24 +1292,39 @@ def freqresp_alg(wave_name, lowpass, dual):
 
 def _test_kernel(wave_name):
     print('Testing %s, 1D' % wave_name)
-    res = random.random(16)
-    x = zeros(16)
-    x[:] = res[:]
+    # res = random.random(16)
+    res = array([1., 2., 3., 4., 5., 6., 7., 8., 9., 10.,11. ,12. ,13., 14., 15., 16.])
+    x = res.copy()
     dwt_impl(x, wave_name, 2)
     idwt_impl(x, wave_name, 2)
     diff = abs(x-res).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff
     
-    print('Testing %s, 2D' % wave_name)
+    print('Testing %s, 1D, two channels' % wave_name)
     res = random.random((16,2))
-    x = zeros((16,2))
-    x[:] = res[:]
+    x = res.copy()
     dwt_impl(x, wave_name, 2)
     idwt_impl(x, wave_name, 2)
     diff = abs(x-res).max()
     assert diff < 1E-13, 'bug, diff=%s' % diff  
     
+    print('Testing %s, 2D' % wave_name)
+    res = random.random((16,16))
+    x = res.copy()
+    dwt_impl(x, wave_name, 2, 'symm', 'none', 2)
+    idwt_impl(x, wave_name, 2, 'symm', 'none', 2)
+    diff = abs(x-res).max()
+    assert diff < 1E-13, 'bug, diff=%s' % diff  
     
+    print('Testing %s, 2D, 3 channels' % wave_name)
+    res = random.random((16,16,3))
+    x = res.copy()
+    dwt_impl(x, wave_name, 2)
+    idwt_impl(x, wave_name, 2)
+    diff = abs(x-res).max()
+    assert diff < 1E-13, 'bug, diff=%s' % diff
+    
+ 
         
 def _test_kernel_ortho():
     print('Testing orthonormal wavelets')
@@ -1414,12 +1425,29 @@ def _test_orthogonality():
     diff = abs(x-x0).max()
     assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
 
+def _test_simple_dwt2():
+    print('Testing simple DWT2')
+    img2 = random.random((32, 32, 3))
+    img = img2.copy()
+# Begin simple_dwt2
+    f = lambda x, bd_mode: dwt_impl(x, 'cdf97', 4, bd_mode, 'none', 1)
+    tensor2_impl(img, f, f, 'symm')
+# End simple_dwt2
+# Begin simple_idwt2
+    invf = lambda x, bd_mode: idwt_impl(x, 'cdf97', 4, bd_mode, 'none', 1)
+    tensor2_impl(img, invf, invf, 'symm')
+# End simple_idwt2
+    diff = abs(img2-img).max()
+    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
+    
 if __name__=='__main__':
     _test_dwt_different_sizes()
     _test_kernel_ortho()
     _test_orthogonality()
-    _test_kernel( 'cdf97')
-    _test_kernel( 'cdf53')
-    _test_kernel( 'pwl0')
-    _test_kernel( 'pwl2')
-    _test_kernel( 'haar')
+    _test_kernel('cdf97')
+    _test_kernel('cdf53')
+    _test_kernel('pwl0')
+    _test_kernel('pwl2')
+    _test_kernel('haar')
+    _test_kernel('spline4.4')
+    _test_simple_dwt2()

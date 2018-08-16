@@ -1,27 +1,46 @@
 test_dwt_different_sizes()
 test_kernel_ortho()
 test_orthogonality()
-test_kernel( 'cdf97')
-test_kernel( 'cdf53')
-test_kernel( 'pwl0')
-test_kernel( 'pwl2')
-test_kernel( 'haar')
+test_kernel('cdf97')
+test_kernel('cdf53')
+test_kernel('pwl0')
+test_kernel('pwl2')
+test_kernel('haar')
+test_kernel('spline4.4')
+test_simple_dwt2()
     
 function test_kernel(wave_name)
     disp(sprintf('Testing %s, 1D', wave_name))
-    res = rand(16,1);
+    % res = rand(16,1);
+    res = [1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16];
     x = res;
     x = dwt_impl(x, wave_name, 2);
     x = idwt_impl(x, wave_name, 2);
     diff = max(abs(x-res));
     assert(diff < 1E-13)
     
-    disp(sprintf('Testing %s, 2D', wave_name))
+    disp(sprintf('Testing %s, 1D, two channels', wave_name))
     res = rand(16,2);
     x = res;
     x = dwt_impl(x, wave_name, 2);
     x = idwt_impl(x, wave_name, 2);
     diff = max(max(abs(x-res)));
+    assert(diff < 1E-13)
+    
+    disp(sprintf('Testing %s, 2D', wave_name))
+    res = rand(16,16);
+    x = res;
+    x = dwt_impl(x, wave_name, 2, 'symm', 'none', 2);
+    x = idwt_impl(x, wave_name, 2, 'symm', 'none', 2);
+    diff = max(max(max(abs(x-res))));
+    assert(diff < 1E-13)
+    
+    disp(sprintf('Testing %s, 2D, 3 channels', wave_name))
+    res = rand(16,16,3);
+    x = res;
+    x = dwt_impl(x, wave_name, 2);
+    x = idwt_impl(x, wave_name, 2);
+    diff = max(max(max(abs(x-res))));
     assert(diff < 1E-13)
 end
     
@@ -120,5 +139,21 @@ function test_orthogonality()
     x = dwt_impl(x, 'db4', 2, 'per', 'none', 0, 0, 1);
     x = dwt_impl(x, 'db4', 2, 'per', 'none', 0, 0, 0);
     diff = max(abs(x-x0));
+    assert(diff ~= 0 && diff < 1E-13)
+end
+
+function test_simple_dwt2()
+    disp('Testing simple DWT2')
+    img = rand(32, 32, 3);
+    img2 = img;
+% Begin simple_dwt2
+    f = @(x, bd_mode) dwt_impl(x, 'cdf97', 4, bd_mode, 'none', 1);
+    img = tensor2_impl(img, f, f, 'symm');
+% End simple_dwt2
+% Begin simple_idwt2
+    invf = @(x, bd_mode) idwt_impl(x, 'cdf97', 4, bd_mode, 'none', 1);
+    img = tensor2_impl(img, invf, invf, 'symm');
+% End simple_idwt2
+    diff = max(max(max(abs(img2-img))));
     assert(diff ~= 0 && diff < 1E-13)
 end

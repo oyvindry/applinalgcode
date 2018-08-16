@@ -3,7 +3,7 @@ function y = fft_impl(x, f, forward)
     if nargin >= 3
         fwd = forward;
     end
-    x = bitreverse(x);
+    x = bit_reversal(x);
     [N, n] = size(x);
     y = zeros(N, n);
     for s2 = 1:size(x, 2)
@@ -14,8 +14,8 @@ function y = fft_impl(x, f, forward)
     end
 end
     
-function x=bitreverse(x)
-    % bitreverse(x) returns x in bit-reversed order
+function x=bit_reversal(x)
+    % bit_reversal(x) returns x in bit-reversed order
     N = size(x, 1);
     j=0;
     for i = 0:2:(N/2 - 2)
