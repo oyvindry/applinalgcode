@@ -9,8 +9,12 @@ test_kernel('haar')
 test_kernel('spline4.4')
 test_simple_dwt2()
 test_bd_db_van(4)
-test_bd('cdf53', 4)
-test_bd('pwl2', 4)
+
+m = log2(64/(2*2));
+test_bd('cdf53', m)
+test_bd('pwl2', m)
+m = log2(64/(2*4));
+test_bd('cdf97', m)
 test_spline44()
     
 function test_kernel(wave_name)
@@ -166,22 +170,23 @@ function test_bd(wave_name, m)
     disp(sprintf('Testing bd %s', wave_name))
     res = (1:65)';
     x=dwt_impl(res, wave_name,  m, 'bd', 'bd_pre');
-    maxval = max(abs(x(6:64)));
-    assert( maxval < 1E-13)
+    maxval = max(abs(x((64/2^m+2):65)));
+    assert( maxval < 1E-11);
     x=idwt_impl(x,  wave_name, m, 'bd', 'bd_pre');
     diff = max(abs(res-x));
-    assert(diff < 1E-13)
+    assert(diff < 1E-12)
 end
         
 function test_bd_db_van(N)
     for k=1:N
         disp(sprintf('Testing bd db%i',k))
+        m = floor(log2(64/(2*k+1))); % Max number of levels
         for s=0:(k-1)
             res = ((1:64).^s)';
-            x = dwt_impl (res, sprintf('db%i',k),  2, 'bd', 'bd_pre');
-            maxval = max(abs(x(17:64)));
+            x = dwt_impl (res, sprintf('db%i',k),  m, 'bd', 'bd_pre');
+            maxval = max(abs(x((64/2^m+1):64)));
             assert( maxval < 1E-8)
-            x = idwt_impl(x,   sprintf('db%i',k), 2,  'bd', 'bd_pre');
+            x = idwt_impl(x,   sprintf('db%i',k), m,  'bd', 'bd_pre');
             diff = max(abs(res-x));
             assert(diff ~= 0 && diff < 1E-8)
         end
@@ -190,14 +195,15 @@ end
 
 function test_spline44()
     disp('Testing spline4.4')
+    m = 2;
     for s=0:3
-        res = (1:63)';
-        x=dwt_impl(res, 'spline4.4',  1, 'bd', 'bd_pre');
-        maxval = max(abs(x(32:63)));
-        assert( maxval < 1E-8)
-        x=idwt_impl(x, 'spline4.4',  1, 'bd', 'bd_pre');
+        res = ((1:65).^s)';
+        x=dwt_impl(res, 'spline4.4',  m, 'bd', 'bd_pre');
+        maxval = max(abs(x((64/2^m+2):65)));
+        assert( maxval < 1E-7)
+        x=idwt_impl(x, 'spline4.4',  m, 'bd', 'bd_pre');
         diff = max(abs(res-x));
-        assert(diff ~= 0 && diff < 1E-8)
+        assert(diff ~= 0 && diff < 1E-7)
     end
 end
 
