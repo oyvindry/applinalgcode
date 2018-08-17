@@ -1,12 +1,11 @@
-test_dwt_different_sizes()
-test_kernel_ortho()
-test_orthogonality()
-test_kernel('cdf97')
-test_kernel('cdf53')
-test_kernel('pwl0')
-test_kernel('pwl2')
-test_kernel('haar')
-test_kernel('spline4.4')
+test_orthogonality('db2')
+test_orthogonality('db4')
+test_dwt_different_sizes('cdf97')
+test_dwt_different_sizes('cdf53')
+test_dwt_different_sizes('pwl0')
+test_dwt_different_sizes('pwl2')
+test_dwt_different_sizes('haar')
+test_dwt_different_sizes('spline4.4')
 test_simple_dwt2()
 test_bd_db_van(4)
 
@@ -17,135 +16,81 @@ m = log2(64/(2*4));
 test_bd('cdf97', m)
 test_spline44()
     
-function test_kernel(wave_name)
-    disp(sprintf('Testing %s, 1D', wave_name))
-    % res = rand(16,1);
-    res = [1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16];
-    x = res;
-    x = dwt_impl(x, wave_name, 2);
-    x = idwt_impl(x, wave_name, 2);
-    diff = max(abs(x-res));
-    assert(diff < 1E-13)
-    
-    disp(sprintf('Testing %s, 1D, two channels', wave_name))
-    res = rand(16,2);
-    x = res;
-    x = dwt_impl(x, wave_name, 2);
-    x = idwt_impl(x, wave_name, 2);
-    diff = max(max(abs(x-res)));
-    assert(diff < 1E-13)
-    
-    disp(sprintf('Testing %s, 2D', wave_name))
-    res = rand(16,16);
-    x = res;
-    x = dwt_impl(x, wave_name, 2, 'symm', 'none', 2);
-    x = idwt_impl(x, wave_name, 2, 'symm', 'none', 2);
-    diff = max(max(max(abs(x-res))));
-    assert(diff < 1E-13)
-    
-    disp(sprintf('Testing %s, 2D, 3 channels', wave_name))
-    res = rand(16,16,3);
-    x = res;
-    x = dwt_impl(x, wave_name, 2);
-    x = idwt_impl(x, wave_name, 2);
-    diff = max(max(max(abs(x-res))));
-    assert(diff < 1E-13)
-end
-    
-function test_kernel_ortho()
-    disp('Testing orthonormal wavelets')
-    res = rand(16,1); % only this assumes that N is even
-    
-    disp('Testing that the reverse inverts the forward transform')
-    x = res;
-    x = dwt_impl(x, 'db4', 2);
-    x = idwt_impl(x, 'db4', 2);
-    diff = max(abs(x-res));
-    assert(diff ~= 0 && diff < 1E-13)
-    
-    disp('Testing that the transform is orthogonal, i.e. that the transform and its dual are equal')
-    x = res;
-    x = dwt_impl(x, 'db4', 2, 'per');
-    res = dwt_impl(res, 'db4', 2, 'per', 'none', 0, 1);
-    diff = max(abs(x-res));
-    assert(diff ~= 0 && diff < 1E-13)
-end
-    
-function test_dwt_different_sizes()
+function test_dwt_different_sizes(wave_name)
     disp('Testing the DWT on different input sizes')
     m = 4;
 
-    disp('Testing the DWT for greyscale image')
-    img = rand(32);
+    disp(sprintf('Testing 2D with one channel: %s', wave_name))
+    img = rand(64);
     img2 = img;
-    img2 = dwt_impl(img2, 'cdf97', m, 'symm', 'none', 2);
-    img2 = idwt_impl(img2, 'cdf97', m, 'symm', 'none', 2);
+    img2 = dwt_impl(img2, wave_name, m, 'symm', 'none', 2);
+    img2 = idwt_impl(img2, wave_name, m, 'symm', 'none', 2);
     diff = max(max(abs(img2-img)));
     assert(diff ~= 0 && diff < 1E-13)
     
-    disp('Testing the DWT for RGB image')
-    img = rand(32, 32, 3);
+    disp(sprintf('Testing 2D with three channels: %s', wave_name))
+    img = rand(64, 64, 3);
     img2 = img;
-    img2 = dwt_impl(img2, 'cdf97', m);
-    img2 = idwt_impl(img2, 'cdf97', m);
+    img2 = dwt_impl(img2, wave_name, m);
+    img2 = idwt_impl(img2, wave_name, m);
     diff = max(max(max(abs(img2-img))));
     assert(diff ~= 0 && diff < 1E-13)
     
-    disp('Testing the DWT for sound with one channel')
-    sd = rand(32,1);
+    disp(sprintf('Testing 1D with one channel: %s', wave_name))
+    sd = rand(64,1);
     sd2 = sd;
-    sd2 = dwt_impl(sd2, 'cdf97', m);
-    sd2 = idwt_impl(sd2, 'cdf97', m);
+    sd2 = dwt_impl(sd2, wave_name, m);
+    sd2 = idwt_impl(sd2, wave_name, m);
     diff = max(abs(sd2-sd));
     assert(diff ~= 0 && diff < 1E-13)
     
-    disp('Testing the DWT for sound with two channels')
-    sd = rand(32,2);
+    disp(sprintf('Testing 1D with two channels: %s', wave_name))
+    sd = rand(64,2);
     sd2 = sd;
-    sd2 = dwt_impl(sd2, 'cdf97', m);
-    sd2 = idwt_impl(sd2, 'cdf97', m);
+    sd2 = dwt_impl(sd2, wave_name, m);
+    sd2 = idwt_impl(sd2, wave_name, m);
     diff = max(max(abs(sd2-sd)));
     assert(diff ~= 0 && diff < 1E-13)
     
-    disp('Testing 3D with one channel')
-    sd = rand(32,32,32);
+    disp(sprintf('Testing 3D with one channel: %s', wave_name))
+    sd = rand(64,64,64);
     sd2 = sd;
-    sd2 = dwt_impl(sd2, 'cdf97', m, 'symm', 'none', 3);
-    sd2 = idwt_impl(sd2, 'cdf97', m, 'symm', 'none', 3);
+    sd2 = dwt_impl(sd2, wave_name, m, 'symm', 'none', 3);
+    sd2 = idwt_impl(sd2, wave_name, m, 'symm', 'none', 3);
     diff = max(max(max(abs(sd2-sd))));
     assert(diff ~= 0 && diff < 1E-13)
     
-    disp('Testing 3D with two channels')
-    sd = rand(32,32,32,3);
+    disp(sprintf('Testing 3D with three channels: %s', wave_name))
+    sd = rand(64,64,64,3);
     sd2 = sd;
-    sd2 = dwt_impl(sd2, 'cdf97', m);
-    sd2 = idwt_impl(sd2, 'cdf97', m);
+    sd2 = dwt_impl(sd2, wave_name, m);
+    sd2 = idwt_impl(sd2, wave_name, m);
     diff = max(max(max(max(abs(sd2-sd)))));
     assert(diff ~= 0 && diff < 1E-13)
 end
     
-function test_orthogonality()
-    disp('Testing that the wavelet and the dual wavelet are equal for orthonormal wavelets')
+function test_orthogonality(wave_name)
+    disp('Testing orthonormal wavelets:')
     x0 = rand(32,1);
     
-    disp('Testing that the IDWT inverts the DWT')
+    disp(sprintf('Testing that the IDWT inverts the DWT: %s', wave_name))
     x = x0;
-    x = dwt_impl(x, 'db4', 2, 'per');
-    x = idwt_impl(x, 'db4', 2, 'per');
+    x = dwt_impl(x, wave_name, 2, 'per');
+    x = idwt_impl(x, wave_name, 2, 'per');
     diff = max(abs(x-x0));
     assert(diff ~= 0 && diff < 1E-13)
 
-    disp('See that the wavelet transform equals the dual wavelet transform')
+    disp(sprintf('See that the wavelet transform equals the dual wavelet transform: %s', wave_name))
     x = x0;
-    x = dwt_impl(x, 'db4', 2, 'per', 'none', 0, 1);
-    x0 = dwt_impl(x0, 'db4', 2, 'per', 'none', 0, 0);
+    x = dwt_impl(x, wave_name, 2, 'per', 'none', 0, 1);
+    x0 = dwt_impl(x0, wave_name, 2, 'per', 'none', 0, 0);
     diff = max(abs(x-x0));
     assert(diff ~= 0 && diff < 1E-13)
 
-    disp('Apply the transpose, to see that the transpose equals the inverse')
+    disp(sprintf('Apply the transpose, to see that the transpose equals the inverse: %s', wave_name))
     x = x0;
-    x = dwt_impl(x, 'db4', 2, 'per', 'none', 0, 0, 1);
-    x = dwt_impl(x, 'db4', 2, 'per', 'none', 0, 0, 0);
+    x = dwt_impl(x, wave_name, 2, 'per', 'none', 0, 0, 1);
+    x = dwt_impl(x, wave_name, 2, 'per', 'none', 0, 0, 0);
     diff = max(abs(x-x0));
     assert(diff ~= 0 && diff < 1E-13)
 end

@@ -1287,141 +1287,85 @@ def freqresp_alg(wave_name, lowpass, dual):
     plt.figure()
     plt.plot(omega, abs(fft.fft(g)), 'k-')
     plt.show()
-    plt.close()
-
-
-def _test_kernel(wave_name):
-    print('Testing %s, 1D' % wave_name)
-    # res = random.random(16)
-    res = array([1., 2., 3., 4., 5., 6., 7., 8., 9., 10.,11. ,12. ,13., 14., 15., 16.])
-    x = res.copy()
-    dwt_impl(x, wave_name, 2)
-    idwt_impl(x, wave_name, 2)
-    diff = abs(x-res).max()
-    assert diff < 1E-13, 'bug, diff=%s' % diff
+    plt.close()    
     
-    print('Testing %s, 1D, two channels' % wave_name)
-    res = random.random((16,2))
-    x = res.copy()
-    dwt_impl(x, wave_name, 2)
-    idwt_impl(x, wave_name, 2)
-    diff = abs(x-res).max()
-    assert diff < 1E-13, 'bug, diff=%s' % diff  
-    
-    print('Testing %s, 2D' % wave_name)
-    res = random.random((16,16))
-    x = res.copy()
-    dwt_impl(x, wave_name, 2, 'symm', 'none', 2)
-    idwt_impl(x, wave_name, 2, 'symm', 'none', 2)
-    diff = abs(x-res).max()
-    assert diff < 1E-13, 'bug, diff=%s' % diff  
-    
-    print('Testing %s, 2D, 3 channels' % wave_name)
-    res = random.random((16,16,3))
-    x = res.copy()
-    dwt_impl(x, wave_name, 2)
-    idwt_impl(x, wave_name, 2)
-    diff = abs(x-res).max()
-    assert diff < 1E-13, 'bug, diff=%s' % diff
-    
- 
-        
-def _test_kernel_ortho():
-    print('Testing orthonormal wavelets')
-    res = random.random(16) # only this assumes that N is even
-    x = zeros(16)
-    
-    print('Testing that the reverse inverts the forward transform')
-    x[0:16] = res[0:16]
-    dwt_impl(x, 'db4', 2)
-    idwt_impl(x, 'db4', 2)
-    diff = max(abs(x-res))
-    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
-    
-    print('Testing that the transform is orthogonal, i.e. that the transform and its dual are equal')
-    x[0:16] = res[0:16]
-    dwt_impl(x, 'db4', 2, 'per')
-    dwt_impl(res, 'db4', 2, 'per', 'none', 0, True)
-    diff = max(abs(x-res))
-    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
-    
-def _test_dwt_different_sizes():
+def _test_dwt_different_sizes(wave_name):
     print('Testing the DWT on different input sizes')
     m = 4
 
-    print('Testing the DWT for greyscale image')
-    img = random.random((32,32))
+    print('Testing 2D with one channel: %s' % wave_name)
+    img = random.random((64,64))
     img2 = img.copy()
-    dwt_impl(img2, 'cdf97', m, 'symm', 'none', 2)
-    idwt_impl(img2, 'cdf97', m, 'symm', 'none', 2)
+    dwt_impl(img2, wave_name, m, 'symm', 'none', 2)
+    idwt_impl(img2, wave_name, m, 'symm', 'none', 2)
     # print(img2)
     diff = abs(img2-img).max()
     assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
-    print('Testing the DWT for RGB image')
-    img = random.random((32, 32, 3))
+    print('Testing 2D with three channels: %s' % wave_name)
+    img = random.random((64, 64, 3))
     img2 = img.copy()
-    dwt_impl(img2, 'cdf97', m)
-    idwt_impl(img2, 'cdf97', m)
+    dwt_impl(img2, wave_name, m)
+    idwt_impl(img2, wave_name, m)
     diff = abs(img2-img).max()
     assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
-    print('Testing the DWT for sound with one channel')
-    sd = random.random(32)
+    print('Testing 1D with one channel: %s' % wave_name)
+    sd = random.random(64)
     sd2 = sd.copy()
-    dwt_impl(sd2, 'cdf97', m)
-    idwt_impl(sd2, 'cdf97', m)
+    dwt_impl(sd2, wave_name, m)
+    idwt_impl(sd2, wave_name, m)
     diff = abs(sd2-sd).max()
     assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
-    print('Testing the DWT for sound with two channels')
-    sd = random.random((32,2))
+    print('Testing 1D with two channels: %s' % wave_name)
+    sd = random.random((64,2))
     sd2 = sd.copy()
-    dwt_impl(sd2, 'cdf97', m)
-    idwt_impl(sd2, 'cdf97', m)
+    dwt_impl(sd2, wave_name, m)
+    idwt_impl(sd2, wave_name, m)
     diff = abs(sd2-sd).max()
     assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
-    print('Testing 3D with one channel')
-    sd = random.random((32,32,32))
+    print('Testing 3D with one channel: %s' % wave_name)
+    sd = random.random((64,64,64))
     sd2 = sd.copy()
-    dwt_impl(sd2, 'cdf97', m, 'symm', 'none', 3);
-    idwt_impl(sd2, 'cdf97', m, 'symm', 'none', 3);
+    dwt_impl(sd2, wave_name, m, 'symm', 'none', 3);
+    idwt_impl(sd2, wave_name, m, 'symm', 'none', 3);
     diff = abs(sd2-sd).max()
     assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
-    print('Testing 3D with two channels')
-    sd = random.random((32,32,32,3))
+    print('Testing 3D with two channels: %s' % wave_name)
+    sd = random.random((64,64,64,3))
     sd2 = sd.copy()
-    dwt_impl(sd2, 'cdf97', m);
-    idwt_impl(sd2, 'cdf97', m);
+    dwt_impl(sd2, wave_name, m);
+    idwt_impl(sd2, wave_name, m);
     diff = abs(sd2-sd).max()
     assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
     
     
-def _test_orthogonality():
-    print('Testing that the wavelet and the dual wavelet are equal for orthonormal wavelets')
+def _test_orthogonality(wave_name):
+    print('Testing orthonormal wavelets:')
     x0 = random.random(32)
     
-    print('Testing that the IDWT inverts the DWT')
+    print('Testing that the IDWT inverts the DWT: %s' % wave_name)
     x = x0.copy()
-    dwt_impl(x, 'db4', 2, 'per')
-    idwt_impl(x, 'db4', 2, 'per')
+    dwt_impl(x, wave_name, 2, 'per')
+    idwt_impl(x, wave_name, 2, 'per')
     diff = abs(x-x0).max()
     assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
 
-    print('See that the wavelet transform equals the dual wavelet transform')
+    print('See that the wavelet transform equals the dual wavelet transform: %s' % wave_name)
     x = x0.copy()
-    dwt_impl(x, 'db4', 2, 'per', 'none', 0, True)
-    dwt_impl(x0, 'db4', 2, 'per', 'none', 0, False)
+    dwt_impl(x, wave_name, 2, 'per', 'none', 0, True)
+    dwt_impl(x0, wave_name, 2, 'per', 'none', 0, False)
     diff = abs(x-x0).max()
     assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
 
-    print('Apply the transpose, to see that the transpose equals the inverse')
+    print('Apply the transpose, to see that the transpose equals the inverse: %s' % wave_name)
     x = x0.copy()
-    dwt_impl(x, 'db4', 2, 'per', 'none', 0, False, True)
-    dwt_impl(x, 'db4', 2, 'per', 'none', 0, False, False)
+    dwt_impl(x, wave_name, 2, 'per', 'none', 0, False, True)
+    dwt_impl(x, wave_name, 2, 'per', 'none', 0, False, False)
     diff = abs(x-x0).max()
     assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
 
@@ -1441,13 +1385,8 @@ def _test_simple_dwt2():
     assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
 if __name__=='__main__':
-    _test_dwt_different_sizes()
-    _test_kernel_ortho()
-    _test_orthogonality()
-    _test_kernel('cdf97')
-    _test_kernel('cdf53')
-    _test_kernel('pwl0')
-    _test_kernel('pwl2')
-    _test_kernel('haar')
-    _test_kernel('spline4.4')
+    for wave_name in ['db2', 'db4']:
+        _test_orthogonality(wave_name)
+    for wave_name in ['cdf97', 'cdf53', 'pwl0', 'pwl2', 'haar', 'spline4.4']:
+        _test_dwt_different_sizes(wave_name)
     _test_simple_dwt2()
