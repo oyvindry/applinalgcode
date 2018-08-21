@@ -699,7 +699,7 @@ def computeQN(N):
         QN[k] = 2*math.factorial(N+k-1)/(math.factorial(k)*math.factorial(N-1))
     vals = array([QN[0]])
     start = array([1.0])
-    for k in range(1,N):
+    for k in range(1, N):
         start = convolve(start,[-1/4.0,1/2.0,-1/4.0])
         vals = hstack([0,vals])
         vals = hstack([vals,0])
@@ -1288,6 +1288,7 @@ def freqresp_alg(wave_name, lowpass, dual):
     plt.plot(omega, abs(fft.fft(g)), 'k-')
     plt.show()
     plt.close()    
+# End freqresp_alg
     
 def _test_dwt_different_sizes(wave_name):
     print('Testing the DWT on different input sizes')

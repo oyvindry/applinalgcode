@@ -257,7 +257,7 @@ function [A_L,A_R]=find_AL_AR_lifting(WL, WR, wav_props)
 end
 
 function [wav_props, dual_wav_props, WL, WLtilde, WR, WRtilde]=wav_props_biortho_bd(N, Ntilde, wav_props, dual_wav_props)
-    Nprime = max(N,Ntilde);
+    Nprime = max(N, Ntilde);
     R = (length(wav_props.g0)-1)/2; Rtilde = (length(dual_wav_props.g0)-1)/2;
     L  = -R; Ltilde = -Rtilde;
         

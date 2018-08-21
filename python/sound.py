@@ -61,7 +61,7 @@ def audioread(filename):
     soundx = x
     if channels > 1:
         soundx = x.reshape( ( int(len(x)/channels), channels ) )
-    return soundx,fs
+    return soundx, fs
 
 def get_status_output(*args, **kwargs):
     p = subprocess.Popen(*args, **kwargs)
