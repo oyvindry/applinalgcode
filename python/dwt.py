@@ -215,7 +215,7 @@ def dwt1_impl_internal(x, f, m = 1, bd_mode = 'symm', prefilter = 0, offsets = 0
     xcopy = x[inds].copy()
     prefilter(xcopy, False)
     x[inds] = xcopy
-    reorganize_coeffs_forward(x, m, offsets, data_layout)  
+    _reorganize_coeffs_forward(x, m, offsets, data_layout)  
     
 def idwt1_impl_internal(x, f, m = 1, bd_mode = 'symm', prefilter = 0, offsets = 0, data_layout = 'resolution'):
     """
@@ -242,7 +242,7 @@ def idwt1_impl_internal(x, f, m = 1, bd_mode = 'symm', prefilter = 0, offsets = 
     if len(offsets) == 0:
         offsets = array([[0,0]])
     
-    resstart, resend = reorganize_coeffs_reverse(x, m, offsets, data_layout)
+    resstart, resend = _reorganize_coeffs_reverse(x, m, offsets, data_layout)
     inds = arange(resstart[0,m], resend[0,m] + 1, 2**m)
     xcopy = x[inds].copy()
     prefilter(xcopy, True)
@@ -298,7 +298,7 @@ def dwt2_impl_internal(x, fx, fy, m = 1, bd_mode = 'symm', prefilterx = 0, prefi
     tensor2_impl(xcopy, lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), bd_mode)
     x[ix_(indsx,indsy)] = xcopy
     
-    reorganize_coeffs2_forward(x, m, offsets, data_layout)
+    _reorganize_coeffs2_forward(x, m, offsets, data_layout)
     
 def idwt2_impl_internal(x, fx, fy, m = 1, bd_mode = 'symm', prefilterx = 0, prefiltery = 0, offsets = 0, data_layout = 'resolution'):
     """
@@ -327,7 +327,7 @@ def idwt2_impl_internal(x, fx, fy, m = 1, bd_mode = 'symm', prefilterx = 0, pref
     if len(offsets) == 0:
         offsets = array([[0,0],[0,0]])
     
-    resstart, resend = reorganize_coeffs2_reverse(x, m, offsets, data_layout)
+    resstart, resend = _reorganize_coeffs2_reverse(x, m, offsets, data_layout)
         
     # postconditioning
     indsx = arange(resstart[0,m], resend[0,m] + 1, 2**m)
@@ -397,7 +397,7 @@ def dwt3_impl_internal(x, fx, fy, fz, m = 1, bd_mode = 'symm', prefilterx = 0, p
     tensor3_impl(xcopy, lambda x, bd_mode: prefilterx(x, False), lambda x, bd_mode: prefiltery(x, False), lambda x, bd_mode: prefilterz(x, False), bd_mode)
     x[ix_(indsx, indsy, indsz)] = xcopy
     
-    reorganize_coeffs3_forward(x, m, offsets, data_layout)
+    _reorganize_coeffs3_forward(x, m, offsets, data_layout)
         
         
     
@@ -434,7 +434,7 @@ def idwt3_impl_internal(x, fx, fy, fz, m = 1, bd_mode = 'symm', prefilterx = 0, 
     if len(offsets) == 0:
         offsets = array([[0,0],[0,0],[0,0]])
     
-    resstart, resend = reorganize_coeffs3_reverse(x, m, offsets, data_layout)
+    resstart, resend = _reorganize_coeffs3_reverse(x, m, offsets, data_layout)
     
     # postconditioning
     indsx = arange(resstart[0,m], resend[0,m] + 1, 2**m)
@@ -514,25 +514,25 @@ def find_wav_props(wave_name, m = 1, bd_mode = 'symm', length_signal = 0):
     if wave_name.lower()[:2] == 'db':
         N = int(wave_name[2:])
         if N > 1:
-            wav_props_ortho(N, wav_props, dual_wav_props, bd_mode)
+            _wav_props_ortho(N, wav_props, dual_wav_props, bd_mode)
     elif wave_name.lower()[:3] == 'sym':
         N = int(wave_name[3:]);
         if N > 1:
-            wav_props_ortho(N, wav_props, dual_wav_props, bd_mode, 1)
+            _wav_props_ortho(N, wav_props, dual_wav_props, bd_mode, 1)
     elif wave_name.lower() == 'pwl0':
-        wav_props_pwl0(wav_props, dual_wav_props, bd_mode)
+        _wav_props_pwl0(wav_props, dual_wav_props, bd_mode)
     elif wave_name.lower() == 'pwl2':
-        wav_props_pwl2(wav_props, dual_wav_props, bd_mode)
+        _wav_props_pwl2(wav_props, dual_wav_props, bd_mode)
     elif wave_name.lower() == 'cdf53':
-        wav_props_53(wav_props, dual_wav_props, bd_mode)
+        _wav_props_53(wav_props, dual_wav_props, bd_mode)
     elif wave_name.lower() == 'cdf97':
-        wav_props_97(wav_props, dual_wav_props, bd_mode)
+        _wav_props_97(wav_props, dual_wav_props, bd_mode)
     elif wave_name.lower()[:6] =='spline':
         N = int(wave_name[6])
         Ntilde = int(wave_name[8])
-        dual_wav_props.g0, dual_wav_props.g1, wav_props.g0, wav_props.g1 = compute_spline_filters(N, Ntilde)
+        dual_wav_props.g0, dual_wav_props.g1, wav_props.g0, wav_props.g1 = _compute_spline_filters(N, Ntilde)
         if bd_mode.lower() == 'bd':
-            WL, WLtilde, WR, WRtilde = wav_props_biortho_bd(N, Ntilde, wav_props, dual_wav_props)
+            WL, WLtilde, WR, WRtilde = _wav_props_biortho_bd(N, Ntilde, wav_props, dual_wav_props)
             # swap filters if offset is odd
             if mod(wav_props.offset_L,2) == 1:
                 g0temp = wav_props.g0; wav_props.g0 = wav_props.g1; wav_props.g1 = g0temp
@@ -543,7 +543,7 @@ def find_wav_props(wave_name, m = 1, bd_mode = 'symm', length_signal = 0):
 
 
             
-def wav_props_ortho(N, wav_props, dual_wav_props, bd_mode, type = 0): 
+def _wav_props_ortho(N, wav_props, dual_wav_props, bd_mode, type = 0): 
     """
     N:    Number of vanishing moments
     type: The type of orthonormal wavelet.
@@ -554,10 +554,10 @@ def wav_props_ortho(N, wav_props, dual_wav_props, bd_mode, type = 0):
         
     h0 = 0; h1 = 0
     if type == 0:
-        [h0, h1, wav_props.g0, wav_props.g1] = h0h1computeortho(N)
+        [h0, h1, wav_props.g0, wav_props.g1] = _h0h1_compute_ortho(N)
     elif type == 1:
-        [h0, h1, wav_props.g0, wav_props.g1] = h0h1computesym(N)
-    wav_props.lambdas, wav_props.alpha, wav_props.beta, wav_props.last_even = lifting_fact_ortho(h0, h1)
+        [h0, h1, wav_props.g0, wav_props.g1] = _h0h1_compute_sym(N)
+    wav_props.lambdas, wav_props.alpha, wav_props.beta, wav_props.last_even = _lifting_fact_ortho(h0, h1)
     
     # TODO: add boundary handling
     
@@ -570,7 +570,7 @@ def wav_props_ortho(N, wav_props, dual_wav_props, bd_mode, type = 0):
     
     
     
-def set_wav_props(wav_props, dual_wav_props, bd_mode): # TODO: Add WL, WLtilde, WR, WRtilde
+def _set_wav_props(wav_props, dual_wav_props, bd_mode): # TODO: Add WL, WLtilde, WR, WRtilde
     # TODO: add boundary handling
     
     dual_wav_props.lambdas = -wav_props.lambdas 
@@ -581,7 +581,7 @@ def set_wav_props(wav_props, dual_wav_props, bd_mode): # TODO: Add WL, WLtilde, 
     # TODO: add boundary handling
 
             
-def wav_props_pwl0(wav_props, dual_wav_props, bd_mode):
+def _wav_props_pwl0(wav_props, dual_wav_props, bd_mode):
     wav_props.last_even = False
     wav_props.lambdas = array([0.5])
     wav_props.alpha = sqrt(2)
@@ -593,9 +593,9 @@ def wav_props_pwl0(wav_props, dual_wav_props, bd_mode):
     
     # TODO: add boundary handling
     
-    set_wav_props(wav_props, dual_wav_props, bd_mode); # TODO: Add WL, WLtilde, WR, WRtilde
+    _set_wav_props(wav_props, dual_wav_props, bd_mode); # TODO: Add WL, WLtilde, WR, WRtilde
 
-def wav_props_pwl2(wav_props, dual_wav_props, bd_mode):
+def _wav_props_pwl2(wav_props, dual_wav_props, bd_mode):
     wav_props.last_even = False
     wav_props.lambdas = array([0.25, 0.5])
     wav_props.alpha = sqrt(2)
@@ -607,9 +607,9 @@ def wav_props_pwl2(wav_props, dual_wav_props, bd_mode):
     
     # TODO: add boundary handling
     
-    set_wav_props(wav_props, dual_wav_props, bd_mode); # TODO: Add WL, WLtilde, WR, WRtilde
+    _set_wav_props(wav_props, dual_wav_props, bd_mode); # TODO: Add WL, WLtilde, WR, WRtilde
 
-def wav_props_53(wav_props, dual_wav_props, bd_mode):
+def _wav_props_53(wav_props, dual_wav_props, bd_mode):
     wav_props.last_even = False;
     wav_props.lambdas = array([-1, 0.125])
     wav_props.alpha = 2
@@ -621,21 +621,21 @@ def wav_props_53(wav_props, dual_wav_props, bd_mode):
     
     # TODO: add boundary handling
     
-    set_wav_props(wav_props, dual_wav_props, bd_mode); # TODO: Add WL, WLtilde, WR, WRtilde
+    _set_wav_props(wav_props, dual_wav_props, bd_mode); # TODO: Add WL, WLtilde, WR, WRtilde
 
-def wav_props_97(wav_props, dual_wav_props, bd_mode):
+def _wav_props_97(wav_props, dual_wav_props, bd_mode):
     wav_props.last_even = False;
-    wav_props.lambdas, wav_props.alpha, wav_props.beta, dual_wav_props.g0, dual_wav_props.g1, wav_props.g0, wav_props.g1 = liftingfact97()
+    wav_props.lambdas, wav_props.alpha, wav_props.beta, dual_wav_props.g0, dual_wav_props.g1, wav_props.g0, wav_props.g1 = _lifting_fact_97()
     
     # TODO: add boundary handling
     
-    set_wav_props(wav_props, dual_wav_props, bd_mode); # TODO: Add WL, WLtilde, WR, WRtilde
+    _set_wav_props(wav_props, dual_wav_props, bd_mode); # TODO: Add WL, WLtilde, WR, WRtilde
             
 
 
 
-def liftingfact97():
-    h0, h1, g0, g1 = h0h1compute97() # Should have 9 and 7 filter coefficients.
+def _lifting_fact_97():
+    h0, h1, g0, g1 = _h0h1_compute_97() # Should have 9 and 7 filter coefficients.
     h00, h01 = h0[0:9:2], h0[1:9:2]
     h10, h11 = h1[0:7:2], h1[1:7:2]
         
@@ -660,8 +660,8 @@ def liftingfact97():
     alpha, beta = h00[2], h11[1] 
     return lambdas, alpha, beta,  h0, h1, g0, g1
     
-def h0h1compute97():
-    QN = computeQN(4)
+def _h0h1_compute_97():
+    QN = _compute_QN(4)
         
     rts = roots(QN)
     rts1 = rts[nonzero(abs(imag(rts))>0.001)] # imaginary roots
@@ -690,7 +690,7 @@ def h0h1compute97():
     #print(h0, h1, g0, g1)
     return h0, h1, g0, g1
 
-def computeQN(N):
+def _compute_QN(N):
     """
     Compute the coefficients of the polynomial Q^(N)((1-cos(w))/2).
     """
@@ -706,9 +706,9 @@ def computeQN(N):
         vals = vals + QN[k]*start
     return vals
         
-def compute_spline_filters(N, Ntilde):
+def _compute_spline_filters(N, Ntilde):
     Navg=int((N+Ntilde)/2)
-    vals = computeQN(Navg)
+    vals = _compute_QN(Navg)
     
     h0=array([1])
     for k in range(int(N/2)):
@@ -724,8 +724,8 @@ def compute_spline_filters(N, Ntilde):
     return h0, h1, g0, g1
 
         
-def h0h1computeortho(N):
-    vals = computeQN(N)
+def _h0h1_compute_ortho(N):
+    vals = _compute_QN(N)
     rts=roots(vals)
     rts1=rts[nonzero(abs(rts)>1)]
     g0=array([1])
@@ -743,7 +743,7 @@ def h0h1computeortho(N):
     h1=g1[::-1]
     return h0, h1, g0, g1
 
-def lifting_fact_ortho(h0, h1):
+def _lifting_fact_ortho(h0, h1):
     """
     Assume that len(h1)==len(h0), and that h0 and h1 are even length and as symmetric as possible, with h0 with a minimum possible overweight of filter coefficients to the left, h1 to the right
     This function computes lifting steps l1, l2,...,ln, and constants alpha, beta so that ln ... l2 l1 H =  diag(alpha,beta), and stores these in files.
@@ -840,75 +840,75 @@ def find_kernel(wav_props, dual_wav_props, forward, dual = False, transpose = Fa
     
     if wav_props.wave_name.lower() == 'haar':
         if forward:
-            f = dwt_kernel_haar
+            f = _dwt_kernel_haar
         else:
-            f = idwt_kernel_haar
+            f = _idwt_kernel_haar
     else:
        if forward:
-           f, prefilter = find_kernel_dwt_general(wav_props, dual_wav_props, prefilter_mode)
+           f, prefilter = _find_kernel_dwt_general(wav_props, dual_wav_props, prefilter_mode)
        else:
-           f, prefilter = find_kernel_idwt_general(wav_props, dual_wav_props, prefilter_mode)
+           f, prefilter = _find_kernel_idwt_general(wav_props, dual_wav_props, prefilter_mode)
            
     return f, prefilter      
             
 
-def find_kernel_dwt_general(wav_props, dual_wav_props, prefilter_mode):
+def _find_kernel_dwt_general(wav_props, dual_wav_props, prefilter_mode):
     prefilter = lambda x, forward: x
     
     if wav_props.wave_name.lower() == 'cdf53' or wav_props.wave_name.lower() == 'cdf97' or wav_props.wave_name.lower() ==  'pwl0' or wav_props.wave_name.lower() ==  'pwl2':
-        f = lambda x, bd_mode: dwt_kernel_biortho(x, bd_mode, dual_wav_props)
+        f = lambda x, bd_mode: _dwt_kernel_biortho(x, bd_mode, dual_wav_props)
         # TODO: Add boundary handling
     elif wav_props.wave_name.lower()[:2] == 'db':
         N = int(wav_props.wave_name[2:])
         if N == 1:
-            f = dwt_kernel_haar
+            f = _dwt_kernel_haar
         else:
-            f = lambda x, bd_mode: dwt_kernel_ortho(x, bd_mode, dual_wav_props)
+            f = lambda x, bd_mode: _dwt_kernel_ortho(x, bd_mode, dual_wav_props)
             # TODO: Add boundary handling
     elif wav_props.wave_name.lower()[:3] == 'sym':
         N = int(wav_props.wave_name[3:])
         if N == 1:
-            f = dwt_kernel_haar
+            f = _dwt_kernel_haar
         else:
-            f = lambda x, bd_mode: dwt_kernel_ortho(x, bd_mode, dual_wav_props)
+            f = lambda x, bd_mode: _dwt_kernel_ortho(x, bd_mode, dual_wav_props)
             # TODO: Add boundary handling
     elif wav_props.wave_name.lower()[:6] == 'spline':
         N = int(wav_props.wave_name[6])
         Ntilde = int(wav_props.wave_name[8])
-        f = lambda x, bd_mode: dwt_kernel_filters(x, bd_mode, dual_wav_props)
+        f = lambda x, bd_mode: _dwt_kernel_filters(x, bd_mode, dual_wav_props)
         # TODO: Add boundary handling
         
     return f, prefilter
 
-def find_kernel_idwt_general(wav_props, dual_wav_props, prefilter_mode):
+def _find_kernel_idwt_general(wav_props, dual_wav_props, prefilter_mode):
     prefilter = lambda x, forward: x
     
     if wav_props.wave_name.lower() == 'cdf53' or wav_props.wave_name.lower() == 'cdf97' or wav_props.wave_name.lower() ==  'pwl0' or wav_props.wave_name.lower() ==  'pwl2':
-        f = lambda x, bd_mode: idwt_kernel_biortho(x, bd_mode, wav_props)
+        f = lambda x, bd_mode: _idwt_kernel_biortho(x, bd_mode, wav_props)
         # TODO: Add boundary handling
     elif wav_props.wave_name.lower()[:2] == 'db':
         N = int(wav_props.wave_name[2:])
         if N == 1:
-            f = idwt_kernel_haar;
+            f = _idwt_kernel_haar;
         else:
-            f = lambda x, bd_mode: idwt_kernel_ortho(x, bd_mode, wav_props)
+            f = lambda x, bd_mode: _idwt_kernel_ortho(x, bd_mode, wav_props)
             # TODO: Add boundary handling
     elif wav_props.wave_name.lower()[:3] == 'sym':
         N = int(wav_props.wave_name[3:])
         if N == 1:
-            f = idwt_kernel_haar
+            f = _idwt_kernel_haar
         else:
-            f = lambda x, bd_mode: idwt_kernel_ortho(x, bd_mode, wav_props)
+            f = lambda x, bd_mode: _idwt_kernel_ortho(x, bd_mode, wav_props)
             # TODO: Add boundary handling
     elif wav_props.wave_name.lower()[:6] == 'spline':
         N = int(wav_props.wave_name[6])
         Ntilde = int(wav_props.wave_name[8])
-        f = lambda x, bd_mode: idwt_kernel_filters(x, bd_mode, wav_props)
+        f = lambda x, bd_mode: _idwt_kernel_filters(x, bd_mode, wav_props)
         # TODO: Add boundary handling
 
     return f, prefilter
 
-def dwt_kernel_filters(x, bd_mode, dual_wav_props):
+def _dwt_kernel_filters(x, bd_mode, dual_wav_props):
     # TODO: Add boundary handling
     x0 = x.copy()
     x1 = x.copy()
@@ -917,9 +917,9 @@ def dwt_kernel_filters(x, bd_mode, dual_wav_props):
     x[::2] = x0[::2]
     x[1::2] = x1[1::2]
     # TODO: Add boundary handling
-# End dwt_kernel_filters
+# End _dwt_kernel_filters
 
-def idwt_kernel_filters(x, bd_mode, wav_props):
+def _idwt_kernel_filters(x, bd_mode, wav_props):
     # TODO: Add boundary handling
     x0 = x.copy(); x0[1::2] = 0
     x1 = x.copy(); x1[::2] = 0
@@ -927,11 +927,11 @@ def idwt_kernel_filters(x, bd_mode, wav_props):
     filter_impl(wav_props.g1, x1, bd_mode)
     x[:] = x0 + x1
     # TODO: Add boundary handling
-# End idwt_kernel_filters
+# End _idwt_kernel_filters
     
 # The Haar wavelet
 
-def dwt_kernel_haar(x, bd_mode):
+def _dwt_kernel_haar(x, bd_mode):
     x /= sqrt(2)
     if mod(len(x), 2)==1:
         a, b = x[0] + x[1] - x[-1], x[0] - x[1] - x[-1]
@@ -944,7 +944,7 @@ def dwt_kernel_haar(x, bd_mode):
         a, b = x[k] + x[k+1], x[k] - x[k+1]  
         x[k], x[k+1] = a, b
          
-def idwt_kernel_haar(x, bd_mode):
+def _idwt_kernel_haar(x, bd_mode):
     x /= sqrt(2)
     if mod(len(x), 2)==1:
         a, b = x[0] + x[1]  + x[-1], x[0] - x[1]
@@ -957,7 +957,7 @@ def idwt_kernel_haar(x, bd_mode):
             a, b = x[k] + x[k+1], x[k] - x[k+1] 
             x[k], x[k+1] = a, b
 
-def dwt_kernel_biortho(x, bd_mode, dual_wav_props):
+def _dwt_kernel_biortho(x, bd_mode, dual_wav_props):
     # TODO: Add boundary handling
     x[0::2] /= dual_wav_props.alpha
     x[1::2] /= dual_wav_props.beta
@@ -970,7 +970,7 @@ def dwt_kernel_biortho(x, bd_mode, dual_wav_props):
         iseven = not iseven
     # TODO: Add boundary handling
 
-def idwt_kernel_biortho(x, bd_mode, wav_props):
+def _idwt_kernel_biortho(x, bd_mode, wav_props):
     # TODO: Add boundary handling
     iseven = ( mod(wav_props.lambdas.shape[0], 2) == wav_props.last_even )
     for stepnr in range(wav_props.lambdas.shape[0]):
@@ -983,7 +983,7 @@ def idwt_kernel_biortho(x, bd_mode, wav_props):
     x[1::2] /= wav_props.beta
     # TODO: Add boundary handling
 
-def dwt_kernel_ortho(x, bd_mode, dual_wav_props):
+def _dwt_kernel_ortho(x, bd_mode, dual_wav_props):
     # TODO: Add boundary handling
     x[0::2] /= dual_wav_props.alpha
     x[1::2] /= dual_wav_props.beta
@@ -996,7 +996,7 @@ def dwt_kernel_ortho(x, bd_mode, dual_wav_props):
         iseven = not iseven
     # TODO: Add boundary handling
 
-def idwt_kernel_ortho(x, bd_mode, wav_props):
+def _idwt_kernel_ortho(x, bd_mode, wav_props):
     # TODO: Add boundary handling
     iseven = ( mod(wav_props.lambdas.shape[0], 2) == wav_props.last_even )
     for stepnr in range(wav_props.lambdas.shape[0]):
@@ -1044,7 +1044,7 @@ def lifting_odd_symm(lmbda, x, bd_mode):
         else:
             x[-1] += lmbda*(x[0]+x[-2])
 
-def reorganize_coeffs_forward(x, m, offsets, data_layout):
+def _reorganize_coeffs_forward(x, m, offsets, data_layout):
     if data_layout.lower() == 'resolution':
         N = shape(x)[0]
         y = zeros_like(x)
@@ -1058,7 +1058,7 @@ def reorganize_coeffs_forward(x, m, offsets, data_layout):
         y[:endy] = x[inds]
         x[:] = y[:]
 
-def reorganize_coeffs2_forward(sig_in, m, offsets, data_layout):
+def _reorganize_coeffs2_forward(sig_in, m, offsets, data_layout):
     if data_layout.lower() == 'resolution':
         sig_out = zeros_like(sig_in)
         indsx = arange(shape(sig_in)[0])
@@ -1081,7 +1081,7 @@ def reorganize_coeffs2_forward(sig_in, m, offsets, data_layout):
         sig_out[:endx, :endy] = sig_in[ ix_(indsx, indsy) ]
     sig_in[:] = sig_out[:]
     
-def reorganize_coeffs3_forward(sig_in, m, offsets, data_layout):
+def _reorganize_coeffs3_forward(sig_in, m, offsets, data_layout):
     if data_layout.lower() == 'resolution':
         sig_out = zeros_like(sig_in)
         indsx = arange(shape(sig_in)[0])
@@ -1114,7 +1114,7 @@ def reorganize_coeffs3_forward(sig_in, m, offsets, data_layout):
         sig_out[:endx, :endy, :endz] = sig_in[ ix_(indsx, indsy, indsz) ]
     sig_in[:] = sig_out[:]
 
-def reorganize_coeffs_reverse(x, m, offsets, data_layout):
+def _reorganize_coeffs_reverse(x, m, offsets, data_layout):
     inds = arange(shape(x)[0])
     y = zeros_like(x)
     resstart = array(zeros((1,m + 1), int))
@@ -1143,7 +1143,7 @@ def reorganize_coeffs_reverse(x, m, offsets, data_layout):
 
 
      
-def reorganize_coeffs2_reverse(sig_in, m, offsets, data_layout):
+def _reorganize_coeffs2_reverse(sig_in, m, offsets, data_layout):
     indsx = arange(shape(sig_in)[0])
     indsy = arange(shape(sig_in)[1])
     sig_out = zeros_like(sig_in)
@@ -1181,7 +1181,7 @@ def reorganize_coeffs2_reverse(sig_in, m, offsets, data_layout):
         sig_in[:] = sig_out[:]
     return resstart, resend
             
-def reorganize_coeffs3_reverse(sig_in, m, offsets, data_layout):
+def _reorganize_coeffs3_reverse(sig_in, m, offsets, data_layout):
     indsx = arange(shape(sig_in)[0])
     indsy = arange(shape(sig_in)[1])
     indsz = arange(shape(sig_in)[2])
@@ -1264,7 +1264,7 @@ def cascade_alg(m, a, b, wave_name, scaling, dual):
         coords[b - a] = 1
     
     t = linspace(a, b, (b-a)*2**m)
-    idwt_impl(coords, wave_name, m, 'per', 'none', 1, dual)
+    idwt_impl(coords, wave_name, m=m, bd_mode='per', dual=dual)
     coords = concatenate([coords[(b*2**m):((b-a)*2**m)], \
                           coords[0:(b*2**m)]])
     plt.figure()
@@ -1283,111 +1283,111 @@ def freqresp_alg(wave_name, lowpass, dual):
     else:
         g[1] = 1
     
-    idwt_impl(g, wave_name, 1, 'per', 'none', 1, dual, False, 'time')
+    idwt_impl(g, wave_name, bd_mode='per', dual=dual, data_layout='time')
     plt.figure()
     plt.plot(omega, abs(fft.fft(g)), 'k-')
     plt.show()
     plt.close()    
 # End freqresp_alg
     
-def _test_dwt_different_sizes(wave_name):
-    print('Testing the DWT on different input sizes')
-    m = 4
-
-    print('Testing 2D with one channel: %s' % wave_name)
-    img = random.random((64,64))
-    img2 = img.copy()
-    dwt_impl(img2, wave_name, m, 'symm', 'none', 2)
-    idwt_impl(img2, wave_name, m, 'symm', 'none', 2)
-    # print(img2)
-    diff = abs(img2-img).max()
-    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
+def _test_dwt_different_sizes():
+    for wave_name in ['cdf97', 'cdf53', 'pwl0', 'pwl2', 'haar', 'spline4.4']:
+        print('Testing the DWT on different input sizes')
+        m = 4
     
-    print('Testing 2D with three channels: %s' % wave_name)
-    img = random.random((64, 64, 3))
-    img2 = img.copy()
-    dwt_impl(img2, wave_name, m)
-    idwt_impl(img2, wave_name, m)
-    diff = abs(img2-img).max()
-    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
+        print('Testing 2D with one channel: %s' % wave_name)
+        img = random.random((64,64))
+        img2 = img.copy()
+        dwt_impl(img2, wave_name, m=m, dims=2)
+        idwt_impl(img2, wave_name, m=m, dims=2)
+        # print(img2)
+        diff = abs(img2-img).max()
+        assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
+        
+        print('Testing 2D with three channels: %s' % wave_name)
+        img = random.random((64, 64, 3))
+        img2 = img.copy()
+        dwt_impl(img2, wave_name, m=m)
+        idwt_impl(img2, wave_name, m=m)
+        diff = abs(img2-img).max()
+        assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
+        
+        print('Testing 1D with one channel: %s' % wave_name)
+        sd = random.random(64)
+        sd2 = sd.copy()
+        dwt_impl(sd2, wave_name, m=m)
+        idwt_impl(sd2, wave_name, m=m)
+        diff = abs(sd2-sd).max()
+        assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
+        
+        print('Testing 1D with two channels: %s' % wave_name)
+        sd = random.random((64,2))
+        sd2 = sd.copy()
+        dwt_impl(sd2, wave_name, m=m)
+        idwt_impl(sd2, wave_name, m=m)
+        diff = abs(sd2-sd).max()
+        assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
+        
+        print('Testing 3D with one channel: %s' % wave_name)
+        sd = random.random((64,64,64))
+        sd2 = sd.copy()
+        dwt_impl(sd2, wave_name, m=m, dims=3)
+        idwt_impl(sd2, wave_name, m=m, dims=3)
+        diff = abs(sd2-sd).max()
+        assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
+        
+        print('Testing 3D with two channels: %s' % wave_name)
+        sd = random.random((64,64,64,3))
+        sd2 = sd.copy()
+        dwt_impl(sd2, wave_name, m=m)
+        idwt_impl(sd2, wave_name, m=m)
+        diff = abs(sd2-sd).max()
+        assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
-    print('Testing 1D with one channel: %s' % wave_name)
-    sd = random.random(64)
-    sd2 = sd.copy()
-    dwt_impl(sd2, wave_name, m)
-    idwt_impl(sd2, wave_name, m)
-    diff = abs(sd2-sd).max()
-    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
-    
-    print('Testing 1D with two channels: %s' % wave_name)
-    sd = random.random((64,2))
-    sd2 = sd.copy()
-    dwt_impl(sd2, wave_name, m)
-    idwt_impl(sd2, wave_name, m)
-    diff = abs(sd2-sd).max()
-    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
-    
-    print('Testing 3D with one channel: %s' % wave_name)
-    sd = random.random((64,64,64))
-    sd2 = sd.copy()
-    dwt_impl(sd2, wave_name, m, 'symm', 'none', 3);
-    idwt_impl(sd2, wave_name, m, 'symm', 'none', 3);
-    diff = abs(sd2-sd).max()
-    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
-    
-    print('Testing 3D with two channels: %s' % wave_name)
-    sd = random.random((64,64,64,3))
-    sd2 = sd.copy()
-    dwt_impl(sd2, wave_name, m);
-    idwt_impl(sd2, wave_name, m);
-    diff = abs(sd2-sd).max()
-    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
     
+def _test_orthogonality():
+    for wave_name in ['db2', 'db4']:
+        print('Testing orthonormal wavelets:')
+        x0 = random.random(32)
+        
+        print('Testing that the IDWT inverts the DWT: %s' % wave_name)
+        x = x0.copy()
+        dwt_impl(x, wave_name, m=2, bd_mode='per')
+        idwt_impl(x, wave_name, m=2, bd_mode='per')
+        diff = abs(x-x0).max()
+        assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
-def _test_orthogonality(wave_name):
-    print('Testing orthonormal wavelets:')
-    x0 = random.random(32)
+        print('See that the wavelet transform equals the dual wavelet transform: %s' % wave_name)
+        x = x0.copy()
+        dwt_impl(x, wave_name, m=2, bd_mode='per', dual=True)
+        dwt_impl(x0, wave_name, m=2, bd_mode='per', dual=False)
+        diff = abs(x-x0).max()
+        assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
-    print('Testing that the IDWT inverts the DWT: %s' % wave_name)
-    x = x0.copy()
-    dwt_impl(x, wave_name, 2, 'per')
-    idwt_impl(x, wave_name, 2, 'per')
-    diff = abs(x-x0).max()
-    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
-
-    print('See that the wavelet transform equals the dual wavelet transform: %s' % wave_name)
-    x = x0.copy()
-    dwt_impl(x, wave_name, 2, 'per', 'none', 0, True)
-    dwt_impl(x0, wave_name, 2, 'per', 'none', 0, False)
-    diff = abs(x-x0).max()
-    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
-
-    print('Apply the transpose, to see that the transpose equals the inverse: %s' % wave_name)
-    x = x0.copy()
-    dwt_impl(x, wave_name, 2, 'per', 'none', 0, False, True)
-    dwt_impl(x, wave_name, 2, 'per', 'none', 0, False, False)
-    diff = abs(x-x0).max()
-    assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
+        print('Apply the transpose, to see that the transpose equals the inverse: %s' % wave_name)
+        x = x0.copy()
+        dwt_impl(x, wave_name, m=2, bd_mode='per', transpose=True)
+        dwt_impl(x, wave_name, m=2, bd_mode='per', transpose=False)
+        diff = abs(x-x0).max()
+        assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
 
 def _test_simple_dwt2():
     print('Testing simple DWT2')
     img2 = random.random((32, 32, 3))
     img = img2.copy()
 # Begin simple_dwt2
-    f = lambda x, bd_mode: dwt_impl(x, 'cdf97', 4, bd_mode, 'none', 1)
+    f = lambda x, bd_mode: dwt_impl(x, 'cdf97', m=4, bd_mode=bd_mode, dims=1)
     tensor2_impl(img, f, f, 'symm')
 # End simple_dwt2
 # Begin simple_idwt2
-    invf = lambda x, bd_mode: idwt_impl(x, 'cdf97', 4, bd_mode, 'none', 1)
+    invf = lambda x, bd_mode: idwt_impl(x,'cdf97',m=4,bd_mode=bd_mode, dims=1)
     tensor2_impl(img, invf, invf, 'symm')
 # End simple_idwt2
     diff = abs(img2-img).max()
     assert (diff < 1E-13 and diff != 0) , 'bug, diff=%s' % diff
     
 if __name__=='__main__':
-    for wave_name in ['db2', 'db4']:
-        _test_orthogonality(wave_name)
-    for wave_name in ['cdf97', 'cdf53', 'pwl0', 'pwl2', 'haar', 'spline4.4']:
-        _test_dwt_different_sizes(wave_name)
+    _test_orthogonality()
+    _test_dwt_different_sizes()
     _test_simple_dwt2()

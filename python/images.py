@@ -37,7 +37,7 @@ def map_to_01(X):
     X -= minval
     X /= (maxval-minval)
 # End map_to_01
-    
+
 def contrast_adjust(X,epsilon):
     # Assumes that the values are in [0,255]
     X /= 255.
@@ -47,14 +47,3 @@ def contrast_adjust(X,epsilon):
     X /= (log(1+epsilon)-log(epsilon))
     X *= 255
 # End contrast_adjust
-  
-def contrast_adjust0(X,n):
-    # Assumes that the values are in [0,255]
-    X /= 255.
-    X -= 1/2.
-    X *= n
-    arctan(X, X)
-    X /= (2*arctan(n/2.)) 
-    X += 1/2.0
-    X *= 255 # Maps the values back to [0,255]
-# End contrast_adjust0

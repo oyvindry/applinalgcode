@@ -125,7 +125,7 @@ end
 
 function [wav_props, dual_wav_props]=wav_props_97(wav_props, dual_wav_props, bd_mode)
     wav_props.last_even = 0;
-    [wav_props.lambdas, wav_props.alpha, wav_props.beta, dual_wav_props.g0, dual_wav_props.g1, wav_props.g0, wav_props.g1]=liftingfact97();
+    [wav_props.lambdas, wav_props.alpha, wav_props.beta, dual_wav_props.g0, dual_wav_props.g1, wav_props.g0, wav_props.g1] = lifting_fact_97();
 
     WL = 0; WLtilde = 0; WR = 0; WRtilde = 0;
     if strcmpi(bd_mode, 'bd')
@@ -166,9 +166,9 @@ function [wav_props, dual_wav_props]=wav_props_ortho(N, wav_props, dual_wav_prop
         
     h0 = 0; h1 = 0;
     if (type == 0)
-        [h0, h1, wav_props.g0, wav_props.g1] = h0h1computeortho(N);
+        [h0, h1, wav_props.g0, wav_props.g1] = h0h1_compute_ortho(N);
     elseif (type == 1)
-        [h0, h1, wav_props.g0, wav_props.g1] = h0h1computesym(N);
+        [h0, h1, wav_props.g0, wav_props.g1] = h0h1_compute_sym(N);
     end
     [wav_props.lambdas, wav_props.alpha, wav_props.beta, wav_props.last_even] = lifting_fact_ortho(h0, h1);
     
@@ -311,7 +311,7 @@ end
 
 function [h0,h1,g0,g1]=compute_spline_filters(N, Ntilde)
   Navg=(N+Ntilde)/2;
-  vals=computeQN(Navg);
+  vals=compute_QN(Navg);
   
   h0 = 1;
   for k=1:(N/2)
@@ -344,8 +344,8 @@ function val=Gsegment(g0,supp,rowrange,colrange)
     end
 end
 
-function [lambdas, alpha, beta, h0, h1, g0, g1]=liftingfact97()
-    [h0,h1,g0,g1] = h0h1compute97(); % Should have 9 and 7 filter coefficients.
+function [lambdas, alpha, beta, h0, h1, g0, g1]=lifting_fact_97()
+    [h0,h1,g0,g1] = h0h1_compute_97(); % Should have 9 and 7 filter coefficients.
     h00 = h0(1:2:9);
     h01 = h0(2:2:9);
     h10 = h1(1:2:7);
@@ -372,9 +372,9 @@ function [lambdas, alpha, beta, h0, h1, g0, g1]=liftingfact97()
     beta  = h11(2);
 end
 
-function [h0,h1,g0,g1]=h0h1compute97()
+function [h0,h1,g0,g1]=h0h1_compute_97()
   N=4;
-  vals=computeQN(N);
+  vals=compute_QN(N);
    
   rts=roots(vals)';
   rts1=rts(find(abs(imag(rts))>0.001)); % imaginary roots
@@ -408,7 +408,7 @@ function [h0,h1,g0,g1]=h0h1compute97()
   g1=h0.*(-1).^((-(length(h0)-1)/2):((length(h0)-1)/2));
 end
 
-function vals=computeQN(N)
+function vals=compute_QN(N)
     % Compute the coefficients in Q^(N)((1-cos(w))/2)
     k=0:(N-1);
     QN = 2*factorial(N+k-1)./(factorial(k).*factorial(N-1));
@@ -421,10 +421,10 @@ function vals=computeQN(N)
     end
 end
 
-function [h0, h1, g0, g1]=h0h1computeortho(N)
+function [h0, h1, g0, g1]=h0h1_compute_ortho(N)
     % Comptues the wavelet coefficients of the orthonormal Daubechies wavelet
     % N vanishing moments and with minimum phase   
-    vals=computeQN(N);
+    vals=compute_QN(N);
     rts=roots(vals)';
     rts1=rts(find(abs(rts)>1));
 
@@ -450,7 +450,7 @@ function [h0, h1, g0, g1]=h0h1computeortho(N)
     h1=fliplr(g1);
 end
 
-function [h0, h1, g0, g1]=h0h1computesym(N)
+function [h0, h1, g0, g1]=h0h1_compute_sym(N)
     % Comptues the wavelet coefficients of the orthonormal wavelet with N
     % vanishing moments and close to linear phase. This makes the wavelet
     % almost symmetric. These wavelets are called 'symlets'
