@@ -1016,12 +1016,14 @@ def lifting_even(lmbda1, lmbda2, x, bd_mode):
         raise AssertionError()
     x[0] += lmbda1*x[1] + lmbda2*x[-1]
     x[2:-1:2] += lmbda1*x[3::2] + lmbda2*x[1:-2:2]
+# End lifting_even
                 
 def lifting_odd(lmbda1, lmbda2, x, bd_mode):
     if mod(len(x), 2)!=0:
         raise AssertionError()
     x[1:-2:2] += lmbda1*x[2:-1:2] + lmbda2*x[0:-3:2]
     x[-1] += lmbda1*x[0] + lmbda2*x[-2]
+# End lifting_odd
     
 def lifting_even_symm(lmbda, x, bd_mode):
     if (bd_mode.lower() == 'per') and mod(len(x), 2)!=0:
@@ -1033,6 +1035,7 @@ def lifting_even_symm(lmbda, x, bd_mode):
     x[2:-1:2] += lmbda*(x[1:-2:2] + x[3::2])
     if mod(len(x), 2)==1 and bd_mode.lower() == 'symm':
         x[-1] += 2*lmbda*x[-2] # With symmetric extension
+# End lifting_even_symm
       
 def lifting_odd_symm(lmbda, x, bd_mode):
     if (bd_mode.lower() == 'per') and mod(len(x), 2) != 0:
@@ -1043,6 +1046,7 @@ def lifting_odd_symm(lmbda, x, bd_mode):
             x[-1] += 2*lmbda*x[-2] # With symmetric extension
         else:
             x[-1] += lmbda*(x[0]+x[-2])
+# End lifting_odd_symm
 
 def _reorganize_coeffs_forward(x, m, offsets, data_layout):
     if data_layout.lower() == 'resolution':
@@ -1271,6 +1275,7 @@ def cascade_alg(m, a, b, wave_name, scaling, dual):
     plt.plot(t, 2**(m/2.)*coords, 'k-')
     plt.show()
     plt.close()
+# End cascade_alg
 
 def freqresp_alg(wave_name, lowpass, dual):
     N = 128

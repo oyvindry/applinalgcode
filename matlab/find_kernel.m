@@ -123,8 +123,10 @@ function x=dwt_kernel_filters(x, bd_mode, dual_wav_props)
     x(1:2:end,:) = x0(1:2:end,:);
     x(2:2:end,:) = x1(2:2:end,:);
     if strcmpi(bd_mode, 'bd')
-        x(1:size(dual_wav_props.A_L,2), :) = x(1:size(dual_wav_props.A_L,2), :) + y1;
-        x((end-size(dual_wav_props.A_R,2)+1):end, :) = x((end-size(dual_wav_props.A_R,2)+1):end, :) + y2;
+        x(1:size(dual_wav_props.A_L,2), :) ...
+            = x(1:size(dual_wav_props.A_L,2), :) + y1;
+        x((end-size(dual_wav_props.A_R,2)+1):end, :) ...
+            = x((end-size(dual_wav_props.A_R,2)+1):end, :) + y2;
     end
 end
 % End dwt_kernel_filters
@@ -140,8 +142,10 @@ function x=idwt_kernel_filters(x, bd_mode, wav_props)
     x1 = filter_impl(wav_props.g1, x1, bd_mode);
     x = x0 + x1;
     if strcmpi(bd_mode, 'bd')
-        x(1:size(wav_props.A_L,1), :) = x(1:size(wav_props.A_L,1), :) + y1;
-        x((end-size(wav_props.A_R,1)+1):end, :) = x((end-size(wav_props.A_R,1)+1):end, :) + y2;
+        x(1:size(wav_props.A_L,1), :) ...
+            = x(1:size(wav_props.A_L,1), :) + y1;
+        x((end-size(wav_props.A_R,1)+1):end, :) ....
+            = x((end-size(wav_props.A_R,1)+1):end, :) + y2;
     end
 end
 % End idwt_kernel_filters
@@ -159,7 +163,8 @@ function x=dwt_kernel_haar(x, bd_mode)
         x(k:(k+1), :) = [x(k, :) + x(k+1, :); x(k, :) - x(k+1, :)];
     end
 end
-    
+% End dwt_kernel_haar
+
 function x=idwt_kernel_haar(x, bd_mode)
     x = x/sqrt(2);
     N = size(x, 1);
@@ -172,6 +177,7 @@ function x=idwt_kernel_haar(x, bd_mode)
         x(k:(k+1), :) = [x(k, :) + x(k+1, :); x(k, :) - x(k+1, :)];
     end  
 end
+% End idwt_kernel_haar
 
 function x=dwt_kernel_biortho(x, bd_mode, dual_wav_props)
     if strcmpi(bd_mode, 'bd')
@@ -239,6 +245,7 @@ function x=dwt_kernel_ortho(x, bd_mode, dual_wav_props)
         x((end-size(dual_wav_props.A_R,2)+1):end, :) = x((end-size(dual_wav_props.A_R,2)+1):end, :) + y2;
     end
 end
+% End dwt_kernel_ortho
 
 function x=idwt_kernel_ortho(x, bd_mode, wav_props)    
     if strcmpi(bd_mode, 'bd')
@@ -262,6 +269,7 @@ function x=idwt_kernel_ortho(x, bd_mode, wav_props)
         x((end-size(wav_props.A_R,1)+1):end, :) = x((end-size(wav_props.A_R,1)+1):end, :) + y2;
     end
 end
+% End idwt_kernel_ortho
 
 function x=precond_impl(x, forward, wav_props)
     n = size(wav_props.A_L_pre_inv,1);
@@ -286,7 +294,7 @@ function x=lifting_even_symm(lambda, x, bd_mode)
     elseif strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'none')
         x(1, :) = lambda*x(2, :) + x(1, :);
     end
-    x(3:2:(N-1), :) = x(3:2:(N-1), :) + lambda*(x(2:2:(N-2), :) + x(4:2:N, :)); % This saves one multiplication
+    x(3:2:(N-1), :) = x(3:2:(N-1),:) + lambda*(x(2:2:(N-2),:) + x(4:2:N,:));
     if mod(N,2) == 1 % last must also be included
         if strcmpi(bd_mode, 'symm')
             x(N, :) = x(N, :) + 2*lambda*x(N-1, :); % Symmetric extension
@@ -295,10 +303,11 @@ function x=lifting_even_symm(lambda, x, bd_mode)
         end
     end
 end
+% End lifting_even_symm
     
 function x=lifting_odd_symm(lambda, x, bd_mode)
     N = size(x, 1);
-    x(2:2:(N-1), :) = x(2:2:(N-1), :) + lambda*(x(1:2:(N-2), :) + x(3:2:N, :)); % This saves one multiplication
+    x(2:2:(N-1), :) = x(2:2:(N-1),:) + lambda*(x(1:2:(N-2),:) + x(3:2:N,:));
     if mod(N,2)==0 % last must also be included
         if strcmpi(bd_mode, 'symm')
             x(N, :) = x(N, :) + 2*lambda*x(N-1, :); % Symmetric extension
@@ -309,6 +318,7 @@ function x=lifting_odd_symm(lambda, x, bd_mode)
         end
     end
 end
+% End lifting_odd_symm
 
 function x=lifting_even(lambda1, lambda2, x, bd_mode)
     N = size(x, 1);
@@ -324,6 +334,7 @@ function x=lifting_even(lambda1, lambda2, x, bd_mode)
         end
     end
 end
+% End lifting_even
 
 function x=lifting_odd(lambda1, lambda2, x, bd_mode)
     N = size(x, 1);
@@ -336,3 +347,4 @@ function x=lifting_odd(lambda1, lambda2, x, bd_mode)
         end
     end
 end
+% End lifting_odd

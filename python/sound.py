@@ -21,7 +21,7 @@ def filter_impl(t, x, bd_mode):
         z = convolve(t, w[:, k])
         y[:, k] = z[(2*N0):(len(z)-2*N0)]
     x[:] = reshape(y, szx)
-
+# End filter_impl
 
 def audiowrite(filename, x, fs):
     """

@@ -57,6 +57,7 @@ def dct_impl(x):
                 + sinvec*imag(x1[:, s2])
         x[0] *= sqrt(1/float(N))
         x[1:] *= sqrt(2/float(N))
+# End dct_impl
         
 def idct_impl(y):
     # Compute the IDCT of the vector y
@@ -106,6 +107,7 @@ def dft_impl(x, forward=True):
     if sign == 1:
         y /= float(N)
     return y
+# End dft_impl
 
 def fft_impl(x, f, forward = True):
     """
@@ -133,6 +135,7 @@ def fft_impl(x, f, forward = True):
             f(x[:, s2], forward)
     if not forward:
         x /= len(x)
+# End fft_impl
 
 def fft_kernel_standard(x, forward):
     """
@@ -152,6 +155,7 @@ def fft_kernel_standard(x, forward):
         D = exp(sign*2*pi*1j*arange(float(N/2))/N) 
         xo *= D 
         x[:] = concatenate([xe + xo, xe - xo]) 
+# End fft_kernel_standard
                 
 def fft_kernel_nonrec(x, forward):
     """
@@ -174,7 +178,8 @@ def fft_kernel_nonrec(x, forward):
             x[k:(k+2*nextN)] = concatenate([xe + xo, xe - xo])
             k += 2*nextN
         nextN *= 2     
-    
+# End fft_kernel_nonrec
+
 def fft_kernel_splitradix(x, forward):
     """
     Compute the FFT of x, using the split-radix FFT algorithm. 
@@ -199,8 +204,7 @@ def fft_kernel_splitradix(x, forward):
         xo2 *= H
         xo = concatenate( [xo1 + xo2, -sign*1j*(xo2 - xo1)] )
         x[:] = concatenate([xe + xo, xe - xo])   
-    
-# Test code
+# End fft_kernel_splitradix
     
 def _testfft():   
     x1 = random.random(32).astype(complex)

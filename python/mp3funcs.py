@@ -26,6 +26,7 @@ def mp3_forward_fbt(x):
         start -= 32
     z = array(z).flatten()
     return z
+# End mp3_forward_fbt
 
 def mp3_reverse_fbt(z):
     N = len(z)
@@ -58,7 +59,7 @@ def mp3_reverse_fbt(z):
         for i in range(16):
             x[((n-1)*32):(n*32)] += W[32*i:(32*(i + 1))]
     return x
-    
+# End mp3_reverse_fbt   
     
 def mp3_ctable():
     C = zeros(512)
