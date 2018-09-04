@@ -194,7 +194,9 @@ def fft_kernel_splitradix(x, forward):
     if N == 2:
         x[:] = [x[0] + x[1], x[0] - x[1]]
     elif N > 2:
-        xe, xo1, xo2 = x[0:(int(N/2))], x[(int(N/2)):(int(3*N/4))], x[(int(3*N/4)):N]
+        xe  = x[0:(int(N/2))]
+        xo1 = x[(int(N/2)):(int(3*N/4))]
+        xo2 = x[(int(3*N/4)):N]
         fft_kernel_splitradix(xe, forward)
         fft_kernel_splitradix(xo1, forward)
         fft_kernel_splitradix(xo2, forward)

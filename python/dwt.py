@@ -943,6 +943,7 @@ def _dwt_kernel_haar(x, bd_mode):
     for k in range(2,len(x) - 1,2):
         a, b = x[k] + x[k+1], x[k] - x[k+1]  
         x[k], x[k+1] = a, b
+# End _dwt_kernel_haar
          
 def _idwt_kernel_haar(x, bd_mode):
     x /= sqrt(2)
@@ -956,6 +957,7 @@ def _idwt_kernel_haar(x, bd_mode):
         for k in range(0,len(x) - 1, 2):
             a, b = x[k] + x[k+1], x[k] - x[k+1] 
             x[k], x[k+1] = a, b
+# End _idwt_kernel_haar
 
 def _dwt_kernel_biortho(x, bd_mode, dual_wav_props):
     # TODO: Add boundary handling
@@ -969,6 +971,7 @@ def _dwt_kernel_biortho(x, bd_mode, dual_wav_props):
             lifting_odd_symm(  dual_wav_props.lambdas[stepnr], x, bd_mode)
         iseven = not iseven
     # TODO: Add boundary handling
+# End _dwt_kernel_biortho
 
 def _idwt_kernel_biortho(x, bd_mode, wav_props):
     # TODO: Add boundary handling
@@ -982,6 +985,7 @@ def _idwt_kernel_biortho(x, bd_mode, wav_props):
     x[0::2] /= wav_props.alpha
     x[1::2] /= wav_props.beta
     # TODO: Add boundary handling
+# End _idwt_kernel_biortho
 
 def _dwt_kernel_ortho(x, bd_mode, dual_wav_props):
     # TODO: Add boundary handling
@@ -990,24 +994,34 @@ def _dwt_kernel_ortho(x, bd_mode, dual_wav_props):
     iseven = not dual_wav_props.last_even
     for stepnr in range(dual_wav_props.lambdas.shape[0] - 1, -1, -1):
         if iseven:
-            lifting_even(  dual_wav_props.lambdas[stepnr, 1], dual_wav_props.lambdas[stepnr, 0], x, bd_mode)
+            lifting_even( dual_wav_props.lambdas[stepnr, 1], \
+                          dual_wav_props.lambdas[stepnr, 0], \
+                          x, bd_mode)
         else:    
-            lifting_odd(  dual_wav_props.lambdas[stepnr, 1], dual_wav_props.lambdas[stepnr, 0], x, bd_mode)
+            lifting_odd(  dual_wav_props.lambdas[stepnr, 1], \
+                          dual_wav_props.lambdas[stepnr, 0], \
+                          x, bd_mode)
         iseven = not iseven
     # TODO: Add boundary handling
+# End _dwt_kernel_ortho
 
 def _idwt_kernel_ortho(x, bd_mode, wav_props):
     # TODO: Add boundary handling
     iseven = ( mod(wav_props.lambdas.shape[0], 2) == wav_props.last_even )
     for stepnr in range(wav_props.lambdas.shape[0]):
         if iseven:
-            lifting_even( wav_props.lambdas[stepnr, 0], wav_props.lambdas[stepnr, 1], x, bd_mode)
+            lifting_even( wav_props.lambdas[stepnr, 0], \
+                          wav_props.lambdas[stepnr, 1], \
+                          x, bd_mode)
         else:    
-            lifting_odd(  wav_props.lambdas[stepnr, 0], wav_props.lambdas[stepnr, 1], x, bd_mode)
+            lifting_odd(  wav_props.lambdas[stepnr, 0], \
+                          wav_props.lambdas[stepnr, 1], \
+                          x, bd_mode)
         iseven = not iseven
     x[0::2] /= wav_props.alpha
     x[1::2] /= wav_props.beta
     # TODO: Add boundary handling
+# End _idwt_kernel_ortho
 
 # Lifting steps
                
