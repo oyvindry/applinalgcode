@@ -33,7 +33,6 @@ def forw_comp_rev_DFT(L=0, lower=-1, threshold=0, n=0, N=0):
     return x, fs
 
 def forw_comp_rev_2d(X, f, invf, threshold):
-    # TODO: f, invf
     M, N = shape(X)[0:2]
     
     tensor2_impl(X, f, f, 'symm')
