@@ -908,25 +908,25 @@ def _find_kernel_idwt_general(wav_props, dual_wav_props, prefilter_mode):
 
     return f, prefilter
 
+# TODO Add boundary handling at the beginning and end 
+
 def _dwt_kernel_filters(x, bd_mode, dual_wav_props):
-    # TODO: Add boundary handling
     x0 = x.copy()
     x1 = x.copy()
     filter_impl(dual_wav_props.g0, x0, bd_mode)
     filter_impl(dual_wav_props.g1, x1, bd_mode)
     x[::2] = x0[::2]
     x[1::2] = x1[1::2]
-    # TODO: Add boundary handling
 # End _dwt_kernel_filters
 
+# TODO Add boundary handling at the beginning and end 
+
 def _idwt_kernel_filters(x, bd_mode, wav_props):
-    # TODO: Add boundary handling
     x0 = x.copy(); x0[1::2] = 0
     x1 = x.copy(); x1[::2] = 0
     filter_impl(wav_props.g0, x0, bd_mode)
     filter_impl(wav_props.g1, x1, bd_mode)
     x[:] = x0 + x1
-    # TODO: Add boundary handling
 # End _idwt_kernel_filters
     
 # The Haar wavelet
