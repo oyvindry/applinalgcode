@@ -154,7 +154,7 @@ function x=dwt_kernel_haar(x, bd_mode)
     x = x/sqrt(2);
     N = size(x, 1);
     if mod(N,2) == 1
-        x(1:2, :) = [x(1, :) + x(2, :) - x(N, :); x(1, :) - x(2, :) - x(N, :)];
+        x(1:2, :) = [x(1, :) + x(2, :) - x(N, :);x(1, :) - x(2, :) - x(N, :)];
         x(N, :) = 2*x(N, :);
     else
         x(1:2, :) = [x(1, :) + x(2, :); x(1, :) - x(2, :)];
@@ -234,15 +234,19 @@ function x=dwt_kernel_ortho(x, bd_mode, dual_wav_props)
     iseven = ~dual_wav_props.last_even;
     for stepnr = (size(dual_wav_props.lambdas, 1)):(-1):1
         if iseven
-            x = lifting_even(dual_wav_props.lambdas(stepnr,2), dual_wav_props.lambdas(stepnr,1), x, bd_mode);
+            x = lifting_even(dual_wav_props.lambdas(stepnr,2), ...
+                             dual_wav_props.lambdas(stepnr,1), x, bd_mode);
         else
-            x = lifting_odd(dual_wav_props.lambdas(stepnr,2), dual_wav_props.lambdas(stepnr,1), x, bd_mode);
+            x = lifting_odd(dual_wav_props.lambdas(stepnr,2), ...
+                            dual_wav_props.lambdas(stepnr,1), x, bd_mode);
         end
         iseven = ~iseven;
     end
     if strcmpi(bd_mode, 'bd')
-        x(1:size(dual_wav_props.A_L,2), :) = x(1:size(dual_wav_props.A_L,2), :) + y1;
-        x((end-size(dual_wav_props.A_R,2)+1):end, :) = x((end-size(dual_wav_props.A_R,2)+1):end, :) + y2;
+        x(1:size(dual_wav_props.A_L,2), :) = ...
+            x(1:size(dual_wav_props.A_L,2), :) + y1;
+        x((end-size(dual_wav_props.A_R,2)+1):end, :) = ...
+            x((end-size(dual_wav_props.A_R,2)+1):end, :) + y2;
     end
 end
 % End dwt_kernel_ortho
@@ -255,9 +259,11 @@ function x=idwt_kernel_ortho(x, bd_mode, wav_props)
     iseven = ( mod(size(wav_props.lambdas, 1), 2) == wav_props.last_even );
     for stepnr = 1:(size(wav_props.lambdas, 1))
         if iseven
-            x = lifting_even(wav_props.lambdas(stepnr, 1), wav_props.lambdas(stepnr, 2), x, bd_mode);
+            x = lifting_even(wav_props.lambdas(stepnr, 1), ...
+                             wav_props.lambdas(stepnr, 2), x, bd_mode);
         else
-            x = lifting_odd(wav_props.lambdas(stepnr, 1), wav_props.lambdas(stepnr, 2), x, bd_mode);
+            x = lifting_odd(wav_props.lambdas(stepnr, 1), ...
+                            wav_props.lambdas(stepnr, 2), x, bd_mode);
         end
         iseven = ~iseven;
     end
@@ -265,8 +271,10 @@ function x=idwt_kernel_ortho(x, bd_mode, wav_props)
     x(2:2:end, :)=x(2:2:end, :)/wav_props.beta;
 
     if strcmpi(bd_mode, 'bd')
-        x(1:size(wav_props.A_L,1), :) = x(1:size(wav_props.A_L,1), :) + y1;
-        x((end-size(wav_props.A_R,1)+1):end, :) = x((end-size(wav_props.A_R,1)+1):end, :) + y2;
+        x(1:size(wav_props.A_L,1), :) = ...
+            x(1:size(wav_props.A_L,1), :) + y1;
+        x((end-size(wav_props.A_R,1)+1):end, :) = ...
+            x((end-size(wav_props.A_R,1)+1):end, :) + y2;
     end
 end
 % End idwt_kernel_ortho
@@ -327,7 +335,8 @@ function x=lifting_even(lambda1, lambda2, x, bd_mode)
     elseif strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'none')
         x(1, :) = lambda1*x(2, :) + x(1, :);
     end
-    x(3:2:(N-1), :) = lambda1*x(4:2:N, :) + x(3:2:(N-1), :) + lambda2*x(2:2:(N-2), :);
+    x(3:2:(N-1), :) = ...
+        lambda1*x(4:2:N, :) + x(3:2:(N-1), :) + lambda2*x(2:2:(N-2), :);
     if strcmpi(bd_mode, 'bd') || strcmpi(bd_mode, 'none')
         if mod(N,2) == 1 % last must also be included
             x(N, :) = x(N, :) + lambda2*x(N-1, :);
@@ -338,7 +347,8 @@ end
 
 function x=lifting_odd(lambda1, lambda2, x, bd_mode)
     N = size(x, 1);
-    x(2:2:(N-1), :) = lambda1*x(3:2:N, :) + x(2:2:(N-1), :) + lambda2*x(1:2:(N-2), :);
+    x(2:2:(N-1), :) = ...
+        lambda1*x(3:2:N, :) + x(2:2:(N-1), :) + lambda2*x(1:2:(N-2), :);
     if mod(N,2) == 0 % last must also be included
         if strcmpi(bd_mode, 'per')
             x(N, :) = lambda1*x(1, :) + x(N, :) + lambda2*x(N-1, :);
