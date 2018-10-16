@@ -1285,7 +1285,6 @@ def cascade_alg(m, a, b, wave_name, scaling, dual):
     idwt_impl(coords, wave_name, m=m, bd_mode='per', dual=dual)
     coords = concatenate([coords[(b*2**m):((b-a)*2**m)], \
                           coords[0:(b*2**m)]])
-    plt.figure()
     plt.plot(t, 2**(m/2.)*coords, 'k-')
     plt.show()
     plt.close()
@@ -1303,7 +1302,6 @@ def freqresp_alg(wave_name, lowpass, dual):
         g[1] = 1
     
     idwt_impl(g, wave_name, bd_mode='per', dual=dual, data_layout='time')
-    plt.figure()
     plt.plot(omega, abs(fft.fft(g)), 'k-')
     plt.show()
     plt.close()    
