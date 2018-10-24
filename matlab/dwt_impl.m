@@ -21,7 +21,7 @@ function x=dwt_impl(x, wave_name, m, bd_mode, prefilter_mode, dims, dual, transp
     % x:         Matrix whose DWT will be computed along the first dimension(s).      
     % wave_name: Name of the wavelet. Possible names are:
     %            'cdf97' - CDF 9/7 wavelet
-    %            'cdf53' - Spline 5/3 wavelet
+    %            'spline53' - Spline 5/3 wavelet
     %            'splinex.x' - Spline wavelet with given number of vanishing 
     %                          moments for each filter
     %            'pwl0'  - Piecewise linear wavelet with 0 vanishing moments

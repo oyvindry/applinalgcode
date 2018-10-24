@@ -24,7 +24,7 @@ classdef TestDecRec < matlab.unittest.TestCase
             testWaveletDecRec(testCase, 'cdf97');
         end
         function testCDF53(testCase)
-            testWaveletDecRec(testCase, 'cdf53');
+            testWaveletDecRec(testCase, 'spline53');
         end
         function testpwl0(testCase)
             testWaveletDecRec(testCase, 'pwl0');

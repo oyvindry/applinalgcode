@@ -41,7 +41,7 @@ end
 
 function [f, prefilter] = find_kernel_dwt_general(wav_props, dual_wav_props, prefilter_mode)
     prefilter = @(x, forward) x;
-    if strcmpi(wav_props.wave_name, 'cdf53') || strcmpi(wav_props.wave_name, 'cdf97') || strcmpi(wav_props.wave_name, 'pwl0') || strcmpi(wav_props.wave_name, 'pwl2')
+    if strcmpi(wav_props.wave_name, 'spline53') || strcmpi(wav_props.wave_name, 'cdf97') || strcmpi(wav_props.wave_name, 'pwl0') || strcmpi(wav_props.wave_name, 'pwl2')
         f = @(x, bd_mode) dwt_kernel_biortho(x, bd_mode, dual_wav_props);
         if strcmpi(prefilter_mode,'bd_pre')
             prefilter = @(x, forward) precond_impl(x, forward, wav_props);
@@ -78,7 +78,7 @@ end
 
 function [f, prefilter] = find_kernel_idwt_general(wav_props, dual_wav_props, prefilter_mode)
     prefilter = @(x, forward) x;
-    if strcmpi(wav_props.wave_name, 'cdf53') || strcmpi(wav_props.wave_name, 'cdf97') || strcmpi(wav_props.wave_name, 'pwl0') || strcmpi(wav_props.wave_name, 'pwl2')
+    if strcmpi(wav_props.wave_name, 'spline53') || strcmpi(wav_props.wave_name, 'cdf97') || strcmpi(wav_props.wave_name, 'pwl0') || strcmpi(wav_props.wave_name, 'pwl2')
         f = @(x, bd_mode) idwt_kernel_biortho(x, bd_mode, wav_props);
         if strcmpi(prefilter_mode,'bd_pre')
             prefilter = @(x, forward) precond_impl(x, forward, wav_props);

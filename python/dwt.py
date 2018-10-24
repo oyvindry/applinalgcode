@@ -27,7 +27,7 @@ def dwt_impl(x, wave_name, m = 1, bd_mode = 'symm', prefilter_mode = 'none', dim
     x:         Matrix whose DWT will be computed along the first dimension(s).      
     wave_name: Name of the wavelet. Possible names are:
                'cdf97' - CDF 9/7 wavelet
-               'cdf53' - Spline 5/3 wavelet
+               'spline53' - Spline 5/3 wavelet
                'splinex.x' - Spline wavelet with given number of vanishing moments for each filter
                'pwl0'  - Piecewise linear wavelet with 0 vanishing moments
                'pwl2'  - Piecewise linear wavelet with 2 vanishing moments
@@ -112,7 +112,7 @@ def idwt_impl(x, wave_name, m=1, bd_mode = 'symm', prefilter_mode = 'none', dims
     x:         Matrix whose IDWT will be computed along the first dimension(s).      
     wave_name: Name of the wavelet. Possible names are:
                'cdf97' - CDF 9/7 wavelet
-               'cdf53' - Spline 5/3 wavelet
+               'spline53' - Spline 5/3 wavelet
                'splinex.x' - Spline wavelet with given number of vanishing 
                              moments for each filter
                'pwl0'  - Piecewise linear wavelet with 0 vanishing moments
@@ -490,7 +490,7 @@ def find_wav_props(wave_name, m = 1, bd_mode = 'symm', length_signal = 0):
     
     wave_name: Name of the wavelet. Possible names are:
                'cdf97' - CDF 9/7 wavelet
-               'cdf53' - Spline 5/3 wavelet
+               'spline53' - Spline 5/3 wavelet
                'splinex.x' - Spline wavelet with given number of vanishing moments for each filter
                'pwl0'  - Piecewise linear wavelet with 0 vanishing moments
                'pwl2'  - Piecewise linear wavelet with 2 vanishing moments
@@ -523,7 +523,7 @@ def find_wav_props(wave_name, m = 1, bd_mode = 'symm', length_signal = 0):
         _wav_props_pwl0(wav_props, dual_wav_props, bd_mode)
     elif wave_name.lower() == 'pwl2':
         _wav_props_pwl2(wav_props, dual_wav_props, bd_mode)
-    elif wave_name.lower() == 'cdf53':
+    elif wave_name.lower() == 'spline53':
         _wav_props_53(wav_props, dual_wav_props, bd_mode)
     elif wave_name.lower() == 'cdf97':
         _wav_props_97(wav_props, dual_wav_props, bd_mode)
@@ -855,7 +855,7 @@ def find_kernel(wav_props, dual_wav_props, forward, dual = False, transpose = Fa
 def _find_kernel_dwt_general(wav_props, dual_wav_props, prefilter_mode):
     prefilter = lambda x, forward: x
     
-    if wav_props.wave_name.lower() == 'cdf53' or wav_props.wave_name.lower() == 'cdf97' or wav_props.wave_name.lower() ==  'pwl0' or wav_props.wave_name.lower() ==  'pwl2':
+    if wav_props.wave_name.lower() == 'spline53' or wav_props.wave_name.lower() == 'cdf97' or wav_props.wave_name.lower() ==  'pwl0' or wav_props.wave_name.lower() ==  'pwl2':
         f = lambda x, bd_mode: _dwt_kernel_biortho(x, bd_mode, dual_wav_props)
         # TODO: Add boundary handling
     elif wav_props.wave_name.lower()[:2] == 'db':
@@ -883,7 +883,7 @@ def _find_kernel_dwt_general(wav_props, dual_wav_props, prefilter_mode):
 def _find_kernel_idwt_general(wav_props, dual_wav_props, prefilter_mode):
     prefilter = lambda x, forward: x
     
-    if wav_props.wave_name.lower() == 'cdf53' or wav_props.wave_name.lower() == 'cdf97' or wav_props.wave_name.lower() ==  'pwl0' or wav_props.wave_name.lower() ==  'pwl2':
+    if wav_props.wave_name.lower() == 'spline53' or wav_props.wave_name.lower() == 'cdf97' or wav_props.wave_name.lower() ==  'pwl0' or wav_props.wave_name.lower() ==  'pwl2':
         f = lambda x, bd_mode: _idwt_kernel_biortho(x, bd_mode, wav_props)
         # TODO: Add boundary handling
     elif wav_props.wave_name.lower()[:2] == 'db':
@@ -1308,7 +1308,7 @@ def freqresp_alg(wave_name, lowpass, dual):
 # End freqresp_alg
     
 def _test_dwt_different_sizes():
-    for wave_name in ['cdf97', 'cdf53', 'pwl0', 'pwl2', 'haar', 'spline4.4']:
+    for wave_name in ['cdf97', 'spline53', 'pwl0', 'pwl2', 'haar', 'spline4.4']:
         print('Testing the DWT on different input sizes')
         m = 4
     

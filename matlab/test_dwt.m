@@ -1,7 +1,7 @@
 test_orthogonality('db2')
 test_orthogonality('db4')
 test_dwt_different_sizes('cdf97')
-test_dwt_different_sizes('cdf53')
+test_dwt_different_sizes('spline53')
 test_dwt_different_sizes('pwl0')
 test_dwt_different_sizes('pwl2')
 test_dwt_different_sizes('haar')
@@ -10,7 +10,7 @@ test_simple_dwt2()
 test_bd_db_van(4)
 
 m = log2(64/(2*2));
-test_bd('cdf53', m)
+test_bd('spline53', m)
 test_bd('pwl2', m)
 m = log2(64/(2*4));
 test_bd('cdf97', m)

@@ -4,7 +4,7 @@ function [wav_props, dual_wav_props]=find_wav_props(wave_name, m, bd_mode, lengt
     %
     % wave_name: Name of the wavelet. Possible names are:
     %            'cdf97' - CDF 9/7 wavelet
-    %            'cdf53' - Spline 5/3 wavelet
+    %            'spline53' - Spline 5/3 wavelet
     %            'splinex.x' - Spline wavelet with given number of vanishing 
     %                          moments for each filter
     %            'pwl0'  - Piecewise linear wavelet with 0 vanishing moments
@@ -47,7 +47,7 @@ function [wav_props, dual_wav_props]=find_wav_props(wave_name, m, bd_mode, lengt
         [wav_props, dual_wav_props] = wav_props_pwl0(wav_props, dual_wav_props, bd_mode);
     elseif strcmpi(wave_name, 'pwl2')
         [wav_props, dual_wav_props] = wav_props_pwl2(wav_props, dual_wav_props, bd_mode);
-    elseif strcmpi(wave_name, 'cdf53')
+    elseif strcmpi(wave_name, 'spline53')
         [wav_props, dual_wav_props] = wav_props_53(wav_props, dual_wav_props, bd_mode);
     elseif strcmpi(wave_name, 'cdf97')
         [wav_props, dual_wav_props] = wav_props_97(wav_props, dual_wav_props, bd_mode);
