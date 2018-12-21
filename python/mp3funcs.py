@@ -1,9 +1,9 @@
 from numpy import *
 
-def mp3forwardfbt(x):
+def mp3_forward_fbt(x):
     N = len(x)
     z = mat(zeros((N,1)))
-    C = mp3ctable() # The analysis window;
+    C = mp3_ctable() # The analysis window;
     x = x[(N-1)::(-1)]
     x = concatenate([x, zeros(512 - 32)])
     
@@ -15,7 +15,7 @@ def mp3forwardfbt(x):
     M = cos((2*yvec+1)*xvec*pi/64)
 
     start = len(x) - 512;
-    for n in range(1, N/32 + 1): 
+    for n in range(1, int(N/32) + 1): 
         X = x[start:(start + 512)]
         Z = C*X # Pointwise multiplication
         Y = zeros(64)
@@ -26,14 +26,15 @@ def mp3forwardfbt(x):
         start -= 32
     z = array(z).flatten()
     return z
+# End mp3_forward_fbt
 
-def mp3reversefbt(z):
+def mp3_reverse_fbt(z):
     N = len(z)
     z = z. reshape((N,1))
     z = mat(z)
-    Ns = N/32
+    Ns = int(N/32)
     x = zeros(32*Ns)
-    D = mp3dtable()          # The reconstruction window.
+    D = mp3_dtable()          # The reconstruction window.
     V = mat(zeros((1024,1)))
     # The 64x32 matrix N
     
@@ -58,9 +59,9 @@ def mp3reversefbt(z):
         for i in range(16):
             x[((n-1)*32):(n*32)] += W[32*i:(32*(i + 1))]
     return x
+# End mp3_reverse_fbt   
     
-    
-def mp3ctable():
+def mp3_ctable():
     C = zeros(512)
 
     C[0] = 0.0         ; C[  1]=-0.000000477; C[  2]=-0.000000477; C[  3]=-0.000000477 ;
@@ -193,7 +194,7 @@ def mp3ctable():
     C[508]= 0.000000477; C[509]= 0.000000477; C[510]= 0.000000477; C[511]= 0.000000477 ;
     return C
 
-def mp3dtable():
+def mp3_dtable():
     D=zeros(512)
                                                                                                                
     D[0] = 0.0         ; D[  1]=-0.000015259; D[  2]=-0.000015259; D[  3]=-0.000015259;

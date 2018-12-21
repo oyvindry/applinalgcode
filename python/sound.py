@@ -1,27 +1,28 @@
-import math, wave, commands, sys, os
+import math, wave, sys, os, subprocess
 from numpy import *
 
 max_amplitude = 2**15-1 # iinfo('int16').max if numpy >= 1.0.3
 
-def filterS(t, x, symm):
-    tlen = len(t) 
-    N0 = (tlen - 1)/2
-    N = shape(x)[0]
+def filter_impl(t, x, bd_mode):
+    szx = shape(x)
+    N = szx[0]
+    n = int(prod(szx[1:]))
+    y =  reshape(x, (N, n))
+    tlen = len(t); N0 = int((tlen - 1)/2)
+    w = 0
     
-    if symm:
-        y = concatenate([ x[N0:0:(-1)], x, x[(N-2):(N - N0 - 2):(-1)] ])
-    else:
-        y = concatenate([ x[(N - N0):], x, x[:N0]])
-    if ndim(x) == 1:
-        res = convolve(t, y)
-        x[:] = res[(2*N0):(len(res)-2*N0)]
-    else:
-        n = shape(x)[1]
-        for k in range(n):
-            res = convolve(t, y[:, k])
-            x[:, k] = res[(2*N0):(len(res)-2*N0)]
-            
-            
+    if bd_mode.lower() == 'symm':
+        w = concatenate([ y[N0:0:(-1)], y, y[(N-2):(N - N0 - 2):(-1)] ])
+    elif bd_mode.lower() == 'per':
+        w = concatenate([ y[(N - N0):], y, y[:N0]])
+    elif bd_mode.lower() == 'none' or bd_mode.lower() == 'bd':
+        w = concatenate( (zeros(N0, n), y, zeros(N0, n)) )
+    for k in range(n):
+        z = convolve(t, w[:, k])
+        y[:, k] = z[(2*N0):(len(z)-2*N0)]
+    x[:] = reshape(y, szx)
+# End filter_impl
+
 def audiowrite(filename, x, fs):
     """
     Writes the array data to the specified filename.
@@ -59,9 +60,14 @@ def audioread(filename):
     x=x.astype(float)/max_amplitude
     soundx = x
     if channels > 1:
-        soundx = x.reshape((len(x)/channels,channels))
-    return soundx,fs
+        soundx = x.reshape( ( int(len(x)/channels), channels ) )
+    return soundx, fs
 
+def get_status_output(*args, **kwargs):
+    p = subprocess.Popen(*args, **kwargs)
+    stdout, stderr = p.communicate()
+    return p.returncode, stdout, stderr
+    
 def play(x, fs, player=None):
     """
     Play a file with array data.  (The array is first written to file
@@ -79,7 +85,7 @@ def play(x, fs, player=None):
         if sys.platform[:3] == 'win':
             status = os.system('%s %s' %(player, tmpfile))
         else:
-            status, output = commands.getstatusoutput('%s %s' %(player, tmpfile))
+            status, output, err = get_status_output([player, tmpfile])
             msg += '\nError message:\n%s' %output
         if status != 0:
             raise OSError(msg)
@@ -88,7 +94,7 @@ def play(x, fs, player=None):
     if sys.platform[:5] == 'linux':
         open_commands = ['gnome-open', 'kmfclient exec', 'exo-open', 'xdg-open', 'open']
         for cmd in open_commands:
-            status, output = commands.getstatusoutput('%s %s' %(cmd, tmpfile))
+            status, output, err = get_status_output([cmd, tmpfile])
             if status == 0:
                 break
         if status != 0:
@@ -96,7 +102,7 @@ def play(x, fs, player=None):
                               ' keyword argument.')
 
     elif sys.platform == 'darwin':
-        commands.getstatusoutput('open %s' %tmpfile)
+        get_status_output(['open', tmpfile])
     else:
         # assume windows
         os.system('start %s' %tmpfile)
